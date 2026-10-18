@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class wise Student Update | PM POSHAN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --purple: #8b5cf6;
+            --purple-deep: #7c3aed;
+            --purple-light: #f5f3ff;
+            --blue: #3b82f6;
+            --blue-deep: #2563eb;
+            --emerald: #10b981;
+            --bg: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --radius: 24px;
+            --border: #e2e8f0;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            background-attachment: fixed;
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--purple-light);
+            color: var(--purple);
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            transform: translateX(-3px);
+            background: var(--purple);
+            color: white;
+        }
+
+        .title-area h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--purple-deep), var(--blue-deep));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* SELECTION PANEL */
+        .selection-panel {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .selection-panel h3 {
+            margin: 0 0 15px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .school-info {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .info-cell {
+            background: #fff;
+            padding: 12px 15px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .info-cell span {
+            display: block;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .info-cell strong {
+            display: block;
+            font-size: 13px;
+            color: var(--text-dark);
+            line-height: 1.4;
+        }
+
+        .info-cell.full {
+            grid-column: span 2;
+        }
+
+        /* FORM CARDS */
+        .form-card {
+            display: none;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .section-tag {
+            background: var(--purple-light);
+            color: var(--purple-deep);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            display: inline-block;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+
+        .grid-enrolment {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px 14px;
+            max-width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .input-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-row label {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        .input-box {
+            width: 100%;
+            height: 44px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            padding: 0 12px;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            transition: 0.3s;
+            background: #fff;
+            color: var(--text-dark);
+        }
+
+        .input-box:focus {
+            outline: none;
+            border-color: var(--purple);
+            box-shadow: 0 0 0 4px var(--purple-light);
+        }
+
+        /* TOTALS */
+        .total-banner {
+            background: linear-gradient(135deg, var(--purple-deep), var(--blue-deep));
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 15px 30px rgba(124, 58, 237, 0.2);
+        }
+
+        .total-banner span {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .total-banner strong {
+            display: block;
+            font-size: 36px;
+            font-weight: 800;
+            margin-top: 5px;
+        }
+
+        /* CATEGORY BREAKDOWN */
+        .category-scroll {
+            overflow-x: auto;
+            margin: 20px -24px;
+            padding: 0 24px 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .cat-table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: separate;
+            border-spacing: 8px;
+        }
+
+        .cat-table th {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .cat-table td {
+            text-align: center;
+        }
+
+        .row-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            background: var(--text-dark);
+            padding: 10px;
+            border-radius: 10px;
+            width: 80px;
+        }
+
+        .mini-input {
+            width: 100%;
+            height: 44px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            text-align: center;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        /* MOBILE TOTALS */
+        .summary-grid {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .summary-card {
+            background: #fff;
+            padding: 15px 10px;
+            border-radius: 18px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .summary-card span {
+            display: block;
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .summary-card strong {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--purple-deep);
+        }
+
+        /* ACTIONS */
+        .actions {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            height: 56px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-update {
+            background: var(--blue-deep);
+            color: white;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-cancel {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .nb {
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            .actions { grid-template-columns: 1fr; }
+            .grid-enrolment { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Select2 */
+        .select2-container--default .select2-selection--single {
+            height: 52px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <a href="index.html" class="btn-back"><i class="fa-solid fa-chevron-left"></i></a>
+            <div class="title-area">
+                <h2>Student Enrolment</h2>
+            </div>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <div class="selection-panel">
+            <h3><i class="fa-solid fa-search"></i> Find School</h3>
+            <select id="schoolSelect" style="width: 100%;">
+                <option value="">Search School Name / UDISE...</option>
+            </select>
+
+            <div id="schoolInfo" class="school-info">
+                <div class="info-cell full">
+                    <span>School Name</span>
+                    <strong id="infoName">-</strong>
+                </div>
+                <div class="info-cell">
+                    <span>Category</span>
+                    <strong id="infoCategory">-</strong>
+                </div>
+                <div class="info-cell">
+                    <span>Circle</span>
+                    <strong id="infoCircle">-</strong>
+                </div>
+                <div class="info-cell full">
+                    <span>Gram Panchayat</span>
+                    <strong id="infoGP">-</strong>
+                </div>
+            </div>
+        </div>
+
+        <form id="enrolmentForm" class="form-card">
+            <div class="section-tag">Enrolment Info</div>
+
+            <div class="grid-enrolment">
+                <div class="input-row primary-item" id="prePrimaryField">
+                    <label>Pre Primary</label>
+                    <input type="number" class="input-box enrolment-input" id="pre_primary" min="0" value="0">
+                </div>
+                <div class="input-row primary-item">
+                    <label>Class I</label>
+                    <input type="number" class="input-box enrolment-input" id="class_1" min="0" value="0">
+                </div>
+                <div class="input-row primary-item">
+                    <label>Class II</label>
+                    <input type="number" class="input-box enrolment-input" id="class_2" min="0" value="0">
+                </div>
+                <div class="input-row primary-item">
+                    <label>Class III</label>
+                    <input type="number" class="input-box enrolment-input" id="class_3" min="0" value="0">
+                </div>
+                <div class="input-row primary-item">
+                    <label>Class IV</label>
+                    <input type="number" class="input-box enrolment-input" id="class_4" min="0" value="0">
+                </div>
+                <div class="input-row" id="classVField">
+                    <label>Class V</label>
+                    <input type="number" class="input-box enrolment-input" id="class_5" min="0" value="0">
+                </div>
+                <div class="input-row upper-item">
+                    <label>Class VI</label>
+                    <input type="number" class="input-box enrolment-input" id="class_6" min="0" value="0">
+                </div>
+                <div class="input-row upper-item">
+                    <label>Class VII</label>
+                    <input type="number" class="input-box enrolment-input" id="class_7" min="0" value="0">
+                </div>
+                <div class="input-row upper-item">
+                    <label>Class VIII</label>
+                    <input type="number" class="input-box enrolment-input" id="class_8" min="0" value="0">
+                </div>
+            </div>
+
+            <div class="total-banner">
+                <span>Total Enrolment</span>
+                <strong id="totalEnrolment">0</strong>
+            </div>
+
+            <div class="section-tag">Category Wise</div>
+
+            <div class="category-scroll">
+                <table class="cat-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>SC</th>
+                            <th>ST</th>
+                            <th>OBC</th>
+                            <th>MIN</th>
+                            <th>OTH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="row-label">MALE</td>
+                            <td><input type="number" class="mini-input male-cat" data-cat="sc" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input male-cat" data-cat="st" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input male-cat" data-cat="obc" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input male-cat" data-cat="minority" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input male-cat" data-cat="others" min="0" value="0"></td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">FEMALE</td>
+                            <td><input type="number" class="mini-input female-cat" data-cat="sc" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input female-cat" data-cat="st" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input female-cat" data-cat="obc" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input female-cat" data-cat="minority" min="0" value="0"></td>
+                            <td><input type="number" class="mini-input female-cat" data-cat="others" min="0" value="0"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <span>Total Male</span>
+                    <strong id="totalMale">0</strong>
+                </div>
+                <div class="summary-card">
+                    <span>Total Female</span>
+                    <strong id="totalFemale">0</strong>
+                </div>
+                <div class="summary-card">
+                    <span>Grand Total</span>
+                    <strong id="totalCategoryItems">0</strong>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn btn-update" id="submitBtn">UPDATE DATA</button>
+                <button type="button" class="btn btn-cancel" onclick="location.reload();">CANCEL</button>
+            </div>
+
+            <p class="nb">N.B: If not applicable then put 0.</p>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        var schools = [];
+
+        $(document).ready(function () {
+            $.ajax({
+                url: '/api/student-schools',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    schools = Array.isArray(data) ? data : (data && data.data ? data.data : []);
+
+                    if (!schools.length) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Failed to load school list.'
+                        });
+                        return;
+                    }
+
+                    $('#schoolSelect').select2({
+                        data: schools,
+                        placeholder: "Search School...",
+                        allowClear: true
+                    });
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Failed to load school list. Please refresh or try again later.'
+                    });
+                }
+            });
+
+            $('#schoolSelect').on('change', function () {
+                const udise = $(this).val();
+                if (udise) {
+                    const school = schools.find(s => s.id === udise);
+                    if (school) {
+                        $('#infoName').text(school.text);
+                        $('#infoCategory').text(school.category);
+                        $('#infoCircle').text(school.circle);
+                        $('#infoGP').text(school.gp);
+                    }
+                    $('#schoolInfo').slideDown();
+                    $('#enrolmentForm').fadeIn();
+
+                    $('.enrolment-input, .mini-input').val(0);
+
+                    if (school && school.category === 'PRIMARY ONLY') {
+                        $('.primary-item').show();
+                        $('.upper-item').hide();
+                    } else {
+                        $('.primary-item').hide();
+                        $('.upper-item').show();
+                    }
+
+                    $.ajax({
+                        url: '/api/students/enrolment',
+                        type: 'GET',
+                        data: { u_dise: udise },
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res.status === 'success') {
+                                const d = res.data;
+                                $('#pre_primary').val(d.pre_primary);
+                                $('#class_1').val(d.class_1);
+                                $('#class_2').val(d.class_2);
+                                $('#class_3').val(d.class_3);
+                                $('#class_4').val(d.class_4);
+                                $('#class_5').val(d.class_5);
+                                $('#class_6').val(d.class_6);
+                                $('#class_7').val(d.class_7);
+                                $('#class_8').val(d.class_8);
+
+                                $('.male-cat[data-cat="sc"]').val(d.male_sc);
+                                $('.male-cat[data-cat="st"]').val(d.male_st);
+                                $('.male-cat[data-cat="obc"]').val(d.male_obc);
+                                $('.male-cat[data-cat="minority"]').val(d.male_minority);
+                                $('.male-cat[data-cat="others"]').val(d.male_others);
+
+                                $('.female-cat[data-cat="sc"]').val(d.female_sc);
+                                $('.female-cat[data-cat="st"]').val(d.female_st);
+                                $('.female-cat[data-cat="obc"]').val(d.female_obc);
+                                $('.female-cat[data-cat="minority"]').val(d.female_minority);
+                                $('.female-cat[data-cat="others"]').val(d.female_others);
+                            }
+                            calculateEnrolmentTotal();
+                            calculateCategoryTotals();
+                        }
+                    });
+                } else {
+                    $('#schoolInfo, #enrolmentForm').hide();
+                }
+            });
+
+            $('.enrolment-input').on('input', calculateEnrolmentTotal);
+            $('.male-cat, .female-cat').on('input', calculateCategoryTotals);
+
+            function calculateEnrolmentTotal() {
+                let total = 0;
+                $('.enrolment-input:visible').each(function () {
+                    total += parseInt($(this).val()) || 0;
+                });
+                $('#totalEnrolment').text(total);
+            }
+
+            function calculateCategoryTotals() {
+                let maleTotal = 0, femaleTotal = 0;
+                $('.male-cat').each(function () { maleTotal += parseInt($(this).val()) || 0; });
+                $('.female-cat').each(function () { femaleTotal += parseInt($(this).val()) || 0; });
+                $('#totalMale').text(maleTotal);
+                $('#totalFemale').text(femaleTotal);
+                $('#totalCategoryItems').text(maleTotal + femaleTotal);
+            }
+
+            $('#submitBtn').on('click', function () {
+                const udise = $('#schoolSelect').val();
+                if (!udise) {
+                    Swal.fire({ icon: 'warning', text: 'Please select a school first.' });
+                    return;
+                }
+
+                const eTotal = parseInt($('#totalEnrolment').text()) || 0;
+                const cTotal = parseInt($('#totalCategoryItems').text()) || 0;
+
+                if (eTotal !== cTotal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Mismatch!',
+                        text: 'Class-wise total (' + eTotal + ') and Category-wise total (' + cTotal + ') must match.'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Confirm Save?',
+                    text: "Update enrolment data?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Submit'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const formData = {
+                            u_dise: udise,
+                            school_name: $('#infoName').text(),
+                            category: $('#infoCategory').text(),
+                            circle: $('#infoCircle').text(),
+                            gram_panchayat: $('#infoGP').text(),
+                            pre_primary: $('#pre_primary').val() || 0,
+                            class_1: $('#class_1').val() || 0,
+                            class_2: $('#class_2').val() || 0,
+                            class_3: $('#class_3').val() || 0,
+                            class_4: $('#class_4').val() || 0,
+                            class_5: $('#class_5').val() || 0,
+                            class_6: $('#class_6').val() || 0,
+                            class_7: $('#class_7').val() || 0,
+                            class_8: $('#class_8').val() || 0,
+                            male_sc: $('.male-cat[data-cat="sc"]').val() || 0,
+                            male_st: $('.male-cat[data-cat="st"]').val() || 0,
+                            male_obc: $('.male-cat[data-cat="obc"]').val() || 0,
+                            male_minority: $('.male-cat[data-cat="minority"]').val() || 0,
+                            male_others: $('.male-cat[data-cat="others"]').val() || 0,
+                            female_sc: $('.female-cat[data-cat="sc"]').val() || 0,
+                            female_st: $('.female-cat[data-cat="st"]').val() || 0,
+                            female_obc: $('.female-cat[data-cat="obc"]').val() || 0,
+                            female_minority: $('.female-cat[data-cat="minority"]').val() || 0,
+                            female_others: $('.female-cat[data-cat="others"]').val() || 0,
+                            total_enrolment: eTotal,
+                            total_male: $('#totalMale').text(),
+                            total_female: $('#totalFemale').text(),
+                            grand_total: cTotal
+                        };
+
+                        const $btn = $('#submitBtn');
+                        $btn.prop('disabled', true).html('SAVING...');
+
+                        $.ajax({
+                            url: '/api/students/save',
+                            type: 'POST',
+                            data: JSON.stringify(formData),
+                            contentType: 'application/json',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.status === 'success') {
+                                    Swal.fire({ icon: 'success', title: 'Saved!' }).then(() => location.reload());
+                                } else {
+                                    Swal.fire({ icon: 'error', text: response.message });
+                                    $btn.prop('disabled', false).html('UPDATE DATA');
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({ icon: 'error', title: 'Error!', text: 'Server connection failed.' });
+                                $btn.prop('disabled', false).html('UPDATE DATA');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

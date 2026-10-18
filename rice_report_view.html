@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Rice Requirement Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f3f4f6; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 20px; }
+        .q-btn { padding: 10px 20px; border-radius: 6px; text-decoration: none; color: white; font-weight: bold; margin-right: 5px; display: inline-block; cursor: pointer; }
+        .q-btn.active { box-shadow: 0 0 0 3px rgba(0,0,0,0.3); }
+        .table-custom { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table-custom th, .table-custom td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        .table-custom th { background: #f8fafc; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" style="text-decoration:none; color:#666;">← Back to Dashboard</a>
+    <h2>Rice Requirement View</h2>
+
+    <div style="margin-bottom: 20px;">
+        <a onclick="setQuarter('Q1')" class="q-btn" id="btn-Q1" style="background:#f97316;">Q1</a>
+        <a onclick="setQuarter('Q2')" class="q-btn" id="btn-Q2" style="background:#10b981;">Q2</a>
+        <a onclick="setQuarter('Q3')" class="q-btn" id="btn-Q3" style="background:#3b82f6;">Q3</a>
+        <a onclick="setQuarter('Q4')" class="q-btn" id="btn-Q4" style="background:#8b5cf6;">Q4</a>
+    </div>
+
+    <div id="schoolSelectContainer" style="display:none; margin-bottom: 20px;">
+        <select id="schoolSelect" onchange="onSchoolChange()" style="padding:10px; width:100%;">
+            <option value="">-- Select School to View Report --</option>
+        </select>
+    </div>
+
+    <div id="reportBox" style="display:none; margin-top:30px; border:1px solid #ddd; padding:20px; border-radius:8px;">
+        <h3 id="repSchoolName">School Name</h3>
+        <p><span id="repQuarter">Quarter</span> | Submitted: <span id="repDate">Date</span></p>
+        
+        <table class="table-custom">
+            <thead>
+                <tr><th>Category</th><th>Requirement (KG)</th><th>Bags (50kg)</th></tr>
+            </thead>
+            <tbody id="repTableBody">
+            </tbody>
+        </table>
+        <button onclick="window.print()" style="margin-top:20px; padding:10px 20px; cursor:pointer; background:#2563eb; color:white; border:none; border-radius:6px; font-weight:bold;">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+    </div>
+
+    <p id="noDataMsg" style="color:red; margin-top:20px; display:none;">No data found for this school in selected quarter.</p>
+</div>
+
+<script>
+    let selectedQ = '';
+    let selectedSchool = '';
+    let schools = [];
+
+    async function init() {
+        try {
+            const res = await fetch('/api/schools');
+            schools = await res.json();
+            const select = document.getElementById('schoolSelect');
+            select.innerHTML = '<option value="">-- Select School to View Report --</option>';
+            schools.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.udise;
+                opt.dataset.name = s.name;
+                opt.textContent = `${s.name} (${s.udise})`;
+                select.appendChild(opt);
+            });
+
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            const school = params.get('school');
+            if (q) setQuarter(q);
+            if (school) {
+                select.value = school;
+                onSchoolChange();
+            }
+        } catch (err) {
+            console.error('Failed to load schools from Supabase:', err);
+        }
+    }
+
+    function setQuarter(q) {
+        selectedQ = q;
+        ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
+            const btn = document.getElementById('btn-' + quarter);
+            if (btn) btn.classList.toggle('active', quarter === q);
+        });
+
+        document.getElementById('schoolSelectContainer').style.display = 'block';
+
+        const url = new URL(window.location);
+        url.searchParams.set('q', q);
+        window.history.pushState({}, '', url);
+
+        if (selectedSchool) {
+            loadData();
+        }
+    }
+
+    function onSchoolChange() {
+        selectedSchool = document.getElementById('schoolSelect').value;
+        const url = new URL(window.location);
+        url.searchParams.set('school', selectedSchool);
+        window.history.pushState({}, '', url);
+        loadData();
+    }
+
+    async function loadData() {
+        const box = document.getElementById('reportBox');
+        const noData = document.getElementById('noDataMsg');
+        box.style.display = 'none';
+        noData.style.display = 'none';
+
+        if (!selectedQ || !selectedSchool) return;
+
+        try {
+            const res = await fetch(`/api/rice/saved?u_dise=${encodeURIComponent(selectedSchool)}&quarter=${encodeURIComponent(selectedQ)}`);
+            const data = await res.json();
+
+            if (data.status === 'success' && data.data) {
+                const d = data.data;
+                document.getElementById('repSchoolName').textContent = d.school_name;
+                document.getElementById('repQuarter').textContent = `Quarter: ${d.quarter}`;
+                document.getElementById('repDate').textContent = d.submission_date ? new Date(d.submission_date).toLocaleString('en-IN') : '-';
+
+                const tbody = document.getElementById('repTableBody');
+                tbody.innerHTML = '';
+
+                const showVal = v => (parseFloat(v) > 0 ? v : '-');
+                const bags = v => (parseFloat(v) > 0 ? (parseFloat(v) / 50).toFixed(2) : '-');
+
+                const isUpper = parseFloat(d.total_upper_kg || 0) > 0;
+                const isPrimary = parseFloat(d.total_primary_kg || 0) > 0 || !isUpper;
+
+                if (isPrimary) {
+                    tbody.innerHTML += `<tr><td>Bal Vatika</td><td>${showVal(d.req_bv)}</td><td>${bags(d.req_bv)}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>Primary (I-V)</td><td>${showVal(d.req_c1_5)}</td><td>${bags(d.req_c1_5)}</td></tr>`;
+                    tbody.innerHTML += `<tr style="font-weight:bold; background:#f0f9ff;"><td>Total Primary</td><td>${d.total_primary_kg || 0}</td><td>${bags(d.total_primary_kg)}</td></tr>`;
+                }
+
+                if (isUpper) {
+                    tbody.innerHTML += `<tr><td>Class V</td><td>${showVal(d.req_c5)}</td><td>${bags(d.req_c5)}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>Upper (VI-VIII)</td><td>${showVal(d.req_c6_8)}</td><td>${bags(d.req_c6_8)}</td></tr>`;
+                    tbody.innerHTML += `<tr style="font-weight:bold; background:#f5f3ff;"><td>Total Upper</td><td>${d.total_upper_kg || 0}</td><td>${bags(d.total_upper_kg)}</td></tr>`;
+                }
+
+                box.style.display = 'block';
+            } else {
+                noData.textContent = `No data found for this school in ${selectedQ}`;
+                noData.style.display = 'block';
+            }
+        } catch (err) {
+            console.error('Error loading rice data:', err);
+            noData.style.display = 'block';
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>

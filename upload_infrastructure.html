@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Infrastructure - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --success: #10b981; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin: 0; padding: 40px; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 1400px; width: 100%; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
+        @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
+        .recent-data-card { background: var(--card); padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); animation: fadeInUp 0.6s ease; }
+        .recent-data-card h2 { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-bottom: 20px; font-size: 0.9rem; }
+        .data-table thead th { background: #f1f5f9; padding: 15px; text-align: left; font-weight: 700; color: var(--primary-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+        .data-table thead th:first-child { border-radius: 12px 0 0 12px; }
+        .data-table thead th:last-child { border-radius: 0 12px 12px 0; }
+        .data-table tbody td { padding: 16px 15px; background: #ffffff; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; color: var(--muted); transition: all 0.3s ease; }
+        .data-table tbody td:first-child { border-left: 1px solid #f1f5f9; border-radius: 12px 0 0 12px; font-family: 'Courier New', Courier, monospace; font-weight: 700; color: var(--primary); }
+        .data-table tbody td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 12px 12px 0; }
+        .data-table tbody tr:hover td { background: #f0f7ff; border-color: #d0e7ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08); color: var(--text); }
+        .download-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); }
+        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-primary { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; border: 1px solid #93c5fd; }
+        .badge-primary::before { content: ''; width: 6px; height: 6px; background: #2563eb; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); } }
+        .header { text-align: center; margin-bottom: 40px; animation: fadeInDown 0.6s ease; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px; }
+        .header p { color: var(--muted); font-size: 1.1rem; }
+        .upload-card { background: var(--card); padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); text-align: center; animation: fadeInUp 0.6s ease; }
+        .icon-box { width: 80px; height: 80px; background: #dbeafe; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 30px; }
+        .form-group { margin-bottom: 25px; text-align: left; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+        input[type="file"] { width: 100%; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        input[type="file"]:hover { border-color: var(--primary); background: #f1f5f9; }
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); }
+        .message { margin-top: 25px; padding: 15px; border-radius: 12px; font-weight: 600; font-size: 14px; display: none; }
+        .message.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; display: block; }
+        .message.error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; display: block; }
+        .back-link { position: fixed; top: 30px; left: 30px; display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; background: white; color: var(--primary); text-decoration: none; font-weight: 700; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; border: 1px solid rgba(0, 0, 0, 0.05); }
+        .back-link:hover { transform: translateX(5px) scale(1.05); background: var(--primary); color: white; box-shadow: 0 15px 40px rgba(37, 99, 235, 0.2); }
+        .footer { margin-top: auto; padding: 30px; text-align: center; width: 100%; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-top: 1px solid rgba(0, 0, 0, 0.05); color: var(--muted); font-weight: 500; }
+        .instructions { margin-top: 40px; background: rgba(255, 255, 255, 0.5); padding: 25px; border-radius: 16px; font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+        .instructions h3 { color: var(--text); font-size: 1rem; margin-top: 0; margin-bottom: 10px; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+
+<body>
+    <a href="admin_dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    <div class="container">
+        <div class="header">
+            <h1>Upload Infrastructure</h1>
+            <p>Import school basic infrastructure data via CSV</p>
+        </div>
+
+        <div class="grid-layout">
+            <div class="upload-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; height: 100%;">
+                <div class="icon-box"><i class="fas fa-file-csv"></i></div>
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px;">Upload Infrastructure</h2>
+                <form id="uploadForm" style="width: 100%;">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="text-align: center;">Select CSV File</label>
+                        <input type="file" id="infra_file" accept=".csv" required>
+                    </div>
+                    <button type="submit" id="uploadBtn" class="btn"><i class="fas fa-cloud-upload-alt"></i> Upload & Process</button>
+                </form>
+                <div id="message" class="message"></div>
+            </div>
+
+            <div class="recent-data-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; height: 100%;">
+                <div class="icon-box" style="background: #dcfce7; color: #10b981;"><i class="fas fa-file-excel"></i></div>
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px;">Updated Reports</h2>
+                <p style="color: var(--muted); margin-bottom: 30px; font-size: 0.95rem;">Download the most up-to-date comprehensive basic infrastructure report.</p>
+                <button onclick="downloadExcel()" class="download-btn"><i class="fas fa-file-excel"></i> Download Report (Excel)</button>
+            </div>
+        </div>
+
+        <div class="recent-data-card" style="margin-top: 80px; margin-bottom: 60px; border: 1px solid rgba(37, 99, 235, 0.1); padding: 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 style="margin: 0; font-size: 1.6rem;"><i class="fas fa-history" style="color: var(--primary); margin-right: 12px;"></i> Recently Updated Details</h2>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="font-size: 0.8rem; color: var(--muted); background: #f1f5f9; padding: 6px 14px; border-radius: 12px; font-weight: 600;">Showing last 10 updates</span>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="data-table" style="margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;"><i class="fas fa-hashtag"></i> U-DISE</th>
+                            <th style="width: 25%;"><i class="fas fa-school"></i> School Name</th>
+                            <th style="width: 20%;"><i class="fas fa-circle-notch"></i> Circle</th>
+                            <th style="width: 25%;"><i class="fas fa-clock"></i> Updated At</th>
+                            <th style="width: 15%;"><i class="fas fa-info-circle"></i> Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentUpdatesBody">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> CSV Format Instructions</h3>
+            <p>You can upload the full CSV (26 columns), but the system will only save the first 18 columns (up to 'Remarks') into the database.</p>
+        </div>
+
+    </div>
+    <div class="footer">
+        <p style="margin: 0;">© 2025 MDM Infrastructure Management System</p>
+    </div>
+
+    <script>
+        // Check login
+        if (sessionStorage.getItem('admin_logged_in') !== 'true') {
+            window.location.href = 'admin_login.html';
+        }
+
+        // Fetch recent updates
+        async function fetchRecentUpdates() {
+            const tbody = document.getElementById('recentUpdatesBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+
+            try {
+                const res = await fetch('/api/infrastructure/recent');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const json = await res.json();
+                const data = json.data || [];
+
+            if (data && data.length > 0) {
+                tbody.innerHTML = '';
+                data.forEach(r => {
+                    const date = new Date(r.last_updated);
+                    const dateStr = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                    const row = `
+                        <tr>
+                            <td><span style='background: #f8fafc; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0;'>${r.u_dise}</span></td>
+                            <td style='font-weight: 700; color: #1e293b;'>${r.school_name}</td>
+                            <td style='font-weight: 600; color: #64748b;'><span style='display:inline-flex; align-items:center; gap:5px;'><i class='fas fa-map-marker-alt' style='font-size: 10px; color: #3b82f6;'></i> ${r.circle_name}</span></td>
+                            <td><div style='display: flex; flex-direction: column; gap: 2px;'><span style='font-weight: 600; color: #1e293b;'>${dateStr}</span><span style='font-size: 0.75rem; color: #94a3b8;'>${timeStr}</span></div></td>
+                            <td><span class='badge badge-primary'>Updated</span></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } else {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 60px; color: #94a3b8;'><i class='fas fa-inbox' style='font-size: 40px; margin-bottom: 15px; display: block;'></i>No recent updates found</td></tr>";
+            }
+        } catch (err) {
+            console.error('Error fetching updates:', err);
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Error fetching data</td></tr>';
+        }
+    }
+
+        fetchRecentUpdates();
+
+        // Handle upload
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('uploadBtn');
+            const msg = document.getElementById('message');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            msg.style.display = 'none';
+            msg.className = 'message';
+
+            try {
+                const masterSchools = await fetchSupabaseSchools();
+                const masterMap = {};
+                masterSchools.forEach(s => { masterMap[s.udise_code] = s; });
+
+                const file = document.getElementById('infra_file').files[0];
+                let successCount = 0;
+                let errorCount = 0;
+
+                Papa.parse(file, {
+                    header: false,
+                    skipEmptyLines: true,
+                    complete: async function(results) {
+                        const rows = results.data.slice(1); // Skip header
+                        
+                        for (const col of rows) {
+                            if (col.length < 1 || !col[0]) continue;
+                            const u_dise = String(col[0]).trim();
+                            const master = masterMap[u_dise];
+
+                            const data = {
+                                u_dise: u_dise,
+                                school_name: master ? master.school_name : (col[1] || ''),
+                                circle_name: master ? master.circle_name : (col[2] || ''),
+                                category: master ? master.catergory : (col[3] || ''),
+                                kitchen_status: col[4] || '',
+                                kitchen_year: col[5] || '',
+                                repair_grant_status: col[6] || '',
+                                repair_grant_year: col[7] || '',
+                                dining_status: col[8] || '',
+                                dining_fund: col[9] || '',
+                                nutrition_garden: col[10] || '',
+                                kitchen_device_status: col[11] || '',
+                                kitchen_device_year: col[12] || '',
+                                toilet_separate: col[13] || '',
+                                electric_status: col[14] || '',
+                                water_facilities: col[15] || '',
+                                water_purifier: col[16] || '',
+                                remarks: col[17] || '',
+                                last_updated: new Date().toISOString()
+                            };
+
+                            const { error } = await supabase
+                                .from('school_infrastructure')
+                                .upsert(data, { onConflict: 'u_dise' });
+
+                            if (error) {
+                                console.error('Row error:', error);
+                                errorCount++;
+                            } else {
+                                successCount++;
+                            }
+                        }
+
+                        msg.textContent = `Successfully processed ${successCount} records. Errors: ${errorCount}.`;
+                        msg.classList.add('success');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload & Process';
+                        fetchRecentUpdates();
+                    },
+                    error: function(err) {
+                        throw err;
+                    }
+                });
+
+            } catch (error) {
+                msg.textContent = `Error: ${error.message}`;
+                msg.classList.add('error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload & Process';
+            }
+        });
+
+        // Download Excel
+        async function downloadExcel() {
+            const { data, error } = await supabase
+                .from('school_infrastructure')
+                .select('*');
+            
+            if (error) {
+                alert('Error fetching data for export');
+                return;
+            }
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Infrastructure");
+            XLSX.writeFile(wb, "Infrastructure_Report.xlsx");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Report Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .controls { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 15px; justify-content: center; }
+        select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 280px; }
+        .btn-view { padding: 10px 20px; background: #2563EB; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        .btn-view:hover { background: #1d4ed8; }
+
+        .report-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
+        
+        h1 { font-size: 24px; color: #1e293b; margin: 0 0 5px 0; text-transform: uppercase; }
+        .meta { color: #64748b; font-size: 14px; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .print-btn { float: right; background: #f1f5f9; padding: 6px 16px; border-radius: 6px; color: #333; text-decoration: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .print-btn:hover { background: #e2e8f0; }
+
+        .sec-title { color: #6366f1; font-weight: 700; margin-top: 30px; margin-bottom: 10px; border-left: 4px solid #6366f1; padding-left: 10px; font-size: 16px; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
+        th { background: #fff; border-bottom: 2px solid #e2e8f0; padding: 12px; text-align: center; color: #1e293b; font-weight: 700; text-transform: uppercase; }
+        td { border-bottom: 1px solid #f1f5f9; padding: 10px; text-align: center; color: #334155; }
+        td:first-child { text-align: left; font-weight: 600; }
+        
+        .total-row td { font-weight: 700; background: #f8fafc; }
+        .no-data { text-align:center; padding:50px; color:#ef4444; background:white; border-radius:10px; display:none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="margin-bottom: 15px;">
+        <a href="index.html" style="text-decoration:none; color:#2563EB; font-weight:600;"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="controls">
+        <form id="filterForm" style="display:flex; gap:10px; width:100%; justify-content:center; flex-wrap:wrap;" onsubmit="handleView(event)">
+            <select id="monthSelect" required>
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+            </select>
+            <select id="schoolSelect" required>
+                <option value="" disabled selected>-- Loading Schools from Supabase... --</option>
+            </select>
+            <button type="submit" class="btn-view">View Report</button>
+        </form>
+    </div>
+
+    <div class="report-card" id="reportCard">
+        <a href="#" onclick="window.print()" class="print-btn"><i class="fas fa-print"></i> Print</a>
+        <h1 id="repSchoolName">SCHOOL NAME</h1>
+        <div class="meta" id="repMeta">Monthly Report</div>
+
+        <div class="sec-title">2. Meal Availed Status</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="text-align:left">DESCRIPTION</th>
+                    <th>BAL VATIKA</th>
+                    <th>PRIMARY</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Number of School Days During month</td>
+                    <td id="mBvDays">0</td>
+                    <td id="mPDays">0</td>
+                </tr>
+                <tr>
+                    <td>Actual Number of Days Mid Day Meal Served</td>
+                    <td id="mBvAct">0</td>
+                    <td id="mPAct">0</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Total Meals served during the month</td>
+                    <td id="mBvMeals">0</td>
+                    <td id="mPMeals">0</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sec-title">3. Fund Details (in Rs.)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="text-align:left">COMPONENT</th>
+                    <th>OPENING BALANCE</th>
+                    <th>RECEIVED DURING THE MONTH</th>
+                    <th>EXPENDITURE DURING THE MONTH</th>
+                    <th>CLOSING BALANCE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Cooking cost - Bal Vatika</td>
+                    <td id="fCcBvOpen">0.00</td>
+                    <td id="fCcBvRecv">0.00</td>
+                    <td id="fCcBvExp">0.00</td>
+                    <td id="fCcBvClose">0.00</td>
+                </tr>
+                <tr>
+                    <td>Cooking cost - Primary</td>
+                    <td id="fCcPOpen">0.00</td>
+                    <td id="fCcPRecv">0.00</td>
+                    <td id="fCcPExp">0.00</td>
+                    <td id="fCcPClose">0.00</td>
+                </tr>
+                <tr>
+                    <td>Cook Cum Helper</td>
+                    <td id="fCchOpen">0.00</td>
+                    <td id="fCchRecv">0.00</td>
+                    <td id="fCchExp">0.00</td>
+                    <td id="fCchClose">0.00</td>
+                </tr>
+                <tr>
+                    <td>School expenses: MME</td>
+                    <td id="fMmeOpen">0.00</td>
+                    <td id="fMmeRecv">0.00</td>
+                    <td id="fMmeExp">0.00</td>
+                    <td id="fMmeClose">0.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="sec-title">5. Food Grains Details (in KG)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="text-align:left">CATEGORY</th>
+                    <th>FOOD ITEM</th>
+                    <th>OPENING BALANCE</th>
+                    <th>RECEIVED DURING THE MONTH</th>
+                    <th>CONSUMPTION DURING THE MONTH</th>
+                    <th>CLOSING BALANCE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="2" style="vertical-align:middle"><b>Bal Vatika</b></td>
+                    <td>Wheat</td>
+                    <td>0</td><td>0</td><td>0</td><td>0</td>
+                </tr>
+                <tr>
+                    <td>Rice</td>
+                    <td id="rBvOpen">0.00</td>
+                    <td id="rBvRecv">0.00</td>
+                    <td id="rBvCons">0.00</td>
+                    <td id="rBvClose">0.00</td>
+                </tr>
+                <tr style="border-top:2px solid #eee">
+                    <td rowspan="2" style="vertical-align:middle"><b>Primary</b></td>
+                    <td>Wheat</td>
+                    <td>0</td><td>0</td><td>0</td><td>0</td>
+                </tr>
+                <tr>
+                    <td>Rice</td>
+                    <td id="rPOpen">0.00</td>
+                    <td id="rPRecv">0.00</td>
+                    <td id="rPCons">0.00</td>
+                    <td id="rPClose">0.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="no-data" id="noDataBox">
+        <i class="fas fa-exclamation-circle" style="font-size:30px; margin-bottom:15px; display:block;"></i>
+        No Data Found for this School in selected Month.
+    </div>
+</div>
+
+<script>
+    let schools = [];
+
+    async function init() {
+        const select = document.getElementById('schoolSelect');
+        try {
+            const res = await fetch('/api/schools');
+            schools = await res.json();
+
+            select.innerHTML = '<option value="">-- Select School --</option>';
+            schools.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.udise;
+                opt.dataset.name = s.name;
+                opt.textContent = `${s.name} (${s.udise})`;
+                select.appendChild(opt);
+            });
+
+            // Check URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const m = params.get('month');
+            const s = params.get('school');
+            if (m) document.getElementById('monthSelect').value = m;
+            if (s) {
+                // If s is UDISE or name
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === s || select.options[i].dataset.name === s) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+                loadReport();
+            }
+        } catch (err) {
+            console.error('Error fetching schools from Supabase:', err);
+            select.innerHTML = '<option value="">Failed to load schools from Supabase</option>';
+        }
+    }
+
+    function handleView(e) {
+        e.preventDefault();
+        const m = document.getElementById('monthSelect').value;
+        const s = document.getElementById('schoolSelect').value;
+        const url = new URL(window.location);
+        url.searchParams.set('month', m);
+        url.searchParams.set('school', s);
+        window.history.pushState({}, '', url);
+        loadReport();
+    }
+
+    async function loadReport() {
+        const m = document.getElementById('monthSelect').value;
+        const sSelect = document.getElementById('schoolSelect');
+        const udise = sSelect.value;
+        const card = document.getElementById('reportCard');
+        const noData = document.getElementById('noDataBox');
+
+        if (!udise || !m) return;
+
+        card.style.display = 'none';
+        noData.style.display = 'none';
+
+        try {
+            const res = await fetch(`/api/monthly-report?u_dise=${encodeURIComponent(udise)}&month=${encodeURIComponent(m)}`);
+            const data = await res.json();
+
+            if (data.status === 'success' && data.data) {
+                const d = data.data;
+                document.getElementById('repSchoolName').textContent = d.school_name;
+                document.getElementById('repMeta').textContent = `Monthly Report - ${d.month_name} ${d.year || 2025}`;
+
+                document.getElementById('mBvDays').textContent = d.bv_days || 0;
+                document.getElementById('mPDays').textContent = d.p_days || 0;
+                document.getElementById('mBvAct').textContent = d.bv_actual || 0;
+                document.getElementById('mPAct').textContent = d.p_actual || 0;
+                document.getElementById('mBvMeals').textContent = d.bv_meals || 0;
+                document.getElementById('mPMeals').textContent = d.p_meals || 0;
+
+                const fmt = v => parseFloat(v || 0).toFixed(2);
+                document.getElementById('fCcBvOpen').textContent = fmt(d.cc_bv_open);
+                document.getElementById('fCcBvRecv').textContent = fmt(d.cc_bv_recv);
+                document.getElementById('fCcBvExp').textContent = fmt(d.cc_bv_exp);
+                document.getElementById('fCcBvClose').textContent = fmt(d.cc_bv_close);
+
+                document.getElementById('fCcPOpen').textContent = fmt(d.cc_p_open);
+                document.getElementById('fCcPRecv').textContent = fmt(d.cc_p_recv);
+                document.getElementById('fCcPExp').textContent = fmt(d.cc_p_exp);
+                document.getElementById('fCcPClose').textContent = fmt(d.cc_p_close);
+
+                document.getElementById('fCchOpen').textContent = fmt(d.cch_open);
+                document.getElementById('fCchRecv').textContent = fmt(d.cch_recv);
+                document.getElementById('fCchExp').textContent = fmt(d.cch_exp);
+                document.getElementById('fCchClose').textContent = fmt(d.cch_close);
+
+                document.getElementById('fMmeOpen').textContent = fmt(d.mme_open);
+                document.getElementById('fMmeRecv').textContent = fmt(d.mme_recv);
+                document.getElementById('fMmeExp').textContent = fmt(d.mme_exp);
+                document.getElementById('fMmeClose').textContent = fmt(d.mme_close);
+
+                document.getElementById('rBvOpen').textContent = fmt(d.rice_bv_open);
+                document.getElementById('rBvRecv').textContent = fmt(d.rice_bv_recv);
+                document.getElementById('rBvCons').textContent = fmt(d.rice_bv_cons);
+                document.getElementById('rBvClose').textContent = fmt(d.rice_bv_close);
+
+                document.getElementById('rPOpen').textContent = fmt(d.rice_p_open);
+                document.getElementById('rPRecv').textContent = fmt(d.rice_p_recv);
+                document.getElementById('rPCons').textContent = fmt(d.rice_p_cons);
+                document.getElementById('rPClose').textContent = fmt(d.rice_p_close);
+
+                card.style.display = 'block';
+            } else {
+                noData.style.display = 'block';
+            }
+        } catch (err) {
+            console.error('Error fetching monthly report:', err);
+            noData.style.display = 'block';
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+    "kitchen_status": true,
+    "kitchen_year": true,
+    "repair_grant_status": true,
+    "repair_grant_year": true,
+    "dining_status": true,
+    "dining_fund": true,
+    "nutrition_status": true,
+    "kitchen_device_status": true,
+    "kitchen_device_year": true,
+    "toilet_separate": true,
+    "elec_status": true,
+    "water_facilities": false,
+    "water_purifier": false,
+    "water_remarks": false
+}

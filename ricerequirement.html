@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rice Requirement Entry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
+
+
+
+    <style>
+        /* Select2 Custom Styling to match Tailwind */
+        .select2-container .select2-selection--single {
+            height: 56px !important;
+            display: flex !important;
+            align-items: center !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            border-radius: 0.75rem !important;
+            /* rounded-xl */
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #1e293b !important;
+            /* slate-800 */
+            font-weight: 600 !important;
+            font-size: 1.125rem !important;
+            /* text-lg */
+            padding-left: 1.5rem !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 54px !important;
+            right: 15px !important;
+        }
+
+        .select2-dropdown {
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 1rem !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(10px);
+            overflow: hidden !important;
+        }
+
+        .select2-search--dropdown .select2-search__field {
+            padding: 12px !important;
+            border-radius: 0.5rem !important;
+            border: 1px solid #cbd5e1 !important;
+            outline: none !important;
+        }
+
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: #6366f1 !important;
+            /* indigo-500 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+        }
+
+        .select2-results__option {
+            padding: 12px 20px !important;
+            font-size: 1rem !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+        }
+
+        /* Custom Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .animation-delay-100 {
+            animation-delay: 0.1s;
+        }
+
+        .animation-delay-200 {
+            animation-delay: 0.2s;
+        }
+
+        .animation-delay-300 {
+            animation-delay: 0.3s;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 640px) {
+            body {
+                padding: 0.25rem !important;
+            }
+
+            .container {
+                padding: 0 !important;
+            }
+
+            .month-btn {
+                height: 90px !important;
+                border-radius: 0.75rem !important;
+            }
+
+            .month-btn h4 {
+                font-size: 0.95rem !important;
+            }
+
+            .month-grid {
+                margin-bottom: 1rem !important;
+                gap: 0.5rem !important;
+            }
+
+            .top-nav {
+                padding: 0.5rem 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+                flex-direction: row !important;
+                justify-content: center !important;
+                gap: 0.5rem !important;
+            }
+
+            .top-nav h2 {
+                font-size: 1rem !important;
+                line-height: 1 !important;
+                white-space: nowrap !important;
+            }
+
+            .btn-back {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.75rem !important;
+                border-radius: 0.75rem !important;
+                margin-top: 0 !important;
+                white-space: nowrap !important;
+            }
+
+            .month-btn {
+                height: 75px !important;
+                border-radius: 0.75rem !important;
+                padding: 0.5rem !important;
+            }
+
+            .select-box,
+            .report-card {
+                padding: 0.75rem !important;
+                border-radius: 1rem !important;
+                margin-top: 0.5rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* Specifically shrink school selection box */
+            .select-box {
+                padding: 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            .select-box .inline-block {
+                padding: 0.4rem !important;
+                margin-bottom: 0.25rem !important;
+            }
+
+            .select-box .fas.fa-school {
+                font-size: 1.1rem !important;
+            }
+
+            .select-box h3 {
+                font-size: 1rem !important;
+                margin-bottom: 0.2rem !important;
+            }
+
+            .select-box p {
+                font-size: 0.7rem !important;
+                margin-bottom: 0.4rem !important;
+                line-height: 1.2 !important;
+            }
+
+            #schoolBadge {
+                margin-top: 0.25rem !important;
+                font-size: 0.85rem !important;
+            }
+
+            .select2-container--default .select2-selection--single {
+                height: 40px !important;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 40px !important;
+                font-size: 0.9rem !important;
+            }
+
+            .school-name {
+                font-size: 1.15rem !important;
+                line-height: 1.1 !important;
+                margin-bottom: 0.15rem !important;
+            }
+
+            .report-header {
+                padding-bottom: 0.15rem !important;
+                margin-bottom: 0.25rem !important;
+            }
+
+            .report-header h5 {
+                margin-bottom: 0.1rem !important;
+                font-size: 0.6rem !important;
+            }
+
+            .report-meta {
+                width: auto !important;
+                display: inline-block !important;
+                font-size: 0.8rem !important;
+                padding: 0.3rem 0.6rem !important;
+                border-radius: 2rem !important;
+                font-weight: 900 !important;
+            }
+
+            #schoolLocationInfo {
+                margin-top: 0.25rem !important;
+                gap: 0.3rem !important;
+            }
+
+            #schoolLocationInfo span {
+                padding: 0.25rem 0.4rem !important;
+                font-size: 0.75rem !important;
+                border-radius: 0.5rem !important;
+                font-weight: 800 !important;
+            }
+
+            .form-group {
+                padding: 0.4rem 0.75rem !important;
+                margin-bottom: 0.2rem !important;
+            }
+
+            .form-group label {
+                font-size: 1.1rem !important;
+                font-weight: 900 !important;
+                margin-bottom: 0.1rem !important;
+                display: block !important;
+                color: #1e293b !important;
+            }
+
+            .form-group p {
+                font-size: 1.1rem !important;
+                font-weight: 800 !important;
+                margin-bottom: 0.35rem !important;
+                line-height: 1.1 !important;
+                color: #4338ca !important;
+            }
+
+            .form-input {
+                padding: 0.45rem 0.75rem !important;
+                font-size: 1.25rem !important;
+                height: 40px !important;
+                font-weight: 800 !important;
+            }
+
+            .total-card-value {
+                font-size: 1.25rem !important;
+            }
+
+            .total-card-label {
+                font-size: 0.45rem !important;
+                letter-spacing: 0.01em !important;
+                margin-bottom: 0.1rem !important;
+            }
+
+            .report-card .grid {
+                gap: 0.3rem !important;
+            }
+
+            .total-card-wrapper {
+                padding: 0.5rem !important;
+            }
+
+            .submit-btn-wrapper {
+                margin-top: 0.4rem !important;
+            }
+
+            .submit-btn-text {
+                font-size: 0.8rem !important;
+                padding: 0.4rem !important;
+            }
+
+            /* Faint placeholder */
+            .form-input::placeholder {
+                color: #cbd5e1 !important;
+                font-weight: normal !important;
+                font-size: 0.85rem !important;
+                opacity: 0.8 !important;
+            }
+
+            /* Compact Success Modal */
+            .success-modal {
+                padding: 1.25rem !important;
+            }
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body
+    class="bg-gradient-to-br from-[#667eea] to-[#764ba2] min-h-screen m-0 p-5 text-slate-800 font-sans relative selection:bg-purple-200 selection:text-purple-900">
+    <!-- Grid Pattern Overlay -->
+    <div class="fixed inset-0 z-0 pointer-events-none opacity-20"
+        style="background-image: radial-gradient(white 1px, transparent 1px); background-size: 30px 30px;"></div>
+
+
+    <div class="container max-w-5xl mx-auto relative z-10">
+
+        <div
+            class="top-nav mb-8 flex flex-row justify-center items-center bg-white/95 p-5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] backdrop-blur-md border border-white/20">
+            <h2
+                class="m-0 text-xl md:text-2xl font-bold bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-clip-text text-transparent">
+                Rice Allocation System</h2>
+        </div>
+
+        <form id="requirementForm">
+            <input type="hidden" id="selectedQuarter" name="quarter" required>
+            <input type="hidden" id="selectedQuarterText" name="quarter_text">
+
+            <div
+                class="month-grid grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 w-full animate-fadeInUp animation-delay-100">
+                <!-- Helper style for active state via JS -->
+                <style>
+                    .month-btn.active {
+                        transform: scale(1.05);
+                        color: white !important;
+                        border-color: transparent;
+                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    }
+
+                    .month-btn.active h4,
+                    .month-btn.active span {
+                        color: white !important;
+                        opacity: 1;
+                    }
+
+                    .month-btn.active {
+                        transform: scale(1.05) translateY(-5px);
+                        color: white !important;
+                        border-color: transparent !important;
+                    }
+
+                    .month-btn.active.btn-q1 {
+                        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+                        shadow: 0 20px 40px -12px rgba(249, 115, 22, 0.5);
+                    }
+
+                    .month-btn.active.btn-q2 {
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        shadow: 0 20px 40px -12px rgba(16, 185, 129, 0.5);
+                    }
+
+                    .month-btn.active.btn-q3 {
+                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                        shadow: 0 20px 40px -12px rgba(59, 130, 246, 0.5);
+                    }
+
+                    .month-btn.active.btn-q4 {
+                        background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+                        shadow: 0 20px 40px -12px rgba(168, 85, 247, 0.5);
+                    }
+
+                    /* Custom Active Shadow for each through Tailwind doesn't work perfectly in pseudo-classes so we use CSS */
+                    .month-btn.active.btn-q1 {
+                        box-shadow: 0 25px 50px -12px rgba(249, 115, 22, 0.5) !important;
+                    }
+
+                    .month-btn.active.btn-q2 {
+                        box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.5) !important;
+                    }
+
+                    .month-btn.active.btn-q3 {
+                        box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.5) !important;
+                    }
+
+                    .month-btn.active.btn-q4 {
+                        box-shadow: 0 25px 50px -12px rgba(168, 85, 247, 0.5) !important;
+                    }
+
+                    .month-btn.active .q-icon {
+                        color: rgba(255, 255, 255, 0.2) !important;
+                        transform: scale(1.5) rotate(10deg);
+                    }
+                </style>
+
+                <!-- 1st Quarter -->
+                <div class="month-btn btn-q1 relative h-40 flex flex-col justify-center items-center rounded-[2rem] cursor-pointer transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl border-2 border-orange-100 bg-white shadow-lg overflow-hidden group"
+                    onclick="selectQuarter(this, 'Q1')">
+                    <div
+                        class="q-icon absolute right-[-10px] bottom-[-20px] text-[7rem] text-orange-50 transition-all duration-500 group-hover:text-orange-100 group-hover:scale-110">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <h4
+                            class="text-2xl font-black text-slate-800 m-0 group-hover:text-orange-700 transition-colors">
+                            1st Quarter</h4>
+                        <div
+                            class="mt-2 text-[10px] font-black tracking-[0.2em] text-orange-600 bg-orange-50 px-3 py-1 rounded-full inline-block group-hover:bg-white transition-colors uppercase">
+                            APRIL-MAY-JUNE</div>
+                    </div>
+                </div>
+
+                <!-- 2nd Quarter -->
+                <div class="month-btn btn-q2 relative h-40 flex flex-col justify-center items-center rounded-[2rem] cursor-pointer transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl border-2 border-emerald-100 bg-white shadow-lg overflow-hidden group"
+                    onclick="selectQuarter(this, 'Q2')">
+                    <div
+                        class="q-icon absolute right-[-10px] bottom-[-20px] text-[7rem] text-emerald-50 transition-all duration-500 group-hover:text-emerald-100 group-hover:scale-110">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <h4
+                            class="text-2xl font-black text-slate-800 m-0 group-hover:text-emerald-700 transition-colors">
+                            2nd Quarter</h4>
+                        <div
+                            class="mt-2 text-[10px] font-black tracking-[0.2em] text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full inline-block group-hover:bg-white transition-colors uppercase">
+                            JULY-AUGUST-SEPTEMBER</div>
+                    </div>
+                </div>
+
+                <!-- 3rd Quarter -->
+                <div class="month-btn btn-q3 relative h-40 flex flex-col justify-center items-center rounded-[2rem] cursor-pointer transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl border-2 border-blue-100 bg-white shadow-lg overflow-hidden group"
+                    onclick="selectQuarter(this, 'Q3')">
+                    <div
+                        class="q-icon absolute right-[-10px] bottom-[-20px] text-[7rem] text-blue-50 transition-all duration-500 group-hover:text-blue-100 group-hover:scale-110">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <h4 class="text-2xl font-black text-slate-800 m-0 group-hover:text-blue-700 transition-colors">
+                            3rd Quarter</h4>
+                        <div
+                            class="mt-2 text-[10px] font-black tracking-[0.2em] text-blue-600 bg-blue-50 px-3 py-1 rounded-full inline-block group-hover:bg-white transition-colors uppercase">
+                            OCTOBER-NOVEMBER-DECEMBER</div>
+                    </div>
+                </div>
+
+                <!-- 4th Quarter -->
+                <div class="month-btn btn-q4 relative h-40 flex flex-col justify-center items-center rounded-[2rem] cursor-pointer transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl border-2 border-purple-100 bg-white shadow-lg overflow-hidden group"
+                    onclick="selectQuarter(this, 'Q4')">
+                    <div
+                        class="q-icon absolute right-[-10px] bottom-[-20px] text-[7rem] text-purple-50 transition-all duration-500 group-hover:text-purple-100 group-hover:scale-110">
+                        <i class="fas fa-snowflake"></i>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <h4
+                            class="text-2xl font-black text-slate-800 m-0 group-hover:text-purple-700 transition-colors">
+                            4th Quarter</h4>
+                        <div
+                            class="mt-2 text-[10px] font-black tracking-[0.2em] text-purple-600 bg-purple-50 px-3 py-1 rounded-full inline-block group-hover:bg-white transition-colors uppercase">
+                            JANUARY-FEBRUARY-MARCH</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="select-box bg-white/95 p-8 md:p-12 rounded-[2rem] shadow-2xl shadow-indigo-200/50 text-center mb-8 w-full border border-white/60 backdrop-blur-xl animate-fadeInUp animation-delay-200"
+                id="schoolSection" style="display:none;">
+                <div class="inline-block p-3 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+                    <i class="fas fa-school text-2xl"></i>
+                </div>
+                <h3 class="m-0 mb-4 text-slate-700 font-extrabold text-xl md:text-2xl leading-relaxed tracking-tight">
+                    Search & Select Your School</h3>
+
+                <!-- Quarter Indicator & Change Button -->
+                <div id="selectedQuarterDisplay"
+                    class="mb-6 inline-flex items-center gap-3 bg-indigo-50 px-5 py-2.5 rounded-2xl border border-indigo-100 shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-calendar-check text-indigo-500 text-sm"></i>
+                        <span class="text-indigo-700 font-bold text-sm">Selected: <span id="schoolSectionQuarterText"
+                                class="font-black text-indigo-900 ml-1 uppercase"></span></span>
+                    </div>
+                    <div class="w-px h-4 bg-indigo-200 mx-1"></div>
+                    <button type="button" onclick="showQuarterSelection()"
+                        class="text-indigo-600 hover:text-white hover:bg-indigo-600 px-3 py-1 rounded-lg text-xs font-black transition-all border border-indigo-200 hover:border-indigo-600">
+                        CHANGE
+                    </button>
+                </div>
+                <p class="text-slate-500 mb-6 text-sm font-medium">নিচের ড্রপডাউন থেকে নিজেদের স্কুল সিলেক্ট করুন অথবা
+                    টাইপ করে খুঁজুন</p>
+
+                <div class="relative max-w-2xl mx-auto">
+                    <select id="schoolSelect" class="w-full">
+                        <option value="">-- Start typing UDISE or School Name --</option>
+                    </select>
+                </div>
+                <div id="schoolBadge"
+                    class="mt-6 font-bold text-lg transition-transform transform hover:scale-105 inline-block"></div>
+            </div>
+
+            <div class="report-card bg-white/95 p-8 md:p-12 rounded-[2.5rem] shadow-2xl shadow-slate-300/60 mt-8 w-full border border-white/60 backdrop-blur-xl animate-fadeInUp animation-delay-300 relative overflow-hidden"
+                id="dataEntryCard" style="display:none;">
+                <!-- Decorative background element -->
+                <div
+                    class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-50 to-transparent rounded-bl-full pointer-events-none opacity-50">
+                </div>
+
+                <div class="report-header border-b border-slate-100 pb-8 mb-8 relative z-10">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div class="flex-1 w-full text-center md:text-left">
+                            <h5 class="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] mb-3">
+                                School Selection
+                            </h5>
+                            <h1 class="school-name text-2xl md:text-4xl font-black text-slate-800 m-0 uppercase tracking-tight leading-tight"
+                                id="displaySchoolName">SCHOOL NAME</h1>
+                        </div>
+                        <div class="w-full md:w-auto">
+                            <div
+                                class="report-meta text-white font-black bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 rounded-2xl shadow-lg border border-indigo-400/30 inline-block tracking-tight w-full md:w-auto">
+                                Requirement for: <span id="displayQuarter" class="text-yellow-300 ml-1">Q1</span></div>
+                        </div>
+                    </div>
+
+                    <div id="schoolLocationInfo"
+                        class="mt-8 flex flex-wrap justify-center md:justify-start gap-3 items-center"
+                        style="display:none;">
+                        <span
+                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs sm:text-sm font-bold border border-red-100">
+                            <i class="fas fa-map-marker-alt text-red-500"></i>
+                            Circle: <strong id="schoolCircle" class="text-red-900"></strong>
+                        </span>
+                        <span
+                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs sm:text-sm font-bold border border-blue-100">
+                            <i class="fas fa-building text-blue-500"></i>
+                            GP: <strong id="schoolGP" class="text-blue-900"></strong>
+                        </span>
+                    </div>
+                </div>
+
+                <div id="primaryForm" style="display:none;">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
+                        <div
+                            class="form-group bg-slate-50/50 p-6 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:shadow-md hover:border-slate-200">
+                            <label class="block font-black mb-2 text-slate-800 text-lg md:text-xl tracking-tight">Bal
+                                Vatika
+                                Requirement</label>
+                            <p class="text-base md:text-lg text-indigo-600 mb-4 font-bold leading-relaxed">(বাল ভাটিকার
+                                শ্রেণির জন্য কত কেজি
+                                চাল লাগবে?)</p>
+                            <div class="relative">
+                                <input type="number" id="p_bv" inputmode="numeric" pattern="[0-9]*"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                    onkeydown="return event.keyCode !== 190 && event.keyCode !== 110;"
+                                    class="form-input calc-p w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-lg font-bold text-slate-800 shadow-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder-slate-300"
+                                    placeholder="Enter Quantity in KG">
+                            </div>
+                        </div>
+                        <div
+                            class="form-group bg-slate-50/50 p-6 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:shadow-md hover:border-slate-200">
+                            <label
+                                class="block font-black mb-2 text-slate-800 text-lg md:text-xl tracking-tight">Primary
+                                (I-V) Requirement</label>
+                            <p
+                                 <p class="text-sm md:text-base text-indigo-600 mb-4 font-extrabold leading-relaxed break-words whitespace-normal">
+                                (প্রথম থেকে পঞ্চম শ্রেণির জন্য কত কেজি চাল লাগবে?)</p>
+                            <div class="relative">
+                                <input type="number" id="p_c15" inputmode="numeric" pattern="[0-9]*"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                    onkeydown="return event.keyCode !== 190 && event.keyCode !== 110;"
+                                    class="form-input calc-p w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-lg font-bold text-slate-800 shadow-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder-slate-300"
+                                    placeholder="Enter Quantity in KG">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 md:gap-6 mt-5 text-white">
+                        <!-- Quantity Card -->
+                        <div
+                            class="total-card-wrapper relative overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-2xl p-6 shadow-xl shadow-indigo-300/40 group transition-all duration-300">
+                            <div
+                                class="absolute -right-4 -bottom-8 text-white/10 text-[6rem] md:text-[8rem] transform -rotate-12 group-hover:scale-110 group-hover:rotate-0 transition-transform duration-500 ease-out pointer-events-none">
+                                <i class="fas fa-weight-hanging"></i>
+                            </div>
+                            <div class="relative z-10 flex flex-col h-full justify-between">
+                                <label
+                                    class="total-card-label uppercase tracking-widest text-xs md:text-base font-black text-indigo-100 mb-2 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-300 animate-pulse"></span> Total
+                                    Quantity
+                                </label>
+                                <div class="flex items-baseline gap-1">
+                                    <input id="p_total"
+                                        class="total-card-value w-full bg-transparent border-none text-white font-black text-4xl md:text-5xl p-0 focus:outline-none placeholder-white/20 drop-shadow-sm leading-tight"
+                                        readonly placeholder="0">
+                                    <span
+                                        class="text-lg md:text-xl font-bold text-indigo-200 self-end mb-1 md:mb-2">KG</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bags Card -->
+                        <div
+                            class="total-card-wrapper relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl shadow-emerald-300/40 group transition-all duration-300">
+                            <div
+                                class="absolute -right-6 -bottom-6 text-white/10 text-[6rem] md:text-[8rem] transform rotate-12 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 ease-out pointer-events-none">
+                                <i class="fas fa-cubes"></i>
+                            </div>
+                            <div class="relative z-10 flex flex-col h-full justify-between">
+                                <label
+                                    class="total-card-label uppercase tracking-widest text-xs md:text-base font-black text-emerald-100 mb-2 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse"></span> Total
+                                    Bags
+                                </label>
+                                <div class="flex items-baseline gap-1">
+                                    <input id="p_bags"
+                                        class="total-card-value w-full bg-transparent border-none text-white font-black text-4xl md:text-5xl p-0 focus:outline-none placeholder-white/20 drop-shadow-sm leading-tight"
+                                        readonly placeholder="0">
+                                    <span
+                                        class="text-lg md:text-xl font-bold text-emerald-200 self-end mb-1 md:mb-2">BAGS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="upperForm" style="display:none;">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
+                        <div
+                            class="form-group bg-slate-50/50 p-6 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:shadow-md hover:border-slate-200">
+                            <label class="block font-black mb-2 text-slate-800 text-lg md:text-xl tracking-tight">Class
+                                V Requirement</label>
+                            <p
+                                class="text-sm md:text-base text-indigo-600 mb-4 font-extrabold leading-relaxed line-clamp-1 md:whitespace-nowrap">
+                                (পঞ্চম শ্রেণির জন্য কত কেজি চাল লাগবে?)</p>
+                            <div class="relative">
+                                <input type="number" id="u_c5" inputmode="numeric" pattern="[0-9]*"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                    onkeydown="return event.keyCode !== 190 && event.keyCode !== 110;"
+                                    class="form-input calc-u w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-lg font-bold text-slate-800 shadow-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder-slate-300"
+                                    placeholder="Enter Quantity in KG">
+                            </div>
+                        </div>
+                        <div
+                            class="form-group bg-slate-50/50 p-6 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:shadow-md hover:border-slate-200">
+                            <label class="block font-black mb-2 text-slate-800 text-lg md:text-xl tracking-tight">Upper
+                                Primary (VI-VIII) Requirement</label>
+                            <p
+                                <p class="text-sm md:text-base text-indigo-600 mb-4 font-extrabold leading-relaxed break-words whitespace-normal">
+                                (ষষ্ঠ থেকে অষ্টম শ্রেণির জন্য কত কেজি চাল লাগবে?)</p>
+                            <div class="relative">
+                                <input type="number" id="u_c68" inputmode="numeric" pattern="[0-9]*"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                    onkeydown="return event.keyCode !== 190 && event.keyCode !== 110;"
+                                    class="form-input calc-u w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-lg font-bold text-slate-800 shadow-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder-slate-300"
+                                    placeholder="Enter Quantity in KG">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6 mt-6">
+                        <!-- Quantity Card -->
+                        <div
+                            class="total-card-wrapper relative overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-2xl p-6 text-white shadow-xl shadow-indigo-300/40 group transition-all duration-300">
+                            <div
+                                class="absolute -right-4 -bottom-8 text-white/10 text-[6rem] md:text-[8rem] transform -rotate-12 group-hover:scale-110 group-hover:rotate-0 transition-transform duration-500 ease-out pointer-events-none">
+                                <i class="fas fa-weight-hanging"></i>
+                            </div>
+                            <div class="relative z-10 flex flex-col h-full justify-between">
+                                <label
+                                    class="total-card-label uppercase tracking-widest text-xs md:text-base font-black text-indigo-100 mb-2 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-300 animate-pulse"></span> Total
+                                    Quantity
+                                </label>
+                                <div class="flex items-baseline gap-1">
+                                    <input id="u_total"
+                                        class="total-card-value w-full bg-transparent border-none text-white font-black text-4xl md:text-5xl p-0 focus:outline-none placeholder-white/20 drop-shadow-sm leading-tight"
+                                        readonly placeholder="0">
+                                    <span
+                                        class="text-lg md:text-xl font-bold text-indigo-200 self-end mb-1 md:mb-2">KG</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bags Card -->
+                        <div
+                            class="total-card-wrapper relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-xl shadow-emerald-300/40 group transition-all duration-300">
+                            <div
+                                class="absolute -right-6 -bottom-6 text-white/10 text-[6rem] md:text-[8rem] transform rotate-12 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 ease-out pointer-events-none">
+                                <i class="fas fa-cubes"></i>
+                            </div>
+                            <div class="relative z-10 flex flex-col h-full justify-between">
+                                <label
+                                    class="total-card-label uppercase tracking-widest text-xs md:text-base font-black text-emerald-100 mb-2 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse"></span> Total
+                                    Bags
+                                </label>
+                                <div class="flex items-baseline gap-1">
+                                    <input id="u_bags"
+                                        class="total-card-value w-full bg-transparent border-none text-white font-black text-4xl md:text-5xl p-0 focus:outline-none placeholder-white/20 drop-shadow-sm leading-tight"
+                                        readonly placeholder="0">
+                                    <span
+                                        class="text-lg md:text-xl font-bold text-emerald-200 self-end mb-1 md:mb-2">BAGS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="submit-btn-wrapper mt-12">
+                    <button type="submit"
+                        class="group w-full relative p-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 rounded-2xl text-xl font-black cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/40 hover:-translate-y-1 active:translate-y-0 active:shadow-none">
+                        <span
+                            class="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></span>
+                        <span
+                            class="submit-btn-text relative flex items-center justify-center gap-3 tracking-widest uppercase">
+                            <i
+                                class="fas fa-paper-plane text-yellow-300 group-hover:rotate-12 transition-transform duration-300"></i>
+                            Submit Requirement
+                        </span>
+                    </button>
+                    <style>
+                        @keyframes shimmer {
+                            100% {
+                                transform: translateX(100%);
+                            }
+                        }
+
+                        .group-hover\:animate-shimmer {
+                            animation: shimmer 1.5s infinite;
+                        }
+                    </style>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="successOverlay"
+        class="success-overlay fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="success-modal bg-white p-6 md:p-8 rounded-3xl text-center max-w-sm w-[92%] shadow-2xl transform scale-90 opacity-0 transition-all duration-300">
+            <div
+                class="success-icon-circle w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex justify-center items-center mx-auto mb-6 shadow-lg shadow-emerald-500/30">
+                <i class="fas fa-check text-3xl md:text-4xl text-white"></i>
+            </div>
+            <div class="modal-title text-xl md:text-2xl font-extrabold text-slate-800 mb-6 leading-tight">Submitted
+                Successfully!</div>
+
+            <div class="details-box bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 md:p-6 text-left mb-6">
+                <div
+                    class="detail-row flex flex-col sm:grid sm:grid-cols-[110px_1fr] gap-1 sm:gap-3 mb-3 text-sm items-start">
+                    <span class="detail-label text-emerald-700 font-bold">School:</span>
+                    <span class="detail-value text-slate-900 font-bold uppercase" id="modal_school_name">AINCHGARH
+                        PRIMARY SCHOOL</span>
+                </div>
+                <div
+                    class="detail-row flex flex-col sm:grid sm:grid-cols-[110px_1fr] gap-1 sm:gap-3 mb-3 text-sm items-start">
+                    <span class="detail-label text-emerald-700 font-bold">Quarter:</span>
+                    <span class="detail-value text-slate-900 font-bold uppercase text-xs md:text-sm"
+                        id="modal_quarter_text">4th Quarter
+                        (JAN-FEB-MAR)</span>
+                </div>
+
+                <div class="divider h-px border-t border-dashed border-emerald-300 my-4"></div>
+
+                <div
+                    class="total-row-modal flex flex-col sm:flex-row justify-between items-start sm:items-center text-base md:text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-800">
+                    <span>Total Requirement:</span>
+                    <span id="modal_total_kg" class="mt-1 sm:mt-0">0 KG</span>
+                </div>
+            </div>
+
+            <button
+                class="btn-success-close w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold py-3.5 md:py-4 rounded-xl shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+                onclick="closeSuccessModal()">Close & Refresh</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // --- FULL SCHOOL LIST (246 SCHOOLS) ---
+        // --- FULL SCHOOL LIST (LOADED ASYNCHRONOUSLY VIA /api/schools) ---
+        let schools = [];
+
+        function initSchoolDropdown() {
+            const select = $('#schoolSelect');
+            schools.forEach(s => { select.append(new Option(s.name, s.name, false, false)); });
+
+            select.select2({
+                placeholder: "-- Search School Name or UDISE --",
+                allowClear: true,
+                width: '100%',
+                language: {
+                    searching: function () {
+                        return "Searching schools...";
+                    },
+                    noResults: function () {
+                        return "No school found. Try different keywords.";
+                    },
+                    inputTooShort: function () {
+                        return "Type to search for your school...";
+                    }
+                }
+            });
+
+            // Force reset selection on load to ensure blank state
+            select.val(null).trigger('change');
+
+            select.on('change', function () {
+                const selectedName = $(this).val();
+                const school = schools.find(s => s.name === selectedName);
+
+                if (school) {
+                    $('#schoolSection').fadeIn();
+                    $('#dataEntryCard').fadeIn();
+                    $('#displaySchoolName').text(school.name);
+
+                    // Update Badge with Category
+                    const badgeClass = school.type === 'P' ? 'bg-blue-600' : 'bg-emerald-600';
+                    $('#schoolBadge').html(`<span class="px-3 py-1 rounded-full text-white font-bold text-xs uppercase shadow-sm ${badgeClass}">${school.category}</span>`);
+
+                    // Show Location Info
+                    $('#schoolCircle').text(school.circle);
+                    $('#schoolGP').text(school.gp);
+                    $('#schoolLocationInfo').fadeIn();
+
+                    // Logic for showing forms based on category
+                    if (school.category === 'PRIMARY ONLY') {
+                        $('#primaryForm').show();
+                        $('#upperForm').hide();
+                    } else {
+                        $('#primaryForm').hide();
+                        $('#upperForm').show();
+                    }
+
+                    checkSavedData();
+                }
+            });
+        }
+
+        // --- 2. POPULATE DROPDOWN ---
+        $(document).ready(function () {
+            $.ajax({
+                url: '/api/schools',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        schools = data;
+                        initSchoolDropdown();
+                    } else {
+                        console.error('Failed to load schools: Empty or invalid data received');
+                        alert('Error: School data could not be loaded. Please refresh the page.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Failed to load schools:', error);
+                    alert('Error: Failed to fetch school data from server. Please refresh.');
+                }
+            });
+        });
+
+        // --- 3. LOGIC ---
+        function selectQuarter(elem, q) {
+            $('.month-btn').removeClass('active'); $(elem).addClass('active');
+            $('#selectedQuarter').val(q);
+            $('.month-grid').fadeOut(400, function () {
+                $('#schoolSection').fadeIn();
+            });
+
+            // --- Set Full Text for Display ---
+            let fullText = "";
+            if (q === 'Q1') fullText = "Q1 (APRIL-MAY-JUNE)";
+            if (q === 'Q2') fullText = "Q2 (JULY-AUGUST-SEPTEMBER)";
+            if (q === 'Q3') fullText = "Q3 (OCTOBER-NOVEMBER-DECEMBER)";
+            if (q === 'Q4') fullText = "Q4 (JANUARY-FEBRUARY-MARCH)";
+
+            $('#displayQuarter').text(fullText);
+            $('#schoolSectionQuarterText').text(fullText);
+            $('#selectedQuarterText').val(fullText); // For Modal
+
+            checkSavedData();
+        }
+
+        function showQuarterSelection() {
+            $('#schoolSection').fadeOut(300);
+            $('#dataEntryCard').fadeOut(300);
+            $('#schoolLocationInfo').fadeOut(300);
+            $('.month-grid').delay(300).fadeIn(400);
+
+            // Clear current school selection for safety/clarity
+            $('#schoolSelect').val(null).trigger('change');
+            $('#schoolBadge').empty();
+        }
+
+        function checkSavedData() {
+            const schoolName = $('#schoolSelect').val();
+            const quarter = $('#selectedQuarter').val();
+
+            // Clear existing data first
+            $('#p_bv, #p_c15, #u_c5, #u_c68').val('');
+            $('#p_total, #p_bags, #u_total, #u_bags').val('');
+
+            if (schoolName && quarter) {
+                $.ajax({
+                    url: '/api/rice/saved',
+                    type: 'POST',
+                    data: { school_name: schoolName, quarter: quarter },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            const d = response.data;
+
+                            // Populate Primary
+                            if (d.req_bv != null) $('#p_bv').val(Math.round(d.req_bv));
+                            if (d.req_c1_5 != null) $('#p_c15').val(Math.round(d.req_c1_5));
+
+                            // Populate Upper Primary
+                            if (d.req_c5 != null) $('#u_c5').val(Math.round(d.req_c5));
+                            if (d.req_c6_8 != null) $('#u_c68').val(Math.round(d.req_c6_8));
+
+                            // Trigger inputs to recalculate totals/bags
+                            // We use .first() just to pick one element of class to trigger the shared handler
+                            $('.calc-p').first().trigger('input');
+                            $('.calc-u').first().trigger('input');
+                        }
+                    }
+                });
+            }
+        }
+
+        $('.calc-p').on('input', function () {
+            let p_bv = parseInt($('#p_bv').val()) || 0;
+            let p_c15 = parseInt($('#p_c15').val()) || 0;
+            let total = p_bv + p_c15;
+
+            $('#p_total').val(total);
+
+            let bagsInt = Math.floor(total / 50);
+            let remainingKg = Math.round(total % 50);
+
+            if (remainingKg === 0) {
+                $('#p_bags').val(bagsInt);
+            } else {
+                let remStr = remainingKg.toString().padStart(2, '0');
+                $('#p_bags').val(bagsInt + "." + remStr);
+            }
+        });
+
+        $('.calc-u').on('input', function () {
+            let u_c5 = parseInt($('#u_c5').val()) || 0;
+            let u_c68 = parseInt($('#u_c68').val()) || 0;
+            let total = u_c5 + u_c68;
+
+            $('#u_total').val(total);
+
+            let bagsInt = Math.floor(total / 50);
+            let remainingKg = Math.round(total % 50);
+
+            if (remainingKg === 0) {
+                $('#u_bags').val(bagsInt);
+            } else {
+                let remStr = remainingKg.toString().padStart(2, '0');
+                $('#u_bags').val(bagsInt + "." + remStr);
+            }
+        });
+
+        // --- 4. AJAX SUBMIT ---
+        $('#requirementForm').on('submit', function (e) {
+            e.preventDefault();
+            const schoolName = $('#schoolSelect').val();
+            const school = schools.find(s => s.name === schoolName);
+            const quarter = $('#selectedQuarter').val();
+            const quarterText = $('#selectedQuarterText').val();
+
+            if (!school || !quarter) { alert("Select School & Quarter!"); return; }
+
+            const formData = new FormData();
+            const udiseMatch = schoolName.match(/\(([^)]+)\)/);
+            formData.append('u_dise', udiseMatch ? udiseMatch[1] : 'Unknown');
+            formData.append('school_name', schoolName);
+            formData.append('quarter', quarter);
+
+            // Calculate total for modal
+            let totalReq = "0 KG";
+
+            if (school.type === 'P') {
+                formData.append('p_bv', $('#p_bv').val());
+                formData.append('p_c15', $('#p_c15').val());
+                let val = $('#p_total').val();
+                totalReq = (val && val !== "" ? val : "0") + " KG";
+            } else {
+                formData.append('u_c5', $('#u_c5').val());
+                formData.append('u_c68', $('#u_c68').val());
+                let val = $('#u_total').val();
+                totalReq = (val && val !== "" ? val : "0") + " KG";
+            }
+
+            $.ajax({
+                url: '/api/rice/submit',
+                type: 'POST',
+                data: formData,
+                contentType: false, processData: false,
+                success: function (response) {
+                    if (response.trim() === 'success') {
+                        // Populate Modal
+                        $('#modal_school_name').text(school.name.split(' (')[0]);
+                        $('#modal_quarter_text').text(quarterText);
+                        $('#modal_total_kg').text(totalReq);
+
+                        // Reset any previous dynamic content if exists (optional safety)
+                        // But since we reload page on close, DOM is fresh. 
+                        // Show Modal
+                        $('#successOverlay').removeClass('hidden').css('display', 'flex').animate({ opacity: 1 }, 200);
+                        setTimeout(() => {
+                            $('.success-modal').css({ opacity: 1, transform: 'scale(1)' });
+                        }, 100);
+                    } else {
+                        alert("Error: " + response);
+                    }
+                }
+            });
+        });
+
+        function closeSuccessModal() {
+            location.reload();
+        }
+    </script>
+
+</body>
+
+</html>

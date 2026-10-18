@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Infrastructure Information</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            --primary-hover: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%);
+            --primary-solid: #6366f1;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Enhanced Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(217, 70, 239, 0.3) 0%, transparent 50%);
+            animation: gradientShift 20s ease infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Enhanced Top Header */
+        .top-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px) saturate(180%);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--primary-solid);
+            text-decoration: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .back-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .back-btn:hover::before {
+            left: 100%;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+            background: white;
+        }
+
+        .back-btn i {
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-4px);
+        }
+
+        .header-brand {
+            font-weight: 800;
+            font-size: 18px;
+            color: white;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 50px 40px;
+            flex: 1;
+            overflow-y: auto;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+            text-align: center;
+            animation: fadeInDown 0.8s ease;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced Card with Premium Glassmorphism */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 32px;
+            padding: 50px;
+            box-shadow:
+                0 30px 90px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+                0 10px 40px rgba(99, 102, 241, 0.15),
+                0 0 100px rgba(99, 102, 241, 0.05);
+            animation: fadeInUp 0.8s ease, float 6s ease-in-out infinite;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            max-width: 950px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 32px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.5), rgba(217, 70, 239, 0.5));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            -webkit-mask-composite: exclude;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.7s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced Form Elements */
+        .form-group {
+            margin-bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: slideIn 0.6s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-group .label-title {
+            width: 100%;
+            max-width: 650px;
+            text-align: left;
+        }
+
+        .form-group .custom-select {
+            max-width: 650px;
+        }
+
+        .label-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+        }
+
+        .label-title::before {
+            content: '▸';
+            font-size: 18px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+        }
+
+        .custom-select {
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            width: 100%;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(to bottom, #ffffff 0%, #fafbff 100%);
+            color: var(--dark);
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .custom-select:focus {
+            outline: none;
+            border-color: var(--primary-solid);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .custom-select:hover:not(:disabled) {
+            border-color: #a5b4fc;
+        }
+
+        .custom-select:disabled {
+            background: #f8fafc;
+            cursor: not-allowed;
+            opacity: 0.7;
+            border-color: #e2e8f0;
+        }
+
+        /* Enhanced Details Section */
+        #infraDetails {
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .details-header {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            border-bottom: 3px solid;
+            border-image: var(--primary-gradient) 1;
+            padding-bottom: 18px;
+            margin-bottom: 30px;
+            font-size: 1.75rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .details-header i {
+            font-size: 1.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .details-table {
+            width: 100%;
+            max-width: 850px;
+            margin: 25px auto;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .details-table th,
+        .details-table td {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            text-align: left;
+        }
+
+        .details-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .details-table th {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            color: var(--dark);
+            width: 38%;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        .details-table th::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-gradient);
+            opacity: 0.3;
+        }
+
+        .details-table td {
+            font-weight: 500;
+            color: #475569;
+            background: white;
+            font-size: 14px;
+        }
+
+        .details-table tr {
+            transition: all 0.3s ease;
+        }
+
+        .details-table tbody tr:nth-child(even) {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.02) 0%, transparent 100%);
+        }
+
+        .details-table tr:hover {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+            transform: translateX(8px);
+            box-shadow: -4px 0 0 0 var(--primary-solid);
+        }
+
+        /* Enhanced Submit Button */
+        .submit-btn {
+            padding: 18px 50px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 40px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 35px rgba(99, 102, 241, 0.4),
+                0 0 60px rgba(99, 102, 241, 0.2);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 50px rgba(99, 102, 241, 0.6),
+                0 0 80px rgba(99, 102, 241, 0.3);
+            background: var(--primary-hover);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-2px);
+        }
+
+        /* Enhanced Modal */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(15px) saturate(120%);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .preview-content {
+            background: linear-gradient(to bottom, #ffffff 0%, #fafbff 100%);
+            padding: 45px;
+            border-radius: 28px;
+            max-width: 850px;
+            width: 90%;
+            max-height: 95vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5),
+                0 0 100px rgba(99, 102, 241, 0.3);
+            animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .preview-content::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 28px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6), rgba(217, 70, 239, 0.6));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            -webkit-mask-composite: exclude;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.85);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .preview-content h3 {
+            color: var(--dark);
+            font-size: 1.75rem;
+            margin-bottom: 18px;
+            font-weight: 900;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .preview-content h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+        }
+
+        .preview-content p {
+            color: #64748b;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        #modal-school-name {
+            color: var(--primary-solid);
+            font-size: 1.3rem;
+            margin: 18px 0;
+            font-weight: 700;
+        }
+
+        .modal-buttons {
+            margin-top: 35px;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 14px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: var(--dark);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-cancel:hover {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Enhanced Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                background: #f8fafc;
+            }
+
+            .content-area {
+                padding: 20px 15px;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+                margin-bottom: 25px;
+                -webkit-text-fill-color: var(--dark);
+                background: none;
+                color: var(--dark);
+            }
+
+            .page-title::after {
+                width: 60px;
+            }
+
+            .card {
+                padding: 25px 15px;
+                border-radius: 20px;
+                backdrop-filter: none;
+                background: white;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+                border: 1px solid #e2e8f0;
+            }
+
+            .details-header {
+                font-size: 1.4rem;
+                margin-top: 10px;
+            }
+
+            /* Stack Table for Mobile */
+            .details-table,
+            .details-table tbody,
+            .details-table tr,
+            .details-table th,
+            .details-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .details-table {
+                border: none;
+                box-shadow: none;
+                background: transparent;
+            }
+
+            .details-table tr {
+                margin-bottom: 25px;
+                background: #fcfdfe !important;
+                border: 1px solid #eef2f6 !important;
+                border-radius: 16px;
+                padding: 15px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            }
+
+            .details-table tr:hover {
+                transform: none;
+                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1);
+            }
+
+            .details-table th {
+                background: transparent;
+                padding: 0 0 10px 0;
+                width: 100%;
+                font-size: 13px;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                border: none;
+            }
+
+            .details-table th::after {
+                display: none;
+            }
+
+            .details-table td {
+                padding: 0;
+                background: transparent;
+                border: none;
+            }
+
+            .custom-select {
+                padding: 14px 16px;
+                font-size: 14px;
+                background: #ffffff;
+                border: 1.5px solid #d1d5db;
+                border-radius: 12px;
+                box-shadow: none;
+            }
+
+            .input-remarks,
+            .input-locked {
+                padding: 14px 16px;
+                font-size: 14px;
+                border-radius: 12px;
+            }
+
+            .submit-btn {
+                width: 100%;
+                padding: 16px;
+                margin-top: 10px;
+                border-radius: 14px;
+                font-size: 15px;
+            }
+
+            /* Modal Mobile Refinement */
+            .preview-content {
+                padding: 25px 20px;
+                width: 95%;
+                border-radius: 20px;
+            }
+
+            .preview-content h3 {
+                font-size: 1.4rem;
+                margin-bottom: 12px;
+            }
+
+            #preview-summary {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .summary-item {
+                padding: 10px 5px;
+            }
+
+            .summary-label {
+                font-size: 0.75rem;
+            }
+
+            .summary-value {
+                font-size: 0.85rem;
+            }
+
+            .modal-buttons {
+                margin-top: 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 13px;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+
+        /* Dynamic Content Styling */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .summary-item {
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            padding-bottom: 8px;
+            transition: background 0.2s;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .summary-item:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .summary-label {
+            color: #64748b;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .input-locked {
+            width: 100%;
+            padding: 12px 16px;
+            background: #f1f5f9;
+            cursor: not-allowed;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .input-remarks {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .input-remarks:focus {
+            outline: none;
+            border-color: var(--primary-solid);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        /* General Info Grid Styles */
+        .general-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 25px auto;
+            max-width: 850px;
+        }
+
+        .info-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .info-box:hover {
+            border-color: #6366f1;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+            .general-info-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 0 5px;
+            }
+
+            .info-box {
+                padding: 12px 16px;
+            }
+        }
+
+        /* Mobile Header Responsiveness */
+        @media (max-width: 768px) {
+            .top-header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .welcome-text h1 {
+                font-size: 1.25rem !important;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .header-actions a {
+                flex: 1;
+                justify-content: center;
+                white-space: nowrap;
+                font-size: 0.9rem !important;
+                padding: 10px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="main-content">
+        <header class="top-header" style="justify-content: space-between; align-items: center;">
+            <div class="welcome-text">
+                <h1
+                    style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Welcome to Dashboard
+                </h1>
+            </div>
+            <div class="header-actions" style="display: flex; gap: 15px; align-items: center;">
+
+                <a href="/api/auth/logout?type=infrastructure" class="logout-btn"
+                    style="background: #ef4444; color: white; padding: 10px 20px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+                    <i class="fas fa-power-off"></i> Logout
+                </a>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <h1 class="page-title">Basic Infrastructure Information</h1>
+
+            <div class="card">
+                <div class="form-group">
+                    <label class="label-title">Select Circle:</label>
+                    <select id="circleSelect" class="custom-select">
+                        <option value="" selected disabled>-- Select Circle --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-title">Select School:</label>
+                    <select id="schoolSelect" class="custom-select" disabled>
+                        <option value="" selected disabled>-- First Select a Circle --</option>
+                    </select>
+                </div>
+
+                <div id="infraDetails" style="display: none;">
+                    <h3 class="details-header">
+                        <i class="fas fa-school"></i>
+                        School Details
+                    </h3>
+                    <div class="general-info-grid">
+                        <div class="info-box">
+                            <span class="info-label">School Name</span>
+                            <span class="info-value" id="d-name"></span>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label">U-DISE Code</span>
+                            <span class="info-value" id="d-code"></span>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label">Circle Name</span>
+                            <span class="info-value" id="d-circle"></span>
+                        </div>
+                        <div class="info-box">
+                            <span class="info-label">Category</span>
+                            <span class="info-value" id="d-category"></span>
+                        </div>
+                    </div>
+
+                    <table class="details-table">
+                        <tr data-field-key="kitchen_status">
+                            <th>Kitchen cum Store Status</th>
+                            <td id="d-kitchen-status"></td>
+                        </tr>
+                        <tr data-field-key="kitchen_year">
+                            <th>Kitchen Store Construction Year</th>
+                            <td id="d-kitchen-year"></td>
+                        </tr>
+                        <tr data-field-key="repair_grant_status">
+                            <th>Kitchen cum Store Repairing Grant Rs. 10000/- (10 years) received status</th>
+                            <td id="d-repair-grant-status"></td>
+                        </tr>
+                        <tr data-field-key="repair_grant_year">
+                            <th>Repairing Grant (Rs. 10000/-) Receive Year</th>
+                            <td id="d-repair-grant-year"></td>
+                        </tr>
+                        <tr data-field-key="dining_status">
+                            <th>Dining Hall Status</th>
+                            <td id="d-dining-status"></td>
+                        </tr>
+                        <tr data-field-key="dining_fund">
+                            <th>Dining Hall Fund sanctioned from</th>
+                            <td id="d-dining-fund"></td>
+                        </tr>
+                        <tr data-field-key="nutrition_status">
+                            <th>Nutrition Garden Status</th>
+                            <td id="d-nutrition-status"></td>
+                        </tr>
+                        <tr data-field-key="kitchen_device_status">
+                            <th>Kitchen Device Status</th>
+                            <td id="d-kitchen-device-status"></td>
+                        </tr>
+                        <tr data-field-key="kitchen_device_year">
+                            <th>Kitchen Device Replacement Grant receive Year</th>
+                            <td id="d-kitchen-device-year"></td>
+                        </tr>
+                        <tr data-field-key="toilet_separate">
+                            <th>Separate Toilet for Boys and Girls</th>
+                            <td id="d-toilet-separate"></td>
+                        </tr>
+                        <tr data-field-key="elec_status">
+                            <th>Electric Connection Status</th>
+                            <td id="d-elec-status"></td>
+                        </tr>
+                        <tr data-field-key="water_facilities">
+                            <th>Drinking Water Facilities</th>
+                            <td id="d-water-facilities"></td>
+                        </tr>
+                        <tr data-field-key="water_purifier">
+                            <th>Water Purifier</th>
+                            <td id="d-water-purifier"></td>
+                        </tr>
+                        <tr data-field-key="water_remarks">
+                            <th>Remarks (if Any Requirement)</th>
+                            <td id="d-water-remarks"></td>
+                        </tr>
+                    </table>
+                    <div style="text-align: center;">
+                        <button class="submit-btn" onclick="openModal()">Submit Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="previewModal" class="preview-modal">
+        <div class="preview-content">
+            <h3>Confirm Submission</h3>
+            <p>Please review the following information for:</p>
+            <h4 id="modal-school-name">
+            </h4>
+
+            <div id="preview-summary"
+                style="flex-grow: 1; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: left;">
+            </div>
+
+            <div class="modal-buttons" style="flex-shrink: 0;">
+                <button class="btn btn-cancel" onclick="closeModal()">Back to Edit</button>
+                <button class="btn btn-confirm" id="confirmSubmitBtn" onclick="finalSubmit()">
+                    <i class="fas fa-check-circle"></i> Confirm & Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allSchools = [];
+        let fieldConfig = {};
+
+        // Select Elements
+        const circleSelect = document.getElementById('circleSelect');
+        const schoolSelect = document.getElementById('schoolSelect');
+        const detailsDiv = document.getElementById('infraDetails');
+
+        // Enforce Infrastructure Admin authentication session
+        (function enforceInfraAuth() {
+            if (window.location.protocol === 'file:') return;
+            fetch('/api/auth/session?admin_type=infrastructure', {
+                cache: 'no-store',
+                credentials: 'same-origin'
+            })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Session check failed');
+                return res.json();
+            })
+            .then(function (data) {
+                if (!data || !data.authenticated || data.admin_type !== 'infrastructure') {
+                    window.location.replace('infra_login.html');
+                }
+            })
+            .catch(function () {
+                window.location.replace('infra_login.html');
+            });
+        })();
+
+        // Initial Data Loading from authenticated endpoint
+        fetch('/api/infrastructure/options', { cache: 'no-store' })
+            .then(function (response) {
+                if (response.status === 401) {
+                    window.location.replace('infra_login.html');
+                    return null;
+                }
+                if (!response.ok) {
+                    throw new Error('Failed to load infrastructure options (HTTP ' + response.status + ')');
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data) return;
+                if (data.status === 'success') {
+                    allSchools = data.schools || [];
+                    fieldConfig = data.fieldConfig || {};
+
+                    // Dynamically populate Circle dropdown from Supabase data
+                    const circles = [...new Set(allSchools.map(function(s) { return s.circle; }).filter(Boolean))].sort();
+                    circleSelect.innerHTML = '<option value="" selected disabled>-- Select Circle --</option>';
+                    circles.forEach(function(c) {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.textContent = c;
+                        circleSelect.appendChild(opt);
+                    });
+
+                    applyLockSettings();
+                } else {
+                    console.error('Initialization error:', data.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Data Load Error',
+                        text: data.message || 'Unable to load school and configuration data.'
+                    });
+                }
+            })
+            .catch(function (err) {
+                console.error('Error loading options:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Error',
+                    text: 'Failed to load school master data. Please refresh the page.'
+                });
+            });
+
+        // Populate Schools based on Circle
+        circleSelect.addEventListener('change', function () {
+            const selectedCircle = this.value;
+
+            // Reset School Dropdown
+            schoolSelect.innerHTML = '<option value="" selected disabled>-- Select School --</option>';
+            schoolSelect.disabled = false;
+
+            // Filter and Add Schools
+            const filteredSchools = allSchools.filter(function (school) {
+                return school.circle === selectedCircle;
+            });
+
+            if (filteredSchools.length > 0) {
+                filteredSchools.forEach(function (school) {
+                    const option = document.createElement('option');
+                    option.value = school.code;
+                    option.dataset.name = school.name;
+                    option.dataset.circle = school.circle;
+                    option.dataset.category = school.category;
+                    option.textContent = school.name;
+                    schoolSelect.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.textContent = "No schools found in this circle";
+                schoolSelect.appendChild(option);
+            }
+
+            // Hide details if circle changes
+            detailsDiv.style.display = 'none';
+        });
+
+        // Show Form when School Selected
+        schoolSelect.addEventListener('change', function () {
+            if (this.value) {
+                const u_dise = this.value;
+                const option = this.options[this.selectedIndex];
+
+                // Populate Basic Info from dataset
+                document.getElementById('d-name').textContent = option.dataset.name;
+                document.getElementById('d-code').textContent = u_dise;
+                document.getElementById('d-circle').textContent = option.dataset.circle;
+                document.getElementById('d-category').textContent = option.dataset.category || 'N/A';
+
+                // Setup default fields (Dropdowns and Inputs)
+                setupFields();
+                applyLockSettings();
+
+                // Fetch real data from Database via AJAX
+                fetch('/api/infrastructure/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'u_dise=' + encodeURIComponent(u_dise)
+                })
+                    .then(function (response) {
+                        if (response.status === 401) {
+                            window.location.replace('infra_login.html');
+                            return null;
+                        }
+                        return response.json();
+                    })
+                    .then(function (res) {
+                        if (res && res.status === 'success') {
+                            const d = res.data;
+                            // Populate fields with DB values
+                            setFieldValue('d-kitchen-status', d.kitchen_status);
+                            setFieldValue('d-kitchen-year', d.kitchen_year);
+                            setFieldValue('d-repair-grant-status', d.repair_grant_status);
+                            setFieldValue('d-repair-grant-year', d.repair_grant_year);
+                            setFieldValue('d-dining-status', d.dining_status);
+                            setFieldValue('d-dining-fund', d.dining_fund);
+                            setFieldValue('d-nutrition-status', d.nutrition_garden);
+                            setFieldValue('d-kitchen-device-status', d.kitchen_device_status);
+                            setFieldValue('d-kitchen-device-year', d.kitchen_device_year);
+                            setFieldValue('d-toilet-separate', d.toilet_separate);
+                            setFieldValue('d-elec-status', d.electric_status);
+                            setFieldValue('d-water-facilities', d.water_facilities);
+                            setFieldValue('d-water-purifier', d.water_purifier);
+
+                            // Remarks (Input)
+                            const remarksInput = document.querySelector('#d-water-remarks input');
+                            if (remarksInput) remarksInput.value = d.remarks || '';
+
+                            // Re-apply locks after data is set
+                            applyLockSettings();
+                        }
+                    })
+                    .catch(function (err) {
+                        console.error("Error fetching data:", err);
+                    });
+
+                detailsDiv.style.display = 'block';
+            }
+        });
+
+        function setupFields() {
+            // Kitchen Status
+            document.getElementById('d-kitchen-status').innerHTML = createSelect([
+                'Kitchen Shed Available', 'Space available but not constructed', "Can't be Constructed", 'Completely Destroyed'
+            ]);
+
+            const years = [
+                '2007-08', '2009-10', '2010-11', '2011-12', '2012-13',
+                '2013-14', '2014-15', '2015-16', '2016-17', '2017-18',
+                '2019-20', '2023-24', 'NO FUND'
+            ];
+            document.getElementById('d-kitchen-year').innerHTML = createSelect(years);
+
+            document.getElementById('d-repair-grant-status').innerHTML = createSelect(['Fund received & Repaired', 'Fund not received', 'Not Applicable']);
+            document.getElementById('d-repair-grant-year').innerHTML = createSelect(['2020-21', '2021-22', '2023-24', '2024-25']);
+
+            document.getElementById('d-dining-status').innerHTML = createSelect(['Constructed', "Can't be Constructed", 'Space Available']);
+            document.getElementById('d-dining-fund').innerHTML = createSelect(['MDM Fund', 'RIDF Fund', 'Other FUND', 'SED FUND', 'Not Applicable']);
+            document.getElementById('d-nutrition-status').innerHTML = createSelect(['Good Condition', 'Not Functioning', 'Fund Required', 'Space Not Available']);
+
+            document.getElementById('d-kitchen-device-status').innerHTML = createSelect(['Replacement Fund Received', 'Require Replacement', 'Fund not Require']);
+            document.getElementById('d-kitchen-device-year').innerHTML = createSelect(['2021-22', '2023-24', '2024-25']);
+            document.getElementById('d-toilet-separate').innerHTML = createSelect(['Yes', 'No']);
+            document.getElementById('d-elec-status').innerHTML = createSelect(['Yes', 'No']);
+
+            document.getElementById('d-water-facilities').innerHTML = createSelect(['Hand Pump', 'Tap Water', 'Submersible', 'Sajaldhara', 'Other', 'Require Service']);
+            document.getElementById('d-water-purifier').innerHTML = createSelect(['Yes', 'No']);
+            document.getElementById('d-water-remarks').innerHTML = '<input type="text" class="input-remarks" placeholder="Specify requirement... (Optional)">';
+        }
+
+        function setFieldValue(id, value) {
+            const container = document.getElementById(id);
+            if (!container || !value) return;
+            const select = container.querySelector('select');
+            if (select) {
+                // Find and select the matching option
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text.trim() === value.trim()) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function setInputValue(id, value) {
+            const container = document.getElementById(id);
+            if (!container) return;
+            const input = container.querySelector('input');
+            if (input) input.value = value || '';
+        }
+
+        function createSelect(options) {
+            let html = '<select class="custom-select">';
+            options.forEach(function (opt) {
+                html += '<option>' + opt + '</option>';
+            });
+            html += '</select>';
+            return html;
+        }
+
+        // Modal Logic
+        function openModal() {
+            const schoolName = document.getElementById('d-name').textContent;
+            document.getElementById('modal-school-name').textContent = schoolName;
+
+            // Build Preview Summary
+            const table = document.querySelector('.details-table');
+            const rows = table.querySelectorAll('tr');
+            let summaryHtml = '<div class="summary-grid">';
+
+            rows.forEach(function (row) {
+                const label = row.querySelector('th').textContent.trim();
+
+                // Skip Bank Info and Social Audit in Preview
+                const skipLabels = ['PFMS ID', 'Bank', 'Branch', 'IFSC', 'Account No', 'Social Audit Year', 'Social Audit Month', 'Height & Weight Machine'];
+                if (skipLabels.includes(label)) return;
+
+                const valueCell = row.querySelector('td');
+                let val = '';
+
+                // Check for Select, Input or pure text
+                const select = valueCell.querySelector('select');
+                const input = valueCell.querySelector('input');
+
+                if (select) {
+                    val = select.options[select.selectedIndex].text;
+                } else if (input) {
+                    val = input.value;
+                    // If it's a Remarks field and empty, keep it blank, otherwise show 'N/A' for other empty inputs
+                    if (!val) {
+                        val = label.includes('Remarks') ? '' : 'N/A';
+                    }
+                } else {
+                    val = valueCell.textContent.trim() || 'N/A';
+                }
+
+                summaryHtml += `
+                    <div class="summary-item">
+                        <strong class="summary-label">${label}</strong>
+                        <span class="summary-value">${val}</span>
+                    </div>
+                `;
+            });
+            summaryHtml += '</div>';
+
+            document.getElementById('preview-summary').innerHTML = summaryHtml;
+            document.getElementById('previewModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+
+        function finalSubmit() {
+            const btn = document.getElementById('confirmSubmitBtn');
+            const schoolName = document.getElementById('d-name').textContent;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            const u_dise = document.getElementById('d-code').textContent;
+
+            // Collect all data
+            const formData = new FormData();
+            formData.append('u_dise', u_dise);
+            formData.append('school_name', schoolName);
+            formData.append('circle_name', document.getElementById('d-circle').textContent);
+            formData.append('category', document.getElementById('d-category').textContent);
+
+            // Helper to get values
+            const getVal = function (id) {
+                const container = document.getElementById(id);
+                const select = container.querySelector('select');
+                const input = container.querySelector('input');
+                return select ? select.value : (input ? input.value : '');
+            };
+
+            formData.append('kitchen_status', getVal('d-kitchen-status'));
+            formData.append('kitchen_year', getVal('d-kitchen-year'));
+            formData.append('repair_status', getVal('d-repair-grant-status'));
+            formData.append('repair_year', getVal('d-repair-grant-year'));
+            formData.append('dining_status', getVal('d-dining-status'));
+            formData.append('dining_fund', getVal('d-dining-fund'));
+            formData.append('nutrition', getVal('d-nutrition-status'));
+            formData.append('device_status', getVal('d-kitchen-device-status'));
+            formData.append('device_year', getVal('d-kitchen-device-year'));
+            formData.append('toilet', getVal('d-toilet-separate'));
+            formData.append('electric', getVal('d-elec-status'));
+            formData.append('water', getVal('d-water-facilities'));
+            formData.append('purifier', getVal('d-water-purifier'));
+            formData.append('remarks', getVal('d-water-remarks'));
+
+            fetch('/api/infrastructure/save', {
+                method: 'POST',
+                body: formData
+            })
+                .then(function (response) {
+                    if (response.status === 401) {
+                        window.location.replace('infra_login.html');
+                        return null;
+                    }
+                    return response.text();
+                })
+                .then(function (text) {
+                    if (!text) return;
+                    try {
+                        const data = JSON.parse(text);
+                        if (data.status === 'success') {
+                            closeModal();
+
+                            // Success Message with SweetAlert2
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                html: `Data updated successfully for <br><b>${schoolName}</b>`,
+                                confirmButtonColor: '#6366f1',
+                                timer: 3000
+                            }).then(function () {
+                                location.reload();
+                            });
+
+                        } else {
+                            alert("Error: " + data.message);
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm & Submit';
+                        }
+                    } catch (e) {
+                        console.error("Server Response:", text);
+                        alert("Server Error: Invalid response received.");
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm & Submit';
+                    }
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    alert("Network Error occurred.");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm & Submit';
+                });
+        }
+
+        // Apply Lock Configuration from Admin Settings
+        function applyLockSettings() {
+            if (!fieldConfig) return;
+
+            for (const [key, isLocked] of Object.entries(fieldConfig)) {
+                const row = document.querySelector('tr[data-field-key="' + key + '"]');
+                if (row) {
+                    const control = row.querySelector('select, input');
+                    if (control) {
+                        if (isLocked === true) {
+                            control.disabled = true;
+                            control.classList.add('input-locked');
+                        } else {
+                            control.disabled = false;
+                            control.classList.remove('input-locked');
+                        }
+                    }
+                }
+            }
+        }
+
+        // Clear local storage on logout click
+        const logoutBtn = document.querySelector('.logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function () {
+                sessionStorage.removeItem('infra_access');
+                sessionStorage.removeItem('circle_name');
+            });
+        }
+    </script>
+
+</body>
+
+</html>

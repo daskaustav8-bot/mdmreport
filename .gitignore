@@ -1,0 +1,21 @@
+# Environment variables and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# PHP files
+*.php
+**/*.php
+*.php.bak
+**/*.php.bak
+
+# Node.js dependencies
+node_modules/
+**/node_modules/
+
+# Common generated files
+npm-debug.log*
+*.log

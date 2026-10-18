@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Update Dashboard | Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="supabase-client.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 10px;
+            display: block;
+        }
+
+        .total-val {
+            color: var(--primary);
+        }
+
+        .success-val {
+            color: var(--success);
+        }
+
+        .danger-val {
+            color: var(--danger);
+        }
+
+        .action-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .action-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            transition: 0.3s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            color: white;
+            transition: 0.3s;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .submitted-btn {
+            background: var(--success);
+            box-shadow: 0 8px 20px rgba(22, 163, 74, 0.3);
+        }
+
+        .submitted-btn:hover {
+            background: #15803d;
+        }
+
+        .pending-btn {
+            background: var(--danger);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+        }
+
+        .pending-btn:hover {
+            background: #b91c1c;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2 style="margin:0;">Student Update Monitoring</h2>
+            <a href="admin_dashboard.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Schools</h3>
+                <span id="total-val" class="value total-val">Loading...</span>
+            </div>
+            <div class="stat-card">
+                <h3>Submitted</h3>
+                <span id="submitted-val" class="value success-val">...</span>
+            </div>
+            <div class="stat-card">
+                <h3>Pending</h3>
+                <span id="pending-val" class="value danger-val">...</span>
+            </div>
+        </div>
+
+        <div class="action-cards">
+            <div class="action-card">
+                <div class="icon-box" style="background: #dcfce7; color: #16a34a;">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+                <h3>Submitted Data</h3>
+                <p style="color: #64748b;">Download full Excel report of student enrolment for schools that have
+                    submitted data.</p>
+                <a onclick="downloadSubmitted()" class="btn-download submitted-btn">
+                    <i class="fas fa-download"></i> Download Excel
+                </a>
+            </div>
+
+            <div class="action-card">
+                <div class="icon-box" style="background: #fee2e2; color: #dc2626;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>Pending Schools</h3>
+                <p style="color: #64748b;">Download a list of schools that have not yet updated their student enrolment
+                    data.</p>
+                <a onclick="downloadPending()" class="btn-download pending-btn">
+                    <i class="fas fa-download"></i> Download Pending List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enforce Main Admin authentication session
+        (function enforceMainAuth() {
+            if (window.location.protocol === 'file:') return;
+            fetch('/api/auth/session?admin_type=main', {
+                cache: 'no-store',
+                credentials: 'same-origin'
+            })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Session check failed');
+                return res.json();
+            })
+            .then(function (data) {
+                if (!data || !data.authenticated || data.admin_type !== 'main') {
+                    window.location.replace('admin_login.html');
+                }
+            })
+            .catch(function () {
+                window.location.replace('admin_login.html');
+            });
+        })();
+
+        let schoolMaster = [];
+        let submittedRows = [];
+
+        async function fetchStudentEnrolmentData() {
+            const res = await fetch('/api/student/data', { cache: 'no-store', credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const json = await res.json();
+            return json.data || [];
+        }
+
+        async function init() {
+            try {
+                const [schools, studentData] = await Promise.all([
+                    fetchSupabaseSchools(),
+                    fetchStudentEnrolmentData()
+                ]);
+
+                schoolMaster = schools || [];
+                submittedRows = studentData || [];
+
+                document.getElementById('total-val').textContent = schoolMaster.length;
+                document.getElementById('submitted-val').textContent = submittedRows.length;
+                document.getElementById('pending-val').textContent = Math.max(0, schoolMaster.length - submittedRows.length);
+            } catch (err) {
+                console.error('Error loading dashboard data from Supabase:', err);
+                document.getElementById('total-val').textContent = 'Error';
+                document.getElementById('submitted-val').textContent = 'Error';
+                document.getElementById('pending-val').textContent = 'Error';
+            }
+        }
+
+        init();
+
+        async function downloadSubmitted() {
+            try {
+                if (!submittedRows || submittedRows.length === 0) {
+                    submittedRows = await fetchStudentEnrolmentData();
+                }
+
+                if (!submittedRows || submittedRows.length === 0) {
+                    alert('No submitted data found');
+                    return;
+                }
+
+                const ws = XLSX.utils.json_to_sheet(submittedRows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Student Enrolment");
+                XLSX.writeFile(wb, "Student_Enrolment_Report.xlsx");
+            } catch (err) {
+                alert('Error fetching data: ' + err.message);
+            }
+        }
+
+        async function downloadPending() {
+            try {
+                if (!submittedRows || submittedRows.length === 0) {
+                    submittedRows = await fetchStudentEnrolmentData();
+                }
+
+                const submittedUdise = new Set(submittedRows.map(s => String(s.u_dise || '').trim()));
+                const pendingSchools = schoolMaster.filter(s => {
+                    const udise = String(s.udise || s.code || s.udise_code || '').trim();
+                    return !submittedUdise.has(udise);
+                });
+
+                if (pendingSchools.length === 0) {
+                    alert('No pending schools found');
+                    return;
+                }
+
+                const exportData = pendingSchools.map(s => ({
+                    'U-DISE': s.udise || s.code || s.udise_code,
+                    'School Name': s.name || s.school_name,
+                    'Circle': s.circle || s.circle_name,
+                    'GP': s.gp || s.gp_name,
+                    'Category': s.category || s.catergory
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Pending Schools");
+                XLSX.writeFile(wb, "Pending_Student_Enrolment.xlsx");
+            } catch (err) {
+                alert('Error generating pending list: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

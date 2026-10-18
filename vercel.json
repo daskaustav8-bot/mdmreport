@@ -1,0 +1,62 @@
+{
+  "functions": {
+    "api/*.php": {
+      "runtime": "vercel-php@0.9.0"
+    },
+    "api/index.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/infra_login_handler.php", "dest": "/api/index.js" },
+    { "src": "/infra_session_check.php", "dest": "/api/index.js" },
+    { "src": "/admin_login_handler.php", "dest": "/api/index.js" },
+    { "src": "/admin_session_check.php", "dest": "/api/index.js" },
+    { "src": "/logout.php", "dest": "/api/index.js" },
+    { "src": "/logout", "dest": "/api/index.js" },
+    { "src": "/admin-login", "dest": "/admin_login.html" },
+    { "src": "/infra-login", "dest": "/infra_login.html" },
+    { "src": "/admin-dashboard", "dest": "/api/index.js" },
+    { "src": "/admin_dashboard.html", "dest": "/api/index.js" },
+    { "src": "/basicinfrastructure", "dest": "/api/index.js" },
+    { "src": "/basicinfrastructure.html", "dest": "/api/index.js" },
+    { "src": "/admin-rice-view", "dest": "/api/index.js" },
+    { "src": "/admin_rice_view.html", "dest": "/api/index.js" },
+    { "src": "/admin-student-view", "dest": "/api/index.js" },
+    { "src": "/admin_student_view.html", "dest": "/api/index.js" },
+    { "src": "/admin-upload", "dest": "/api/admin_upload.php" },
+    { "src": "/closing-balance", "dest": "/api/closingbalance.php" },
+    { "src": "/db-connect", "dest": "/api/db_connect.php" },
+    { "src": "/export-all-infra-excel", "dest": "/api/export_all_infra_excel.php" },
+    { "src": "/export-excel", "dest": "/api/export_excel.php" },
+    { "src": "/export-pending-excel", "dest": "/api/export_pending_excel.php" },
+    { "src": "/export-student-excel", "dest": "/api/export_student_excel.php" },
+    { "src": "/export-student-pending-excel", "dest": "/api/export_student_pending_excel.php" },
+    { "src": "/get-infrastructure-data", "dest": "/api/get_infrastructure_data.php" },
+    { "src": "/get-saved-data", "dest": "/api/get_saved_data.php" },
+    { "src": "/get-student-enrolment", "dest": "/api/get_student_enrolment.php" },
+    { "src": "/manage-infrastructure-fields", "dest": "/api/manage_infrastructure_fields.php" },
+    { "src": "/monthly-view", "dest": "/api/monthly_view.php" },
+    { "src": "/monthlyreport", "dest": "/api/monthlyreport.php" },
+    { "src": "/rice-report-panel", "dest": "/api/rice_report_panel.php" },
+    { "src": "/rice-report-view", "dest": "/api/rice_report_view.php" },
+    { "src": "/ricerequirement", "dest": "/api/ricerequirement.php" },
+    { "src": "/save-data", "dest": "/api/save_data.php" },
+    { "src": "/save-infrastructure", "dest": "/api/save_infrastructure.php" },
+    { "src": "/save-student-enrolment", "dest": "/api/save_student_enrolment.php" },
+    { "src": "/setup-infra-table", "dest": "/api/setup_infra_table.php" },
+    { "src": "/setup-student-table", "dest": "/api/setup_student_table.php" },
+    { "src": "/status-table", "dest": "/api/status_table.php" },
+    { "src": "/student-update", "dest": "/api/student_update.php" },
+    { "src": "/submit-rice", "dest": "/api/submit_rice.php" },
+    { "src": "/update-html-table", "dest": "/api/update_html_table.php" },
+    { "src": "/update-monthly-report", "dest": "/api/update_monthly_report.php" },
+    { "src": "/get-monthly-report", "dest": "/api/get_monthly_report.php" },
+    { "src": "/save-monthly-report", "dest": "/api/save_monthly_report.php" },
+    { "src": "/upload-csv", "dest": "/api/upload_csv.php" },
+    { "src": "/upload-infrastructure", "dest": "/api/upload_infrastructure.php" },
+    { "src": "/assets/(.*)", "dest": "/public/$1" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
+  ]
+}

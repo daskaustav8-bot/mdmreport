@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recently Submitted Schools - Status Table</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; padding: 30px; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #475569; font-weight: 600; margin-bottom: 20px; font-size: 14px; }
+        .btn-back:hover { color: #2563eb; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h3 { color: #2563eb; margin: 0 0 20px 0; border-left: 5px solid #2563eb; padding-left: 12px; font-size: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: #f8fafc; color: #334155; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; font-size: 14px; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .badge { background: #e0e7ff; color: #4338ca; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .status-received { color: #16a34a; font-weight: 600; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    
+    <div class="card">
+        <h3>Recently Submitted Schools</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>School Name</th>
+                        <th>Quarter</th>
+                        <th>Total Rice (KG)</th>
+                        <th>Submitted On</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="statusTbody">
+                    <tr><td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">Loading recently submitted schools...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function loadStatusTable() {
+        const tbody = document.getElementById('statusTbody');
+        try {
+            const res = await fetch('/api/rice/status-table?format=json', { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const json = await res.json();
+            const rows = json.data || [];
+
+            if (rows.length > 0) {
+                tbody.innerHTML = '';
+                rows.forEach(r => {
+                    const totalKg = (parseFloat(r.total_primary_kg) > 0) ? r.total_primary_kg : (r.total_upper_kg || 0);
+                    const dateStr = r.submission_date ? new Date(r.submission_date).toLocaleString('en-IN') : '-';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight: 500; color: #1e293b;">
+                            ${escapeHtml(r.school_name || '')}<br><small style="color:#64748b; font-size:11px;">${escapeHtml(r.u_dise || '')}</small>
+                        </td>
+                        <td><span class="badge">${escapeHtml(r.quarter || '')}</span></td>
+                        <td style="font-weight: 600; color: #059669;">${totalKg} KG</td>
+                        <td style="font-size: 13px; color: #64748b;">${dateStr}</td>
+                        <td><span class="status-received"><i class="fas fa-check-circle"></i> Received</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">No schools have submitted yet.</td></tr>';
+            }
+        } catch (err) {
+            console.error('Error loading status table:', err);
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ef4444;">Failed to load status table from database.</td></tr>';
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadStatusTable);
+</script>
+
+</body>
+</html>

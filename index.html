@@ -1,1 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM POSHAN Dashboard</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root {
+            --blue: #2563eb;
+            --green: #16a34a;
+            --orange: #f97316;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --radius: 16px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            padding: 30px;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        /* HEADER */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 24px 28px;
+            border-radius: var(--radius);
+            box-shadow: 0 15px 30px rgba(0,0,0,.06);
+            margin-bottom: 30px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand i {
+            font-size: 42px;
+            color: var(--blue);
+        }
+
+        .brand h1 {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .brand span {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .user {
+            text-align: right;
+        }
+
+        .user strong {
+            display: block;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .date {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 6px;
+            color: #334155;
+        }
+
+        /* WELCOME SECTION */
+        .welcome {
+            background: linear-gradient(135deg, var(--blue), #60a5fa);
+            color: #fff;
+            padding: 28px;
+            border-radius: var(--radius);
+            box-shadow: 0 15px 35px rgba(37,99,235,.35);
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .welcome h2 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .welcome p {
+            margin: 0;
+            font-size: 14px;
+            opacity: .95;
+        }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--blue);
+        }
+
+        /* CARDS */
+        .cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius);
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 12px 25px rgba(0,0,0,.06);
+            position: relative;
+            overflow: hidden;
+            transition: transform .25s ease, box-shadow .25s ease;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,.35));
+            opacity: 0;
+            transition: .3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,.12);
+        }
+
+        .card:hover::before { opacity: 1; }
+
+        .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+
+        .card-content {
+            text-align: left;
+        }
+
+        .card h3 {
+            margin: 0 0 4px;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Card Colors */
+        .blue .icon { background: #e0e7ff; color: var(--blue); }
+        .blue { border-left: 6px solid var(--blue); }
+
+        .teal .icon { background: #ccfbf1; color: #0d9488; }
+        .teal { border-left: 6px solid #0d9488; }
+
+        .green .icon { background: #dcfce7; color: var(--green); }
+        .green { border-left: 6px solid var(--green); }
+
+        .orange .icon { background: #ffedd5; color: var(--orange); }
+        .orange { border-left: 6px solid var(--orange); }
+
+        .purple .icon { background: #f3e8ff; color: #a855f7; }
+        .purple { border-left: 6px solid #a855f7; }
+
+        /* FOOTER */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            .topbar { flex-direction: column; gap: 14px; align-items: flex-start; }
+            .user { text-align: left; }
+            .cards { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="topbar">
+        <div class="brand">
+            <i class="fa-solid fa-building-columns"></i>
+            <div>
+                <h1>Pradhan Mantri Poshan Shakti Nirman</h1>
+                <span>PM-POSHAN DASHBOARD</span>
+            </div>
+        </div>
+        <div class="user">
+            <strong>PM-POSHAN,PANDUA</strong>
+            <div class="date"><i class="fa-regular fa-calendar"></i> <span id="current-date"></span></div>
+        </div>
+    </div>
+
+    <div class="welcome">
+        <h2>Welcome, PM-POSHAN PANDUA</h2>
+        <p>Manage all PM-POSHAN reports and activities from one place.</p>
+    </div>
+
+    <div class="section-title"><i class="fa-solid fa-bolt"></i> Quick Access</div>
+
+    <div class="cards">
+
+        <a href="closingbalance.html" class="card blue">
+            <div class="icon"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="card-content">
+                <h3>Monthly Data Capture Format (MDCF)</h3>
+                <p>MONTHLY REPORT দেখার জন্য এখানে ক্লিক করুন</p>
+            </div>
+        </a>
+
+        <a href="update_monthly_report.html" class="card teal">
+            <div class="icon"><i class="fa-solid fa-file-pen"></i></div>
+            <div class="card-content">
+                <h3>Update Monthly Report (MDCF)</h3>
+                <p>মাসিক MDCF রিপোর্ট আপডেট ও সাবমিট করুন</p>
+            </div>
+        </a>
+
+        <a href="ricerequirement.html" class="card green">
+            <div class="icon"><i class="fa-solid fa-seedling"></i></div>
+            <div class="card-content">
+                <h3>Rice Requirement Entry</h3>
+                <p>RICE REQUIREMENT সাবমিট করার জন্য এখানে ক্লিক করুন</p>
+            </div>
+        </a>
+
+        <a href="basicinfrastructure.html" class="card orange">
+            <div class="icon"><i class="fa-solid fa-school"></i></div>
+            <div class="card-content">
+                <h3>Basic Infrastructure Report</h3>
+                <p>Track school infrastructure facilities</p>
+            </div>
+        </a>
+
+        <a href="student_update.html" class="card purple">
+            <div class="icon"><i class="fa-solid fa-user-graduate"></i></div>
+            <div class="card-content">
+                <h3>Class wise Student Update</h3>
+                <p>শ্রেণিভিত্তিক ছাত্রছাত্রীর সংখ্যা আপডেট করুন</p>
+            </div>
+        </a>
+
+    </div>
+
+    <footer>
+        © <span id="current-year"></span> PM-POSHAN ·PANDUA
+    </footer>
+
+</div>
+
+<script>
+    const now = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+    document.getElementById('current-date').textContent = day + ' ' + month + ', ' + year;
+    document.getElementById('current-year').textContent = year;
+</script>
+
+</body>
+</html>

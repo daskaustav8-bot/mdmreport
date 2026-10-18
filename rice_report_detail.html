@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rice Requirement Detail</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; }
+        h2 { margin: 0; color: #1e293b; }
+        .meta { color: #64748b; font-size: 14px; margin-top: 5px; }
+        .table-custom { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table-custom th, .table-custom td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
+        .table-custom th { background: #f8fafc; text-align: left; font-weight: 600; color: #475569; }
+        .btn-print { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-back { text-decoration: none; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <a href="admin_rice_view.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to List</a>
+        </div>
+        <button onclick="window.print()" class="btn-print"><i class="fas fa-print"></i> Print</button>
+    </div>
+
+    <div id="loading" style="text-align:center; padding: 40px;">Loading...</div>
+
+    <div id="content" style="display:none;">
+        <h2 id="schoolName"></h2>
+        <div class="meta">
+            Quarter: <span id="quarter"></span> | Year: <span id="year"></span> | Submitted: <span id="date"></span>
+        </div>
+
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Requirement (KG)</th>
+                    <th>Bags (50kg)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Rows injected by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Check login
+    if (sessionStorage.getItem('admin_logged_in') !== 'true') {
+        window.location.href = 'admin_login.html';
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const u_dise = params.get('u_dise');
+    const quarter = params.get('quarter');
+    const year = params.get('year') || new Date().getFullYear();
+
+    async function loadData() {
+        if (!u_dise || !quarter) {
+            document.getElementById('loading').textContent = "Invalid parameters.";
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/rice/saved?u_dise=${encodeURIComponent(u_dise)}&quarter=${encodeURIComponent(quarter)}`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const json = await res.json();
+            const data = (json.status === 'success' && json.data) ? json.data : null;
+
+            if (!data) {
+                document.getElementById('loading').textContent = "No data found.";
+                return;
+            }
+
+        document.getElementById('schoolName').textContent = data.school_name;
+        document.getElementById('quarter').textContent = data.quarter;
+        document.getElementById('year').textContent = data.year;
+        document.getElementById('date').textContent = new Date(data.submission_date).toLocaleDateString();
+
+        const tbody = document.getElementById('tableBody');
+        let html = '';
+
+        const showVal = (val) => val > 0 ? val : '-';
+        const calcBags = (val) => val > 0 ? (val/50).toFixed(2) : '-';
+
+        // Primary
+        if (data.total_primary_kg > 0) {
+            html += `
+                <tr><td>Bal Vatika</td><td>${showVal(data.req_bv)}</td><td>${calcBags(data.req_bv)}</td></tr>
+                <tr><td>Primary (I-V)</td><td>${showVal(data.req_c1_5)}</td><td>${calcBags(data.req_c1_5)}</td></tr>
+                <tr style="font-weight:bold; background:#f0f9ff;"><td>Total Primary</td><td>${data.total_primary_kg}</td><td>${calcBags(data.total_primary_kg)}</td></tr>
+            `;
+        }
+
+        // Upper Primary
+        if (data.total_upper_kg > 0) {
+            html += `
+                <tr><td>Class V (Upper)</td><td>${showVal(data.req_c5)}</td><td>${calcBags(data.req_c5)}</td></tr>
+                <tr><td>Upper (VI-VIII)</td><td>${showVal(data.req_c6_8)}</td><td>${calcBags(data.req_c6_8)}</td></tr>
+                <tr style="font-weight:bold; background:#f5f3ff;"><td>Total Upper</td><td>${data.total_upper_kg}</td><td>${calcBags(data.total_upper_kg)}</td></tr>
+            `;
+        }
+
+        tbody.innerHTML = html;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+    } catch (err) {
+        console.error('Error loading report:', err);
+        document.getElementById('loading').textContent = "Failed to load report data: " + err.message;
+    }
+}
+
+loadData();
+</script>
+
+</body>
+</html>

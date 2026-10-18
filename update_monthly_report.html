@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Monthly Report (MDCF) | PM POSHAN</title>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Select2 & SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --primary-light: #f0fdfa;
+            --primary-border: #ccfbf1;
+            --primary-ring: rgba(13, 148, 136, 0.2);
+            --blue: #2563eb;
+            --blue-light: #eff6ff;
+            --indigo: #4f46e5;
+            --indigo-light: #eef2ff;
+            --amber: #d97706;
+            --amber-light: #fef3c7;
+            --emerald: #059669;
+            --emerald-light: #ecfdf5;
+            --rose: #e11d48;
+            --rose-light: #ffe4e6;
+            --bg: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #0f172a;
+            --text-sub: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+            --shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+            --shadow-lg: 0 20px 40px -10px rgba(15, 23, 42, 0.1), 0 8px 16px -4px rgba(15, 23, 42, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+                        radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.09) 0px, transparent 50%),
+                        radial-gradient(at 50% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+                        #f8fafc;
+            background-attachment: fixed;
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 24px 16px 120px;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        /* =========================================
+           TOP NAVIGATION BAR (MODERN HEADER)
+           ========================================= */
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 16px 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            background: #f1f5f9;
+            color: #334155;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.25s ease;
+            border: 1px solid var(--border);
+        }
+
+        .btn-back i {
+            font-size: 13px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-back:hover {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            transform: translateX(-2px);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        }
+
+        .nav-divider {
+            width: 1px;
+            height: 36px;
+            background: var(--border);
+        }
+
+        .brand-block {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--blue) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 19px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title .tag-portal {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--emerald);
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+        }
+
+        .date-badge i {
+            color: var(--primary);
+        }
+
+        /* =========================================
+           PANELS & GLASS CARDS
+           ========================================= */
+        .panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: var(--radius-lg);
+            padding: 26px 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .panel-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1.5px solid var(--border-light);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .panel-title-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .step-pill {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f1f5f9;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        /* SELECTORS GRID */
+        .select-row {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group label i {
+            color: var(--primary);
+            font-size: 12px;
+        }
+
+        .form-control {
+            height: 48px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 0 16px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text-dark);
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-ring);
+        }
+
+        /* =========================================
+           SELECT2 ENHANCED STYLING
+           ========================================= */
+        .select2-container--default .select2-selection--single {
+            height: 48px !important;
+            border: 1.5px solid var(--border) !important;
+            border-radius: var(--radius-md) !important;
+            display: flex !important;
+            align-items: center !important;
+            background-color: #ffffff !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .select2-container--default.select2-container--open .select2-selection--single,
+        .select2-container--default .select2-selection--single:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 4px var(--primary-ring) !important;
+            outline: none !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 48px !important;
+            padding-left: 16px !important;
+            padding-right: 36px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: var(--text-dark) !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px !important;
+            right: 12px !important;
+        }
+
+        .select2-dropdown {
+            border: 1.5px solid var(--border) !important;
+            border-radius: var(--radius-md) !important;
+            box-shadow: var(--shadow-lg) !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+            margin-top: 4px !important;
+        }
+
+        .select2-search--dropdown {
+            padding: 10px !important;
+        }
+
+        .select2-search--dropdown .select2-search__field {
+            height: 38px !important;
+            padding: 0 12px !important;
+            border: 1.5px solid var(--border) !important;
+            border-radius: var(--radius-sm) !important;
+            font-size: 13px !important;
+            outline: none !important;
+            font-family: inherit !important;
+        }
+
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px var(--primary-ring) !important;
+        }
+
+        .select2-results__option {
+            padding: 10px 16px !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+
+        /* =========================================
+           SCHOOL INFO PROFILE CARD
+           ========================================= */
+        .school-badge-container {
+            display: none;
+            margin-top: 24px;
+            padding-top: 22px;
+            border-top: 1.5px dashed var(--border);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .school-profile-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+        }
+
+        .school-header-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .school-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0d9488, #0f766e);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+        }
+
+        .school-name-text h2 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.3;
+        }
+
+        .school-name-text span {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .school-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+        }
+
+        .meta-pill {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .meta-pill-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .meta-pill-value {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #1e293b;
+            word-break: break-word;
+        }
+
+        .category-chip {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .status-alert {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            font-size: 13.5px;
+            font-weight: 600;
+            align-items: center;
+            gap: 12px;
+            line-height: 1.5;
+        }
+
+        .status-existing {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1.5px solid #bfdbfe;
+        }
+
+        .status-existing i {
+            color: #2563eb;
+            font-size: 16px;
+        }
+
+        .status-new {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1.5px solid #a7f3d0;
+        }
+
+        .status-new i {
+            color: #059669;
+            font-size: 16px;
+        }
+
+        /* =========================================
+           FORM SECTIONS & CARDS
+           ========================================= */
+        .form-section {
+            display: none;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: var(--radius-lg);
+            padding: 26px 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section-header {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1.5px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .section-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .badge-teal { background: var(--primary-light); color: var(--primary); }
+        .badge-indigo { background: var(--indigo-light); color: var(--indigo); }
+        .badge-amber { background: var(--amber-light); color: var(--amber); }
+
+        .section-tag {
+            font-size: 11px;
+            background: #f1f5f9;
+            color: var(--text-sub);
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* =========================================
+           DATA TABLES (MODERN CLEAN DESIGN)
+           ========================================= */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: #ffffff;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 7px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        table.entry-table {
+            width: 100%;
+            min-width: 680px;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        table.entry-table th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            padding: 14px 12px;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            border-right: 1px solid var(--border-light);
+            white-space: nowrap;
+        }
+
+        table.entry-table th:last-child {
+            border-right: none;
+        }
+
+        table.entry-table th:first-child {
+            text-align: left;
+            padding-left: 18px;
+            min-width: 240px;
+        }
+
+        table.entry-table td {
+            padding: 10px 10px;
+            border-bottom: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-light);
+            text-align: center;
+            vertical-align: middle;
+            background: #ffffff;
+            transition: background 0.15s ease;
+        }
+
+        table.entry-table td:last-child {
+            border-right: none;
+        }
+
+        table.entry-table tr:hover td {
+            background: #fbfcfe;
+        }
+
+        table.entry-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #1e293b;
+            padding-left: 18px;
+            font-size: 13px;
+        }
+
+        /* Component category badges */
+        .col-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-left: 4px;
+        }
+        .col-badge-bv { background: #fef3c7; color: #b45309; }
+        .col-badge-pri { background: #ecfdf5; color: #047857; }
+        .col-badge-upp { background: #eef2ff; color: #4338ca; }
+
+        /* NUMERIC INPUTS */
+        .num-input {
+            width: 100%;
+            height: 40px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 0 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            color: #0f172a;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .num-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-ring);
+            background: #f0fdfa;
+        }
+
+        .num-input.closing-field {
+            background: #f0fdfa;
+            color: var(--primary-dark);
+            font-weight: 800;
+            border-color: #99f6e4;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .num-input.input-error {
+            border-color: var(--rose) !important;
+            background-color: var(--rose-light) !important;
+            color: #9f1239 !important;
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.2) !important;
+        }
+
+        .input-disabled-row td {
+            background-color: #f8fafc !important;
+        }
+
+        .input-disabled-row input {
+            background-color: #f1f5f9 !important;
+            color: #94a3b8 !important;
+            border-color: #e2e8f0 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            user-select: none !important;
+        }
+
+        .row-na-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            background: #e2e8f0;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            vertical-align: middle;
+        }
+
+        /* TOTAL ROW HIGHLIGHT */
+        .total-row td {
+            background: #f1f5f9 !important;
+            border-top: 2px solid var(--border) !important;
+            border-bottom: 2px solid var(--border) !important;
+            font-weight: 800 !important;
+            padding: 13px 10px !important;
+        }
+
+        .total-cell-val {
+            font-size: 14.5px;
+            font-weight: 800;
+            color: #0f172a;
+            font-family: inherit;
+        }
+
+        .total-cell-close {
+            color: var(--primary-dark) !important;
+            background: #ccfbf1 !important;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* VERIFICATION SUB-CARD IN FUND */
+        .verification-panel {
+            background: #f8fafc;
+            border-top: 2px dashed var(--border);
+            padding: 16px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .verif-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .verif-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.4;
+        }
+
+        .verif-label span {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .verif-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .hint-text {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .hint-text i {
+            color: var(--primary);
+        }
+
+        /* =========================================
+           STICKY BOTTOM ACTION BAR (MODERN FLOATING)
+           ========================================= */
+        .action-bar-wrapper {
+            display: none;
+            position: sticky;
+            bottom: 20px;
+            z-index: 100;
+            margin-top: 30px;
+        }
+
+        .action-bar-glass {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(226, 232, 240, 0.9);
+            border-radius: var(--radius-lg);
+            padding: 14px 24px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .bar-summary {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .summary-chip {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-chip span {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .summary-chip strong {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .bar-buttons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            height: 48px;
+            padding: 0 24px;
+            border-radius: var(--radius-md);
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            border: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+        }
+
+        .btn-reset {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-reset:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+            padding: 0 32px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(13, 148, 136, 0.45);
+            background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+        }
+
+        /* =========================================
+           RESPONSIVE BREAKPOINTS
+           ========================================= */
+        @media (max-width: 860px) {
+            .select-row {
+                grid-template-columns: 1fr;
+            }
+
+            .verification-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .action-bar-glass {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+                padding: 16px;
+            }
+
+            .bar-summary {
+                justify-content: space-between;
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 10px;
+            }
+
+            .bar-buttons {
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 12px 10px 100px;
+            }
+
+            .top-navbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+                padding: 16px;
+            }
+
+            .nav-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .header-title h1 {
+                font-size: 16px;
+            }
+
+            .panel,
+            .form-section {
+                padding: 16px 14px;
+                border-radius: 16px;
+            }
+
+            .section-header {
+                font-size: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            table.entry-table th,
+            table.entry-table td {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+
+            table.entry-table th:first-child,
+            table.entry-table td:first-child {
+                min-width: 160px;
+                padding-left: 10px;
+            }
+
+            .num-input {
+                height: 36px;
+                font-size: 13px;
+                padding: 0 6px;
+            }
+
+            .bar-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- =========================================
+             TOP NAVIGATION BAR
+             ========================================= -->
+        <header class="top-navbar">
+            <div class="nav-left">
+                <a href="index.html" class="btn-back" title="Return to PM-POSHAN Dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Dashboard</span>
+                </a>
+                <div class="nav-divider"></div>
+                <div class="brand-block">
+                    <div class="brand-icon">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                    <div class="header-title">
+                        <h1>Update Monthly Report (MDCF)</h1>
+                        <span class="tag-portal">
+                            <span class="status-dot"></span>
+                            PM-POSHAN · PANDUA
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-right">
+                <div class="date-badge">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span id="navDateBadge">18 Oct, 2026</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- =========================================
+             STEP 1: SELECTION PANEL
+             ========================================= -->
+        <section class="panel">
+            <div class="panel-header-row">
+                <h2 class="panel-title">
+                    <div class="panel-title-icon">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    Select Month &amp; School
+                </h2>
+                <span class="step-pill">Step 1 of 4</span>
+            </div>
+
+            <div class="select-row">
+                <div class="form-group">
+                    <label for="selectMonth">
+                        <i class="fa-regular fa-calendar"></i> Reporting Month
+                    </label>
+                    <select id="selectMonth" class="form-control">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October" selected>October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+
+                <!-- Hidden Year select (maintained in DOM for backward-compatibility) -->
+                <select id="selectYear" style="display:none;">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                </select>
+
+                <div class="form-group">
+                    <label for="selectSchool">
+                        <i class="fa-solid fa-school"></i> School Name / U-DISE Code
+                    </label>
+                    <select id="selectSchool" style="width: 100%;">
+                        <option value="">-- Choose School --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- School Profile & Status Badge -->
+            <div id="schoolBadgeContainer" class="school-badge-container">
+                <div class="school-profile-card">
+                    <div class="school-header-info">
+                        <div class="school-avatar">
+                            <i class="fa-solid fa-school-flag"></i>
+                        </div>
+                        <div class="school-name-text">
+                            <h2 id="badgeSchoolName">-</h2>
+                            <span>Selected Institute Profile</span>
+                        </div>
+                    </div>
+
+                    <div class="school-meta-grid">
+                        <div class="meta-pill">
+                            <span class="meta-pill-label">U-DISE Code</span>
+                            <span class="meta-pill-value" id="badgeUdise" style="font-family: monospace; letter-spacing: 0.5px;">-</span>
+                        </div>
+                        <div class="meta-pill">
+                            <span class="meta-pill-label">Category</span>
+                            <span class="meta-pill-value" id="badgeCategory">-</span>
+                        </div>
+                        <div class="meta-pill">
+                            <span class="meta-pill-label">Circle Name</span>
+                            <span class="meta-pill-value" id="badgeCircle">-</span>
+                        </div>
+                        <div class="meta-pill">
+                            <span class="meta-pill-label">Gram Panchayat</span>
+                            <span class="meta-pill-value" id="badgeGp">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="statusAlert" class="status-alert">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span id="statusAlertText"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================
+             ENTRY FORM SECTIONS
+             ========================================= -->
+        <form id="mdcfForm" autocomplete="off">
+
+            <!-- =========================================
+                 STEP 2: MEAL AVAILED STATUS
+                 ========================================= -->
+            <section class="form-section" id="secMeal">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon-badge badge-teal">
+                            <i class="fa-solid fa-utensils"></i>
+                        </div>
+                        <div>
+                            <strong>2. Meal Availed Status (খাবার পরিবেশন সংক্রান্ত তথ্য)</strong>
+                        </div>
+                    </div>
+                    <span class="section-tag">Attendance &amp; Meals</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="entry-table">
+                        <thead>
+                            <tr>
+                                <th>DESCRIPTION</th>
+                                <th class="col-bv">
+                                    BAL VATIKA <span class="col-badge col-badge-bv">PP</span>
+                                </th>
+                                <th class="col-pri">
+                                    PRIMARY <span class="col-badge col-badge-pri">I-V</span>
+                                </th>
+                                <th class="col-upp">
+                                    UPPER PRIMARY <span class="col-badge col-badge-upp">VI-VIII</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Number of School Days during Month</td>
+                                <td class="col-bv">
+                                    <input type="number" min="0" class="num-input" id="bv_days" name="bv_days" value="0">
+                                </td>
+                                <td class="col-pri">
+                                    <input type="number" min="0" class="num-input" id="p_days" name="p_days" value="0">
+                                </td>
+                                <td class="col-upp">
+                                    <input type="number" min="0" class="num-input" id="up_days" name="up_days" value="0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Actual Number of Days MDM Served</td>
+                                <td class="col-bv">
+                                    <input type="number" min="0" class="num-input" id="bv_actual" name="bv_actual" value="0">
+                                </td>
+                                <td class="col-pri">
+                                    <input type="number" min="0" class="num-input" id="p_actual" name="p_actual" value="0">
+                                </td>
+                                <td class="col-upp">
+                                    <input type="number" min="0" class="num-input" id="up_actual" name="up_actual" value="0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total Meals Served during Month</td>
+                                <td class="col-bv">
+                                    <input type="number" min="0" class="num-input" id="bv_meals" name="bv_meals" value="0">
+                                </td>
+                                <td class="col-pri">
+                                    <input type="number" min="0" class="num-input" id="p_meals" name="p_meals" value="0">
+                                </td>
+                                <td class="col-upp">
+                                    <input type="number" min="0" class="num-input" id="up_meals" name="up_meals" value="0">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="hint-text">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>Enter zero (0) if Bal Vatika or Upper Primary is not applicable for your school.</span>
+                </div>
+            </section>
+
+            <!-- =========================================
+                 STEP 3: FUND DETAILS (IN Rs)
+                 ========================================= -->
+            <section class="form-section" id="secFund">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon-badge badge-indigo">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                        </div>
+                        <div>
+                            <strong>3. FUND DETAILS (IN Rs)</strong>
+                        </div>
+                    </div>
+                    <span class="section-tag">Finance</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="entry-table fund-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 32%;">COMPONENT</th>
+                                <th style="width: 17%;">OPENING BALANCE (₹)</th>
+                                <th style="width: 17%;">RECEIVED (₹)</th>
+                                <th style="width: 17%;">EXPENDITURE (₹)</th>
+                                <th style="width: 17%;">CLOSING BALANCE (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 1. MATERIAL COST BAL VATIKA -->
+                            <tr id="fund_row_bv">
+                                <td>
+                                    MATERIAL COST BAL VATIKA
+                                    <span class="row-na-badge" id="badge_fund_bv" style="display:none;">Not Applicable</span>
+                                </td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_open" name="cc_bv_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_recv" name="cc_bv_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_exp" name="cc_bv_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.00"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="cc_bv_close" name="cc_bv_close" value="0"></td>
+                            </tr>
+
+                            <!-- 2. MATERIAL COST PRIMARY -->
+                            <tr id="fund_row_p">
+                                <td>MATERIAL COST PRIMARY</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_p" id="cc_p_open" name="cc_p_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_p" id="cc_p_recv" name="cc_p_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_p" id="cc_p_exp" name="cc_p_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.00"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="cc_p_close" name="cc_p_close" value="0"></td>
+                            </tr>
+
+                            <!-- 3. MATERIAL COST UPPER PRIMARY -->
+                            <tr id="fund_row_up">
+                                <td>
+                                    MATERIAL COST UPPER PRIMARY
+                                    <span class="row-na-badge" id="badge_fund_up" style="display:none;">Not Applicable</span>
+                                </td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_up" id="cc_up_open" name="cc_up_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_up" id="cc_up_recv" name="cc_up_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_up" id="cc_up_exp" name="cc_up_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.17"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="cc_up_close" name="cc_up_close" value="0"></td>
+                            </tr>
+
+                            <!-- 4. BANK INTEREST -->
+                            <tr>
+                                <td>BANK INTEREST</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bi" id="bi_open" name="bi_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bi" id="bi_recv" name="bi_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bi" id="bi_exp" name="bi_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="bi_close" name="bi_close" value="0"></td>
+                            </tr>
+
+                            <!-- 5. LPG SUBSIDY -->
+                            <tr>
+                                <td>LPG SUBSIDY</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="lpg" id="lpg_open" name="lpg_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="lpg" id="lpg_recv" name="lpg_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="lpg" id="lpg_exp" name="lpg_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="lpg_close" name="lpg_close" value="0"></td>
+                            </tr>
+
+                            <!-- 6. SUPPLEMENTARY / EXTRA NUTRITION -->
+                            <tr>
+                                <td>SUPPLEMENTARY / EXTRA NUTRITION</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="nutri" id="nutri_open" name="nutri_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="nutri" id="nutri_recv" name="nutri_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="nutri" id="nutri_exp" name="nutri_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="nutri_close" name="nutri_close" value="0"></td>
+                            </tr>
+
+                            <!-- 7. SCHOOL EXPENSES (MME) -->
+                            <tr>
+                                <td>SCHOOL EXPENSES (MME)</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="mme" id="mme_open" name="mme_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="mme" id="mme_recv" name="mme_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="mme" id="mme_exp" name="mme_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="mme_close" name="mme_close" value="0"></td>
+                            </tr>
+
+                            <!-- 8. KITCHEN DEVICES -->
+                            <tr>
+                                <td>KITCHEN DEVICES</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="kd" id="kd_open" name="kd_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="kd" id="kd_recv" name="kd_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="kd" id="kd_exp" name="kd_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="kd_close" name="kd_close" value="0"></td>
+                            </tr>
+
+                            <!-- 9. KITCHEN SHED REPAIR -->
+                            <tr>
+                                <td>KITCHEN SHED REPAIR</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ks" id="ks_open" name="ks_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ks" id="ks_recv" name="ks_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ks" id="ks_exp" name="ks_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="ks_close" name="ks_close" value="0"></td>
+                            </tr>
+
+                            <!-- 10. NUTRITION GARDEN -->
+                            <tr>
+                                <td>NUTRITION GARDEN</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ng" id="ng_open" name="ng_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ng" id="ng_recv" name="ng_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ng" id="ng_exp" name="ng_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="ng_close" name="ng_close" value="0"></td>
+                            </tr>
+
+                            <!-- 11. BANK CHARGES (SMS/CHEQUE BOOK) -->
+                            <tr>
+                                <td>BANK CHARGES (SMS/CHEQUE BOOK)</td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bc" id="bc_open" name="bc_open" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bc" id="bc_recv" name="bc_recv" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bc" id="bc_exp" name="bc_exp" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="bc_close" name="bc_close" value="0"></td>
+                            </tr>
+
+                            <!-- TOTAL ROW -->
+                            <tr class="total-row">
+                                <td><strong>GRAND TOTAL (₹)</strong></td>
+                                <td><span class="total-cell-val" id="total_fund_open">0.00</span></td>
+                                <td><span class="total-cell-val" id="total_fund_recv">0.00</span></td>
+                                <td><span class="total-cell-val" id="total_fund_exp">0.00</span></td>
+                                <td><span class="total-cell-val total-cell-close" id="total_fund_close">0.00</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- BANK VERIFICATION SECTION -->
+                    <div class="verification-panel">
+                        <div class="verif-box">
+                            <div class="verif-label">
+                                Bank Pass Book Balance
+                                <span>Recorded balance as on selected date</span>
+                            </div>
+                            <div class="verif-controls">
+                                <input type="date" id="bank_balance_date" name="bank_balance_date"
+                                    class="form-control"
+                                    style="width: 140px; height: 38px; font-size: 13px; font-weight: 600; padding: 2px 8px;">
+                                <input type="number" step="0.01" class="num-input" id="bank_passbook_balance"
+                                    name="bank_passbook_balance" value="0" placeholder="0.00"
+                                    style="width: 120px; height: 38px; font-weight: 800; border-color: var(--primary);">
+                            </div>
+                        </div>
+
+                        <div class="verif-box">
+                            <div class="verif-label">
+                                Bank Match Status
+                                <span>Does sum of Closing Balance match Passbook?</span>
+                            </div>
+                            <div class="verif-controls">
+                                <select id="bank_match" name="bank_match" class="form-control"
+                                    style="height: 38px; width: 110px; font-weight: 800; text-align: center;">
+                                    <option value="YES" selected>YES</option>
+                                    <option value="NO">NO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hint-text">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Closing Balance is calculated in real time: <strong>(Opening + Received - Expenditure)</strong>. Total row updates automatically.</span>
+                </div>
+            </section>
+
+            <!-- =========================================
+                 STEP 4: FOOD GRAINS DETAILS (RICE)
+                 ========================================= -->
+            <section class="form-section" id="secRice">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon-badge badge-amber">
+                            <i class="fa-solid fa-wheat-awn"></i>
+                        </div>
+                        <div>
+                            <strong>4. Food Grains Details - Rice (চাল সংক্রান্ত তথ্য in KG)</strong>
+                        </div>
+                    </div>
+                    <span class="section-tag">Food Grains</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="entry-table">
+                        <thead>
+                            <tr>
+                                <th>CATEGORY</th>
+                                <th>FOOD ITEM</th>
+                                <th>OPENING BALANCE (KG)</th>
+                                <th>RECEIVED (KG)</th>
+                                <th>CONSUMPTION (KG)</th>
+                                <th>CLOSING BALANCE (KG)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Bal Vatika -->
+                            <tr class="row-bv">
+                                <td>
+                                    <b>Bal Vatika</b>
+                                    <span class="col-badge col-badge-bv">PP</span>
+                                </td>
+                                <td>Rice</td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_open" name="rice_bv_open" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_recv" name="rice_bv_recv" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_cons" name="rice_bv_cons" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field" id="rice_bv_close" name="rice_bv_close" value="0"></td>
+                            </tr>
+
+                            <!-- Primary -->
+                            <tr class="row-pri">
+                                <td>
+                                    <b>Primary</b>
+                                    <span class="col-badge col-badge-pri">I-V</span>
+                                </td>
+                                <td>Rice</td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_p" id="rice_p_open" name="rice_p_open" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_p" id="rice_p_recv" name="rice_p_recv" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_p" id="rice_p_cons" name="rice_p_cons" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field" id="rice_p_close" name="rice_p_close" value="0"></td>
+                            </tr>
+
+                            <!-- Upper Primary -->
+                            <tr class="row-upp">
+                                <td>
+                                    <b>Upper Primary</b>
+                                    <span class="col-badge col-badge-upp">VI-VIII</span>
+                                </td>
+                                <td>Rice</td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_up" id="rice_up_open" name="rice_up_open" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_up" id="rice_up_recv" name="rice_up_recv" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_up" id="rice_up_cons" name="rice_up_cons" value="0"></td>
+                                <td><input type="number" step="0.01" class="num-input closing-field" id="rice_up_close" name="rice_up_close" value="0"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="hint-text">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Rice Closing Balance is automatically calculated: <strong>(Opening + Received - Consumption)</strong>.</span>
+                </div>
+            </section>
+
+            <!-- =========================================
+                 STICKY FLOATING ACTION BAR
+                 ========================================= -->
+            <div class="action-bar-wrapper" id="actionBar">
+                <div class="action-bar-glass">
+                    <div class="bar-summary">
+                        <div class="summary-chip">
+                            <span>Total Closing Fund</span>
+                            <strong>₹<span id="floating-fund-close">0.00</span></strong>
+                        </div>
+                    </div>
+
+                    <div class="bar-buttons">
+                        <button type="button" class="btn btn-reset" id="btnReset">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Reset Form</span>
+                        </button>
+                        <button type="button" class="btn btn-save" id="btnSave">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>SAVE / UPDATE REPORT</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- Scripts: Supabase, jQuery, Select2, SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let schools = [];
+
+        async function loadSchools() {
+            try {
+                if (typeof window.fetchSupabaseSchools === 'function') {
+                    try {
+                        const sbData = await window.fetchSupabaseSchools();
+                        if (Array.isArray(sbData) && sbData.length > 0) {
+                            schools = sbData.map(s => ({
+                                id: s.udise,
+                                text: s.name + ' (' + s.udise + ')',
+                                category: s.category,
+                                circle: s.circle,
+                                gp: s.gp
+                            }));
+                            populateSchoolSelect();
+                            return;
+                        }
+                    } catch (sbErr) {
+                        console.warn("Supabase load error, falling back to backend adapter:", sbErr);
+                    }
+                }
+
+                // Call backend adapter which fetches from Supabase
+                const response = await fetch('/api/schools');
+                if (!response.ok) {
+                    const errJson = await response.json().catch(() => ({}));
+                    throw new Error(errJson.message || 'HTTP ' + response.status);
+                }
+                const data = await response.json();
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('No schools returned from Supabase.');
+                }
+                schools = data;
+                populateSchoolSelect();
+            } catch (err) {
+                console.error("Failed to load school master data from Supabase:", err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'School Data Unavailable',
+                    text: 'Failed to load authoritative school data from Supabase: ' + err.message
+                });
+            }
+        }
+
+        function populateSchoolSelect() {
+            const currentVal = $('#selectSchool').val();
+            $('#selectSchool').empty().append('<option value="">-- Choose School --</option>');
+            $('#selectSchool').select2({
+                data: schools,
+                placeholder: "🔍 Type to search school name or U-DISE code...",
+                allowClear: true
+            });
+            if (currentVal) {
+                $('#selectSchool').val(currentVal).trigger('change.select2');
+            }
+        }
+
+        $(document).ready(function () {
+            // Dynamically set today's date badge
+            try {
+                const today = new Date();
+                const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                if ($('#navDateBadge').length) {
+                    $('#navDateBadge').text(dateStr);
+                }
+            } catch (e) {}
+
+            // Initialize Select2 with placeholder
+            $('#selectSchool').select2({
+                placeholder: "🔍 Loading schools from Supabase...",
+                allowClear: true
+            });
+
+            // Fetch schools from Supabase
+            loadSchools();
+
+            // Clear 0 on focus for easy typing (skip readonly inputs)
+            $(document).on('focus', '.num-input', function () {
+                if ($(this).prop('readonly')) return;
+                if ($(this).val() === '0') {
+                    $(this).val('');
+                }
+            }).on('blur', '.num-input', function () {
+                if ($(this).val().trim() === '') {
+                    $(this).val('0');
+                }
+            });
+
+            // Auto calculate Fund Details (All 11 components & Table Totals)
+            function recalculateFundTotals() {
+                let sumOpen = 0, sumRecv = 0, sumExp = 0, sumClose = 0;
+
+                $('.fund-table tbody tr').each(function () {
+                    const $row = $(this);
+                    const openInput = $row.find('input[id$="_open"]');
+                    const recvInput = $row.find('input[id$="_recv"]');
+                    const expInput = $row.find('input[id$="_exp"]');
+                    const closeInput = $row.find('input[id$="_close"]');
+
+                    if (openInput.length) {
+                        const open = parseFloat(openInput.val()) || 0;
+                        const recv = parseFloat(recvInput.val()) || 0;
+                        const exp = parseFloat(expInput.val()) || 0;
+                        const close = (open + recv - exp).toFixed(2);
+                        closeInput.val(close);
+
+                        sumOpen += open;
+                        sumRecv += recv;
+                        sumExp += exp;
+                        sumClose += parseFloat(close);
+                    }
+                });
+
+                $('#total_fund_open').text(sumOpen.toFixed(2));
+                $('#total_fund_recv').text(sumRecv.toFixed(2));
+                $('#total_fund_exp').text(sumExp.toFixed(2));
+                $('#total_fund_close').text(sumClose.toFixed(2));
+                $('#floating-fund-close').text(sumClose.toFixed(2));
+            }
+
+            $(document).on('input', '.calc-fund', recalculateFundTotals);
+
+            // Validate Material Cost Expenditure against Total Meals Served * rate
+            function validateExpenditure(type, showAlert = false) {
+                if (type === 'bv') {
+                    if (!$('#fund_row_bv').is(':visible') || $('#fund_row_bv').hasClass('input-disabled-row')) {
+                        return true;
+                    }
+                    const meals = parseFloat($('#bv_meals').val()) || 0;
+                    const exp = parseFloat($('#cc_bv_exp').val()) || 0;
+                    const maxExp = Math.round(meals * 10 * 100) / 100;
+
+                    if (exp > maxExp + 0.001) {
+                        $('#cc_bv_exp').addClass('input-error');
+                        if (showAlert) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'খরচের সীমা অতিক্রম করেছে!',
+                                html: `<div style="text-align: left; font-size: 14px; line-height: 1.6;">` +
+                                    `<p style="color: #b91c1c; font-weight: 700; font-size: 15px; margin-bottom: 8px;">` +
+                                    `<i class="fa-solid fa-circle-exclamation"></i> MEAL TAKER * 10 টাকার বেশি খরচা দেখানো যাবে না!</p>` +
+                                    `<div><b>কম্পোনেন্ট:</b> MATERIAL COST BAL VATIKA</div>` +
+                                    `<div><b>Total Meals Served:</b> ${meals}</div>` +
+                                    `<div><b>সর্বোচ্চ অনুমোদিত খরচ:</b> ₹${maxExp.toFixed(2)} (${meals} × ₹10.00)</div>` +
+                                    `<div><b>আপনার ইনপুট:</b> <span style="color:#dc2626; font-weight:700;">₹${exp.toFixed(2)}</span></div>` +
+                                    `</div>`,
+                                confirmButtonColor: '#0d9488'
+                            });
+                            $('#cc_bv_exp').val(maxExp.toFixed(2));
+                            $('#cc_bv_exp').removeClass('input-error');
+                            recalculateFundTotals();
+                        }
+                        return false;
+                    } else {
+                        $('#cc_bv_exp').removeClass('input-error');
+                        return true;
+                    }
+                } else if (type === 'p') {
+                    const meals = parseFloat($('#p_meals').val()) || 0;
+                    const exp = parseFloat($('#cc_p_exp').val()) || 0;
+                    const maxExp = Math.round(meals * 10 * 100) / 100;
+
+                    if (exp > maxExp + 0.001) {
+                        $('#cc_p_exp').addClass('input-error');
+                        if (showAlert) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'খরচের সীমা অতিক্রম করেছে!',
+                                html: `<div style="text-align: left; font-size: 14px; line-height: 1.6;">` +
+                                    `<p style="color: #b91c1c; font-weight: 700; font-size: 15px; margin-bottom: 8px;">` +
+                                    `<i class="fa-solid fa-circle-exclamation"></i> MEAL TAKER * 10 টাকার বেশি খরচা দেখানো যাবে না!</p>` +
+                                    `<div><b>কম্পোনেন্ট:</b> MATERIAL COST PRIMARY</div>` +
+                                    `<div><b>Total Meals Served:</b> ${meals}</div>` +
+                                    `<div><b>সর্বোচ্চ অনুমোদিত খরচ:</b> ₹${maxExp.toFixed(2)} (${meals} × ₹10.00)</div>` +
+                                    `<div><b>আপনার ইনপুট:</b> <span style="color:#dc2626; font-weight:700;">₹${exp.toFixed(2)}</span></div>` +
+                                    `</div>`,
+                                confirmButtonColor: '#0d9488'
+                            });
+                            $('#cc_p_exp').val(maxExp.toFixed(2));
+                            $('#cc_p_exp').removeClass('input-error');
+                            recalculateFundTotals();
+                        }
+                        return false;
+                    } else {
+                        $('#cc_p_exp').removeClass('input-error');
+                        return true;
+                    }
+                } else if (type === 'up') {
+                    if (!$('#fund_row_up').is(':visible') || $('#fund_row_up').hasClass('input-disabled-row')) {
+                        return true;
+                    }
+                    const meals = parseFloat($('#up_meals').val()) || 0;
+                    const exp = parseFloat($('#cc_up_exp').val()) || 0;
+                    const maxExp = Math.round(meals * 10.17 * 100) / 100;
+
+                    if (exp > maxExp + 0.001) {
+                        $('#cc_up_exp').addClass('input-error');
+                        if (showAlert) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'খরচের সীমা অতিক্রম করেছে!',
+                                html: `<div style="text-align: left; font-size: 14px; line-height: 1.6;">` +
+                                    `<p style="color: #b91c1c; font-weight: 700; font-size: 15px; margin-bottom: 8px;">` +
+                                    `<i class="fa-solid fa-circle-exclamation"></i> MEAL TAKER * 10.17 টাকার বেশি খরচা দেখানো যাবে না!</p>` +
+                                    `<div><b>কম্পোনেন্ট:</b> MATERIAL COST UPPER PRIMARY</div>` +
+                                    `<div><b>Total Meals Served:</b> ${meals}</div>` +
+                                    `<div><b>সর্বোচ্চ অনুমোদিত খরচ:</b> ₹${maxExp.toFixed(2)} (${meals} × ₹10.17)</div>` +
+                                    `<div><b>আপনার ইনপুট:</b> <span style="color:#dc2626; font-weight:700;">₹${exp.toFixed(2)}</span></div>` +
+                                    `</div>`,
+                                confirmButtonColor: '#0d9488'
+                            });
+                            $('#cc_up_exp').val(maxExp.toFixed(2));
+                            $('#cc_up_exp').removeClass('input-error');
+                            recalculateFundTotals();
+                        }
+                        return false;
+                    } else {
+                        $('#cc_up_exp').removeClass('input-error');
+                        return true;
+                    }
+                }
+                return true;
+            }
+
+            // Auto calculate Material Cost Bal Vatika Expenditure from Total Meals Served (bv_meals * 10.00)
+            $(document).on('input', '#bv_meals', function () {
+                if ($('#fund_row_bv').is(':visible') && !$('#fund_row_bv').hasClass('input-disabled-row')) {
+                    const meals = parseFloat($(this).val()) || 0;
+                    const exp = (meals * 10).toFixed(2);
+                    $('#cc_bv_exp').val(exp);
+                    recalculateFundTotals();
+                    validateExpenditure('bv', false);
+                }
+            });
+
+            // Auto calculate Material Cost Primary Expenditure from Total Meals Served (p_meals * 10.00)
+            $(document).on('input', '#p_meals', function () {
+                const meals = parseFloat($(this).val()) || 0;
+                const exp = (meals * 10).toFixed(2);
+                $('#cc_p_exp').val(exp);
+                recalculateFundTotals();
+                validateExpenditure('p', false);
+            });
+
+            // Auto calculate Material Cost Upper Primary Expenditure from Total Meals Served (up_meals * 10.17)
+            $(document).on('input', '#up_meals', function () {
+                if ($('#fund_row_up').is(':visible') && !$('#fund_row_up').hasClass('input-disabled-row')) {
+                    const meals = parseFloat($(this).val()) || 0;
+                    const exp = (meals * 10.17).toFixed(2);
+                    $('#cc_up_exp').val(exp);
+                    recalculateFundTotals();
+                    validateExpenditure('up', false);
+                }
+            });
+
+            // Real-time expenditure input & blur/change validation
+            $(document).on('input', '#cc_bv_exp', function () {
+                validateExpenditure('bv', false);
+            });
+            $(document).on('change blur', '#cc_bv_exp', function () {
+                validateExpenditure('bv', true);
+            });
+
+            $(document).on('input', '#cc_p_exp', function () {
+                validateExpenditure('p', false);
+            });
+            $(document).on('change blur', '#cc_p_exp', function () {
+                validateExpenditure('p', true);
+            });
+
+            $(document).on('input', '#cc_up_exp', function () {
+                validateExpenditure('up', false);
+            });
+            $(document).on('change blur', '#cc_up_exp', function () {
+                validateExpenditure('up', true);
+            });
+
+            // Auto calculate Rice Details
+            $(document).on('input', '.calc-rice', function () {
+                const grp = $(this).data('group');
+                const open = parseFloat($('#' + grp + '_open').val()) || 0;
+                const recv = parseFloat($('#' + grp + '_recv').val()) || 0;
+                const cons = parseFloat($('#' + grp + '_cons').val()) || 0;
+                const close = (open + recv - cons).toFixed(2);
+                $('#' + grp + '_close').val(close);
+            });
+
+            // Function to set default date to last day of selected month
+            function setDefaultBankDate() {
+                const month = $('#selectMonth').val();
+                const year = parseInt($('#selectYear').val()) || new Date().getFullYear();
+                const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const mIdx = months.indexOf(month);
+                if (mIdx !== -1) {
+                    const lastDay = new Date(year, mIdx + 1, 0).getDate();
+                    const mm = String(mIdx + 1).padStart(2, '0');
+                    const dd = String(lastDay).padStart(2, '0');
+                    const defaultDate = `${year}-${mm}-${dd}`;
+                    if (!$('#bank_balance_date').val() || $('#bank_balance_date').data('autofilled')) {
+                        $('#bank_balance_date').val(defaultDate).data('autofilled', true);
+                    }
+                }
+            }
+
+            $('#bank_balance_date').on('change', function () {
+                $(this).data('autofilled', false);
+            });
+
+            // Live check if passbook balance matches total closing balance
+            $(document).on('input', '#bank_passbook_balance', function () {
+                const passbook = parseFloat($(this).val()) || 0;
+                const totalClose = parseFloat($('#total_fund_close').text()) || 0;
+                if (Math.abs(passbook - totalClose) < 0.01) {
+                    $('#bank_match').val('YES');
+                } else {
+                    $('#bank_match').val('NO');
+                }
+            });
+
+            // School change or Month/Year change triggers fetch
+            $('#selectSchool, #selectMonth, #selectYear').on('change', function () {
+                setDefaultBankDate();
+                loadSchoolMonthlyData();
+            });
+
+            function loadSchoolMonthlyData() {
+                const udise = $('#selectSchool').val();
+                const month = $('#selectMonth').val();
+                const year = $('#selectYear').val();
+
+                if (!udise) {
+                    $('#schoolBadgeContainer, .form-section, #actionBar').hide();
+                    return;
+                }
+
+                const school = schools.find(s => s.id === udise);
+                if (school) {
+                    $('#badgeSchoolName').text(school.text);
+                    $('#badgeUdise').text(school.id);
+                    $('#badgeCategory').html(`<span class="category-chip">${school.category}</span>`);
+                    $('#badgeCircle').text(school.circle);
+                    $('#badgeGp').text(school.gp);
+                    $('#schoolBadgeContainer').slideDown();
+
+                    // Category-based column toggling & Fund restriction
+                    const cat = school.category.toUpperCase();
+                    const isPrimary = (cat.includes('PRIMARY') && !cat.includes('UPPER')) || cat === 'PRIMARY';
+
+                    if (isPrimary) {
+                        // Primary School: Bal Vatika & Primary (Upper Primary hidden)
+                        $('.col-bv, .row-bv').show();
+                        $('.col-pri, .row-pri').show();
+                        $('.col-upp, .row-upp').hide();
+
+                        // Fund Details: MATERIAL COST UPPER PRIMARY locked
+                        $('#fund_row_up').addClass('input-disabled-row');
+                        $('#cc_up_open, #cc_up_recv, #cc_up_exp, #cc_up_close')
+                            .prop('readonly', true)
+                            .attr('tabindex', '-1')
+                            .val(0);
+                        $('#badge_fund_up').show();
+
+                        // Fund Details: MATERIAL COST BAL VATIKA allowed
+                        $('#fund_row_bv').removeClass('input-disabled-row');
+                        $('#cc_bv_open, #cc_bv_recv, #cc_bv_exp')
+                            .prop('readonly', false)
+                            .removeAttr('tabindex');
+                        $('#badge_fund_bv').hide();
+                    } else {
+                        // Non-Primary School (Upper Primary / Jr. High / High School):
+                        // Primary & Upper Primary shown, Bal Vatika hidden
+                        $('.col-bv, .row-bv').hide();
+                        $('.col-pri, .row-pri').show();
+                        $('.col-upp, .row-upp').show();
+
+                        // Fund Details: MATERIAL COST BAL VATIKA locked
+                        $('#fund_row_bv').addClass('input-disabled-row');
+                        $('#cc_bv_open, #cc_bv_recv, #cc_bv_exp, #cc_bv_close')
+                            .prop('readonly', true)
+                            .attr('tabindex', '-1')
+                            .val(0);
+                        $('#badge_fund_bv').show();
+
+                        // Fund Details: MATERIAL COST UPPER PRIMARY allowed
+                        $('#fund_row_up').removeClass('input-disabled-row');
+                        $('#cc_up_open, #cc_up_recv, #cc_up_exp')
+                            .prop('readonly', false)
+                            .removeAttr('tabindex');
+                        $('#badge_fund_up').hide();
+                    }
+
+                    // Reset inputs to 0 first
+                    resetInputs();
+
+                    // Fetch existing data via AJAX
+                    $.ajax({
+                        url: '/api/monthly-report',
+                        type: 'GET',
+                        data: { u_dise: udise, month_name: month, year: year },
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res.status === 'success' && res.data) {
+                                const d = res.data;
+                                // Populate Meal Days
+                                $('#bv_days').val(d.bv_days || 0);
+                                $('#p_days').val(d.p_days || 0);
+                                $('#up_days').val(d.up_days || 0);
+                                $('#bv_actual').val(d.bv_actual || 0);
+                                $('#p_actual').val(d.p_actual || 0);
+                                $('#up_actual').val(d.up_actual || 0);
+                                $('#bv_meals').val(d.bv_meals || 0);
+                                $('#p_meals').val(d.p_meals || 0);
+                                $('#up_meals').val(d.up_meals || 0);
+
+                                // Populate Fund Details
+                                if (isPrimary) {
+                                    $('#cc_bv_open').val(d.cc_bv_open || 0);
+                                    $('#cc_bv_recv').val(d.cc_bv_recv || 0);
+                                    $('#cc_bv_exp').val(d.cc_bv_exp || 0);
+
+                                    $('#cc_up_open').val(0);
+                                    $('#cc_up_recv').val(0);
+                                    $('#cc_up_exp').val(0);
+                                    $('#cc_up_close').val(0);
+                                } else {
+                                    $('#cc_bv_open').val(0);
+                                    $('#cc_bv_recv').val(0);
+                                    $('#cc_bv_exp').val(0);
+                                    $('#cc_bv_close').val(0);
+
+                                    $('#cc_up_open').val(d.cc_up_open || 0);
+                                    $('#cc_up_recv').val(d.cc_up_recv || 0);
+                                    $('#cc_up_exp').val(d.cc_up_exp || 0);
+                                }
+
+                                $('#cc_p_open').val(d.cc_p_open || 0);
+                                $('#cc_p_recv').val(d.cc_p_recv || 0);
+                                $('#cc_p_exp').val(d.cc_p_exp || 0);
+
+                                $('#bi_open').val(d.bi_open || 0);
+                                $('#bi_recv').val(d.bi_recv || 0);
+                                $('#bi_exp').val(d.bi_exp || 0);
+
+                                $('#lpg_open').val(d.lpg_open || 0);
+                                $('#lpg_recv').val(d.lpg_recv || 0);
+                                $('#lpg_exp').val(d.lpg_exp || 0);
+
+                                $('#nutri_open').val(d.nutri_open || 0);
+                                $('#nutri_recv').val(d.nutri_recv || 0);
+                                $('#nutri_exp').val(d.nutri_exp || 0);
+
+                                $('#mme_open').val(d.mme_open || 0);
+                                $('#mme_recv').val(d.mme_recv || 0);
+                                $('#mme_exp').val(d.mme_exp || 0);
+
+                                $('#kd_open').val(d.kd_open || 0);
+                                $('#kd_recv').val(d.kd_recv || 0);
+                                $('#kd_exp').val(d.kd_exp || 0);
+
+                                $('#ks_open').val(d.ks_open || 0);
+                                $('#ks_recv').val(d.ks_recv || 0);
+                                $('#ks_exp').val(d.ks_exp || 0);
+
+                                $('#ng_open').val(d.ng_open || 0);
+                                $('#ng_recv').val(d.ng_recv || 0);
+                                $('#ng_exp').val(d.ng_exp || 0);
+
+                                $('#bc_open').val(d.bc_open || 0);
+                                $('#bc_recv').val(d.bc_recv || 0);
+                                $('#bc_exp').val(d.bc_exp || 0);
+
+                                $('#bank_match').val(d.bank_match || 'YES');
+                                $('#bank_passbook_balance').val(d.bank_passbook_balance || 0);
+                                if (d.bank_balance_date) {
+                                    $('#bank_balance_date').val(d.bank_balance_date).data('autofilled', false);
+                                } else {
+                                    setDefaultBankDate();
+                                }
+
+                                recalculateFundTotals();
+
+                                // Populate Rice Details
+                                $('#rice_bv_open').val(d.rice_bv_open || 0);
+                                $('#rice_bv_recv').val(d.rice_bv_recv || 0);
+                                $('#rice_bv_cons').val(d.rice_bv_cons || 0);
+                                $('#rice_bv_close').val(d.rice_bv_close || 0);
+
+                                $('#rice_p_open').val(d.rice_p_open || 0);
+                                $('#rice_p_recv').val(d.rice_p_recv || 0);
+                                $('#rice_p_cons').val(d.rice_p_cons || 0);
+                                $('#rice_p_close').val(d.rice_p_close || 0);
+
+                                $('#rice_up_open').val(d.rice_up_open || 0);
+                                $('#rice_up_recv').val(d.rice_up_recv || 0);
+                                $('#rice_up_cons').val(d.rice_up_cons || 0);
+                                $('#rice_up_close').val(d.rice_up_close || 0);
+
+                                $('#statusAlertText').html('<strong>Existing report found!</strong> Loaded saved data for <b>' + month + ' ' + year + '</b>. You can review and update values below.');
+                                $('#statusAlert').removeClass('status-new').addClass('status-existing').css('display', 'flex').hide().slideDown();
+                            } else {
+                                $('#statusAlertText').html('<strong>New Entry:</strong> No prior record found for <b>' + month + ' ' + year + '</b>. Enter values below and click Save.');
+                                $('#statusAlert').removeClass('status-existing').addClass('status-new').css('display', 'flex').hide().slideDown();
+                                setDefaultBankDate();
+                            }
+
+                            $('.form-section').fadeIn();
+                            $('#actionBar').fadeIn();
+                        },
+                        error: function () {
+                            $('#statusAlertText').html('Ready to enter report details for <b>' + month + ' ' + year + '</b>.');
+                            $('#statusAlert').removeClass('status-existing').addClass('status-new').css('display', 'flex').hide().slideDown();
+                            setDefaultBankDate();
+                            $('.form-section').fadeIn();
+                            $('#actionBar').fadeIn();
+                        }
+                    });
+                }
+            }
+
+            function resetInputs() {
+                $('.num-input').val(0);
+                $('#bank_match').val('YES');
+                $('#bank_passbook_balance').val(0);
+                setDefaultBankDate();
+
+                const udise = $('#selectSchool').val();
+                if (udise) {
+                    const school = schools.find(s => s.id === udise);
+                    if (school) {
+                        const cat = school.category.toUpperCase();
+                        const isPrimary = (cat.includes('PRIMARY') && !cat.includes('UPPER')) || cat === 'PRIMARY';
+                        if (isPrimary) {
+                            $('#cc_up_open, #cc_up_recv, #cc_up_exp, #cc_up_close').val(0);
+                        } else {
+                            $('#cc_bv_open, #cc_bv_recv, #cc_bv_exp, #cc_bv_close').val(0);
+                        }
+                    }
+                }
+                recalculateFundTotals();
+            }
+
+            $('#btnReset').on('click', function () {
+                Swal.fire({
+                    title: 'Reset form values?',
+                    text: 'All input fields will be reset back to 0.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Reset',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#e11d48'
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        resetInputs();
+                    }
+                });
+            });
+
+            // Save / Update Handler
+            $('#btnSave').on('click', function () {
+                const udise = $('#selectSchool').val();
+                const month = $('#selectMonth').val();
+                const year = $('#selectYear').val();
+
+                if (!udise) {
+                    Swal.fire({ icon: 'warning', text: 'Please select a school first!' });
+                    return;
+                }
+
+                const school = schools.find(s => s.id === udise);
+                if (!school) return;
+
+                // Validate Material Cost Expenditure limits (Meals Served * rate)
+                if (!validateExpenditure('bv', true)) return;
+                if (!validateExpenditure('p', true)) return;
+                if (!validateExpenditure('up', true)) return;
+
+                Swal.fire({
+                    title: 'Save Monthly Report?',
+                    html: `Update report for <strong>${school.text}</strong> for <strong>${month} ${year}</strong>?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Save Now',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#0d9488'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        const payload = {
+                            u_dise: udise,
+                            school_name: school.text,
+                            circle_name: school.circle,
+                            gp_name: school.gp,
+                            category: school.category,
+                            month_name: month,
+                            year: year,
+
+                            // Meals
+                            bv_days: $('#bv_days').val() || 0,
+                            p_days: $('#p_days').val() || 0,
+                            up_days: $('#up_days').val() || 0,
+                            bv_actual: $('#bv_actual').val() || 0,
+                            p_actual: $('#p_actual').val() || 0,
+                            up_actual: $('#up_actual').val() || 0,
+                            bv_meals: $('#bv_meals').val() || 0,
+                            p_meals: $('#p_meals').val() || 0,
+                            up_meals: $('#up_meals').val() || 0,
+
+                            // 11 Fund Details
+                            cc_bv_open: $('#cc_bv_open').val() || 0,
+                            cc_bv_recv: $('#cc_bv_recv').val() || 0,
+                            cc_bv_exp: $('#cc_bv_exp').val() || 0,
+                            cc_bv_close: $('#cc_bv_close').val() || 0,
+
+                            cc_p_open: $('#cc_p_open').val() || 0,
+                            cc_p_recv: $('#cc_p_recv').val() || 0,
+                            cc_p_exp: $('#cc_p_exp').val() || 0,
+                            cc_p_close: $('#cc_p_close').val() || 0,
+
+                            cc_up_open: $('#cc_up_open').val() || 0,
+                            cc_up_recv: $('#cc_up_recv').val() || 0,
+                            cc_up_exp: $('#cc_up_exp').val() || 0,
+                            cc_up_close: $('#cc_up_close').val() || 0,
+
+                            bi_open: $('#bi_open').val() || 0,
+                            bi_recv: $('#bi_recv').val() || 0,
+                            bi_exp: $('#bi_exp').val() || 0,
+                            bi_close: $('#bi_close').val() || 0,
+
+                            lpg_open: $('#lpg_open').val() || 0,
+                            lpg_recv: $('#lpg_recv').val() || 0,
+                            lpg_exp: $('#lpg_exp').val() || 0,
+                            lpg_close: $('#lpg_close').val() || 0,
+
+                            nutri_open: $('#nutri_open').val() || 0,
+                            nutri_recv: $('#nutri_recv').val() || 0,
+                            nutri_exp: $('#nutri_exp').val() || 0,
+                            nutri_close: $('#nutri_close').val() || 0,
+
+                            mme_open: $('#mme_open').val() || 0,
+                            mme_recv: $('#mme_recv').val() || 0,
+                            mme_exp: $('#mme_exp').val() || 0,
+                            mme_close: $('#mme_close').val() || 0,
+
+                            kd_open: $('#kd_open').val() || 0,
+                            kd_recv: $('#kd_recv').val() || 0,
+                            kd_exp: $('#kd_exp').val() || 0,
+                            kd_close: $('#kd_close').val() || 0,
+
+                            ks_open: $('#ks_open').val() || 0,
+                            ks_recv: $('#ks_recv').val() || 0,
+                            ks_exp: $('#ks_exp').val() || 0,
+                            ks_close: $('#ks_close').val() || 0,
+
+                            ng_open: $('#ng_open').val() || 0,
+                            ng_recv: $('#ng_recv').val() || 0,
+                            ng_exp: $('#ng_exp').val() || 0,
+                            ng_close: $('#ng_close').val() || 0,
+
+                            bc_open: $('#bc_open').val() || 0,
+                            bc_recv: $('#bc_recv').val() || 0,
+                            bc_exp: $('#bc_exp').val() || 0,
+                            bc_close: $('#bc_close').val() || 0,
+
+                            bank_match: $('#bank_match').val() || 'YES',
+                            bank_passbook_balance: $('#bank_passbook_balance').val() || 0,
+                            bank_balance_date: $('#bank_balance_date').val() || '',
+
+                            // Rice
+                            rice_bv_open: $('#rice_bv_open').val() || 0,
+                            rice_bv_recv: $('#rice_bv_recv').val() || 0,
+                            rice_bv_cons: $('#rice_bv_cons').val() || 0,
+                            rice_bv_close: $('#rice_bv_close').val() || 0,
+
+                            rice_p_open: $('#rice_p_open').val() || 0,
+                            rice_p_recv: $('#rice_p_recv').val() || 0,
+                            rice_p_cons: $('#rice_p_cons').val() || 0,
+                            rice_p_close: $('#rice_p_close').val() || 0,
+
+                            rice_up_open: $('#rice_up_open').val() || 0,
+                            rice_up_recv: $('#rice_up_recv').val() || 0,
+                            rice_up_cons: $('#rice_up_cons').val() || 0,
+                            rice_up_close: $('#rice_up_close').val() || 0
+                        };
+
+                        const $btn = $('#btnSave');
+                        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+                        $.ajax({
+                            url: '/api/monthly-report/save',
+                            type: 'POST',
+                            data: JSON.stringify(payload),
+                            contentType: 'application/json',
+                            dataType: 'json',
+                            success: function (resp) {
+                                $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk"></i> SAVE / UPDATE REPORT');
+                                if (resp.status === 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: resp.message || 'Report saved successfully!',
+                                        confirmButtonColor: '#0d9488'
+                                    }).then(() => {
+                                        loadSchoolMonthlyData();
+                                    });
+                                } else {
+                                    Swal.fire({ icon: 'error', title: 'Error', text: resp.message || 'Could not save report.' });
+                                }
+                            },
+                            error: function (xhr, status, err) {
+                                $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk"></i> SAVE / UPDATE REPORT');
+                                Swal.fire({ icon: 'error', title: 'Network Error', text: 'Failed to communicate with server.' });
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>

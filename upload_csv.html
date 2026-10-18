@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Upload - PM POSHAN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #1e293b;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header p {
+            color: #64748b;
+            margin-top: 5px;
+            font-size: 15px;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .upload-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 350px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+        }
+        .upload-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 20px;
+        }
+        .pri-icon { background: #e0e7ff; color: #4f46e5; }
+        .upp-icon { background: #f3e8ff; color: #7c3aed; }
+
+        h2 {
+            color: #1e293b;
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            transition: 0.3s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-pri { background: #4f46e5; }
+        .btn-pri:hover:not(:disabled) { background: #4338ca; }
+        .btn-upp { background: #7c3aed; }
+        .btn-upp:hover:not(:disabled) { background: #6d28d9; }
+        .btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+        .success {
+            color: #16a34a;
+            background: #dcfce7;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 15px;
+            font-weight: 600;
+            text-align: left;
+            line-height: 1.5;
+            border: 1px solid #bbf7d0;
+        }
+        .error {
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 15px;
+            font-weight: 600;
+            text-align: left;
+            line-height: 1.5;
+            border: 1px solid #fecaca;
+        }
+        
+        .back-link {
+            margin-top: 40px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #4f46e5; }
+        
+        .logout {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #ef4444;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .logout:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 20px; }
+            .logout { position: static; margin-bottom: 20px; align-self: flex-end; }
+            .container { flex-direction: column; align-items: center; }
+            .upload-card { width: 100%; max-width: 360px; }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="/api/auth/logout?type=main" class="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+
+    <div class="header">
+        <h1>Upload Monthly Reports</h1>
+        <p>Upload CSV files for Primary and Upper Primary schools separately.</p>
+    </div>
+
+    <div class="container">
+        
+        <!-- Primary Schools Upload Card -->
+        <div class="upload-card">
+            <div class="icon-box pri-icon"><i class="fas fa-school"></i></div>
+            <h2>Primary Schools</h2>
+            <form id="form_primary">
+                <select name="month" id="month_primary" required>
+                    <option value="" disabled selected>Select Month</option>
+                    <option>January</option><option>February</option><option>March</option>
+                    <option>April</option><option>May</option><option>June</option>
+                    <option>July</option><option>August</option><option>September</option>
+                    <option>October</option><option>November</option><option>December</option>
+                </select>
+                <select name="year" id="year_primary">
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2024">2024</option>
+                </select>
+                <input type="file" id="file_primary" name="file_primary" accept=".csv" required>
+                <button type="submit" id="btn_primary" class="btn btn-pri">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Primary CSV
+                </button>
+                <div id="msg_primary_container"></div>
+            </form>
+        </div>
+
+        <!-- Upper Primary Schools Upload Card -->
+        <div class="upload-card">
+            <div class="icon-box upp-icon"><i class="fas fa-graduation-cap"></i></div>
+            <h2>Upper Primary Schools</h2>
+            <form id="form_upper">
+                <select name="month_u" id="month_upper" required>
+                    <option value="" disabled selected>Select Month</option>
+                    <option>January</option><option>February</option><option>March</option>
+                    <option>April</option><option>May</option><option>June</option>
+                    <option>July</option><option>August</option><option>September</option>
+                    <option>October</option><option>November</option><option>December</option>
+                </select>
+                <select name="year_u" id="year_upper">
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2024">2024</option>
+                </select>
+                <input type="file" id="file_upper" name="file_upper" accept=".csv" required>
+                <button type="submit" id="btn_upper" class="btn btn-upp">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload UP-Primary CSV
+                </button>
+                <div id="msg_upper_container"></div>
+            </form>
+        </div>
+
+    </div>
+
+    <a href="admin_dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+
+    <script>
+        // Enforce Main Admin Authentication Session
+        (function enforceAuth() {
+            if (window.location.protocol === 'file:') return;
+            fetch('/api/auth/session?admin_type=main', {
+                cache: 'no-store',
+                credentials: 'same-origin'
+            })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Session invalid');
+                return res.json();
+            })
+            .then(function (data) {
+                if (!data || !data.authenticated || data.admin_type !== 'main') {
+                    window.location.replace('admin_login.html');
+                }
+            })
+            .catch(function () {
+                window.location.replace('admin_login.html');
+            });
+        })();
+
+        // Setup Form Handlers on DOM Ready
+        document.addEventListener('DOMContentLoaded', function () {
+            setupUploadForm({
+                formId: 'form_primary',
+                monthSelectId: 'month_primary',
+                yearSelectId: 'year_primary',
+                fileInputId: 'file_primary',
+                buttonId: 'btn_primary',
+                containerId: 'msg_primary_container',
+                type: 'primary',
+                defaultBtnHtml: '<i class="fas fa-cloud-upload-alt"></i> Upload Primary CSV'
+            });
+
+            setupUploadForm({
+                formId: 'form_upper',
+                monthSelectId: 'month_upper',
+                yearSelectId: 'year_upper',
+                fileInputId: 'file_upper',
+                buttonId: 'btn_upper',
+                containerId: 'msg_upper_container',
+                type: 'upper',
+                defaultBtnHtml: '<i class="fas fa-cloud-upload-alt"></i> Upload UP-Primary CSV'
+            });
+        });
+
+        /**
+         * Robust CSV Upload Handler with Client-Side PapaParse Validation and Server Supabase Upsert
+         */
+        function setupUploadForm(cfg) {
+            const form = document.getElementById(cfg.formId);
+            const monthSelect = document.getElementById(cfg.monthSelectId);
+            const yearSelect = document.getElementById(cfg.yearSelectId);
+            const fileInput = document.getElementById(cfg.fileInputId);
+            const btn = document.getElementById(cfg.buttonId);
+            const msgBox = document.getElementById(cfg.containerId);
+
+            if (!form || !btn) return;
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                msgBox.innerHTML = '';
+
+                const month = monthSelect.value;
+                const year = yearSelect.value;
+                const file = fileInput.files[0];
+
+                if (!month) {
+                    showError(msgBox, 'Please select a valid month.');
+                    return;
+                }
+                if (!year) {
+                    showError(msgBox, 'Please select a valid year.');
+                    return;
+                }
+                if (!file) {
+                    showError(msgBox, 'Please choose a CSV file to upload.');
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Parsing & Uploading...';
+
+                // Parse CSV in browser using PapaParse
+                Papa.parse(file, {
+                    header: false,
+                    skipEmptyLines: 'greedy',
+                    complete: async function (results) {
+                        try {
+                            const rawRows = results.data;
+                            if (!rawRows || rawRows.length < 2) {
+                                showError(msgBox, 'The selected CSV file is empty or contains no data rows.');
+                                resetBtn();
+                                return;
+                            }
+
+                            // Exclude header row (matching original PHP fgetcsv)
+                            const dataRows = rawRows.slice(1).filter(function (r) {
+                                return r && r.length >= 2 && String(r[1] || '').trim().length > 0;
+                            });
+
+                            if (dataRows.length === 0) {
+                                showError(msgBox, 'No valid school rows with U-DISE found in the CSV.');
+                                resetBtn();
+                                return;
+                            }
+
+                            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing ' + dataRows.length + ' schools to Supabase...';
+
+                            // Send parsed rows directly to authenticated backend endpoint
+                            const payload = {
+                                month: month,
+                                year: year,
+                                type: cfg.type,
+                                rows: dataRows
+                            };
+
+                            const res = await fetch('/api/monthly-report/upload-csv', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (res.status === 401) {
+                                window.location.href = 'admin_login.html';
+                                return;
+                            }
+
+                            const json = await res.json();
+
+                            if (res.ok && json.status === 'success') {
+                                showSuccess(msgBox, json.message || 'File uploaded successfully!');
+                                fileInput.value = '';
+                            } else {
+                                showError(msgBox, json.message || 'Failed to update database with CSV records.');
+                            }
+                        } catch (err) {
+                            console.error('Upload error:', err);
+                            showError(msgBox, 'Network or processing error: ' + (err.message || 'Unable to complete upload.'));
+                        } finally {
+                            resetBtn();
+                        }
+                    },
+                    error: function (parseErr) {
+                        console.error('CSV Parsing Error:', parseErr);
+                        showError(msgBox, 'Failed to read CSV file: ' + (parseErr.message || 'Invalid format'));
+                        resetBtn();
+                    }
+                });
+            });
+
+            function resetBtn() {
+                btn.disabled = false;
+                btn.innerHTML = cfg.defaultBtnHtml;
+            }
+        }
+
+        function showSuccess(container, msg) {
+            container.innerHTML = '<div class="success"><i class="fas fa-check-circle"></i> ' + escapeHtml(msg) + '</div>';
+        }
+
+        function showError(container, msg) {
+            container.innerHTML = '<div class="error"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(msg) + '</div>';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

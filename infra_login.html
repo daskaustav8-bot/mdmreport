@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Basic Infrastructure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+        }
+
+        .login-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            background: #ffedd5;
+            color: #f97316;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        p {
+            margin: 0 0 30px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: .3s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #94a3b8;
+        }
+
+        .toggle-password:hover {
+            color: #f97316;
+        }
+
+        .btn {
+            width: 100%;
+            background: #f97316;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        .btn:hover {
+            background: #ea580c;
+        }
+
+        .error {
+            color: #ef4444;
+            font-size: 13px;
+            margin-bottom: 20px;
+            background: #fee2e2;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #0f172a;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-card">
+        <div class="icon-box"><i class="fa-solid fa-lock"></i></div>
+        <h2>Basic Infrastructure Login</h2>
+        <p>সিস্টেমে প্রবেশ করতে লগইন করুন</p>
+
+        <div id="errorBox" class="error" style="display: none;"><i class="fa-solid fa-circle-exclamation"></i> <span id="errorText">ভুল ইউজারনেম বা পাসওয়ার্ড!</span></div>
+
+        <form id="loginForm" method="POST" action="/api/auth/login">
+            <input type="hidden" name="admin_type" value="infrastructure">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" id="usernameInput" placeholder="Enter username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div class="password-container">
+                    <input type="password" name="password" id="passwordInput" placeholder="Enter password" required autocomplete="current-password">
+                    <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+                </div>
+                <div id="capsWarning" style="display: none; color: #d97706; font-size: 12px; margin-top: 6px; font-weight: 500;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Caps Lock চালু আছে (Caps Lock is ON)
+                </div>
+            </div>
+            <button type="submit" name="login_btn" id="loginBtn" class="btn">Login</button>
+        </form>
+
+        <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+    </div>
+
+    <script>
+        // Check session immediately
+        (function checkAuth() {
+            fetch('/api/auth/session?admin_type=infrastructure', { 
+                cache: 'no-store',
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    return null;
+                })
+                .then(function (data) {
+                    if (data && data.authenticated && data.admin_type === 'infrastructure') {
+                        window.location.replace(data.redirect || 'basicinfrastructure.html');
+                    }
+                })
+                .catch(function (err) {
+                    console.warn('Session check error:', err);
+                });
+        })();
+
+        // Password visibility toggle
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#passwordInput');
+
+        togglePassword.addEventListener('click', function (e) {
+            // toggle the type attribute
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+
+            // toggle the eye icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Caps Lock detection
+        const capsWarning = document.getElementById('capsWarning');
+        function checkCapsLock(e) {
+            if (e.getModifierState && e.getModifierState('CapsLock')) {
+                capsWarning.style.display = 'block';
+            } else {
+                capsWarning.style.display = 'none';
+            }
+        }
+        password.addEventListener('keyup', checkCapsLock);
+        password.addEventListener('keydown', checkCapsLock);
+
+        // Form submission & error handling
+        const loginForm = document.getElementById('loginForm');
+        const errorBox = document.getElementById('errorBox');
+        const errorText = document.getElementById('errorText');
+        const loginBtn = document.getElementById('loginBtn');
+        const usernameInput = document.getElementById('usernameInput');
+
+        function showError(msg) {
+            errorText.textContent = msg || 'ভুল ইউজারনেম বা পাসওয়ার্ড!';
+            errorBox.style.display = 'block';
+        }
+
+        function hideError() {
+            errorBox.style.display = 'none';
+        }
+
+        // Check if there is an error query param in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('error')) {
+            showError(urlParams.get('error'));
+        }
+
+        usernameInput.addEventListener('input', hideError);
+        password.addEventListener('input', hideError);
+
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            hideError();
+
+            const userVal = usernameInput.value.trim();
+            const passVal = password.value;
+
+            if (!userVal || !passVal) {
+                showError('ভুল ইউজারনেম বা পাসওয়ার্ড!');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            const originalBtnText = loginBtn.textContent;
+            loginBtn.textContent = 'Login...';
+
+            const payload = {
+                username: userVal,
+                password: passVal,
+                admin_type: 'infrastructure'
+            };
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload),
+                credentials: 'same-origin'
+            })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { status: response.status, ok: response.ok, data: data };
+                }).catch(function () {
+                    return { status: response.status, ok: response.ok, data: null };
+                });
+            })
+            .then(function (res) {
+                if (res.ok && res.data && res.data.success) {
+                    sessionStorage.setItem('infra_access', 'true');
+                    sessionStorage.setItem('circle_name', res.data.circle_name || 'Pandua Block Admin');
+                    window.location.href = res.data.redirect || 'basicinfrastructure.html';
+                } else {
+                    showError(res.data && res.data.error ? res.data.error : 'ভুল ইউজারনেম বা পাসওয়ার্ড!');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = originalBtnText;
+                }
+            })
+            .catch(function (err) {
+                console.error('Login error:', err);
+                showError('ভুল ইউজারনেম বা পাসওয়ার্ড!');
+                loginBtn.disabled = false;
+                loginBtn.textContent = originalBtnText;
+            });
+        });
+    </script>
+
+</body>
+
+</html>
