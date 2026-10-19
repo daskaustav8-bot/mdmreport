@@ -705,7 +705,6 @@
 
         table.entry-table {
             width: 100%;
-            min-width: 680px;
             border-collapse: collapse;
             font-size: 13.5px;
         }
@@ -731,7 +730,6 @@
         table.entry-table th:first-child {
             text-align: left;
             padding-left: 18px;
-            min-width: 240px;
         }
 
         table.entry-table td {
@@ -930,6 +928,28 @@
             flex-shrink: 0;
         }
 
+        .verif-date-input {
+            width: 140px;
+            height: 38px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 2px 8px;
+        }
+
+        .verif-balance-input {
+            width: 120px;
+            height: 38px;
+            font-weight: 800;
+            border-color: var(--primary);
+        }
+
+        .verif-match-select {
+            height: 38px;
+            width: 110px;
+            font-weight: 800;
+            text-align: center;
+        }
+
         .hint-text {
             font-size: 12.5px;
             color: var(--text-muted);
@@ -1047,362 +1067,167 @@
             transform: translateY(0);
         }
 
-        /* =========================================
-           RESPONSIVE BREAKPOINTS (MOBILE OPTIMIZED)
-           ========================================= */
+        /* =========================================================================
+           RESPONSIVE PROPORTIONAL SCALING (DESKTOP LAYOUT PRESERVED ON ALL SCREENS)
+           Zero Horizontal Scrolling • Zero Sideways Swiping • Identical Alignment
+           ========================================================================= */
 
-        /* Tablets & small desktops (<= 860px) */
-        @media (max-width: 860px) {
-            .select-row {
-                grid-template-columns: 1fr;
-            }
+        /* Never show swipe hint anywhere */
+        .table-scroll-hint {
+            display: none !important;
         }
 
-        /* Tablets, iPads & larger mobile (<= 768px) */
-        @media (max-width: 768px) {
+        /* Tablets & Medium Screens (<= 860px) */
+        @media (max-width: 860px) {
             body {
-                padding: 16px 12px calc(130px + env(safe-area-inset-bottom, 0px));
+                padding: 18px 12px max(90px, calc(90px + env(safe-area-inset-bottom, 0px)));
             }
 
-            /* Show horizontal swipe hint on mobile */
-            .table-scroll-hint {
-                display: flex !important;
+            .container {
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
-            /* Sticky First Column for All Data Tables on swipe */
-            table.entry-table th:first-child {
-                position: sticky;
-                left: 0;
-                z-index: 5;
-                background: #f8fafc;
-                box-shadow: 2px 0 6px rgba(15, 23, 42, 0.08);
-                border-right: 1.5px solid var(--border);
+            .panel,
+            .form-section {
+                padding: 20px 20px;
+                border-radius: 16px;
+                margin-bottom: 18px;
             }
 
-            table.entry-table td:first-child {
-                position: sticky;
-                left: 0;
-                z-index: 4;
-                background: #ffffff;
-                box-shadow: 2px 0 6px rgba(15, 23, 42, 0.08);
-                border-right: 1.5px solid var(--border);
+            /* Header: keep desktop horizontal arrangement */
+            .top-navbar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 18px;
+                margin-bottom: 18px;
+                border-radius: 16px;
             }
 
-            table.entry-table tr:hover td:first-child {
-                background: #fbfcfe;
+            .brand-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 17px;
             }
 
-            .total-row td:first-child {
-                background: #f1f5f9 !important;
-                z-index: 4;
+            .header-title h1 {
+                font-size: 16px;
             }
 
-            .input-disabled-row td:first-child {
-                background: #f8fafc !important;
+            /* Selectors: 2 columns side-by-side */
+            .select-row {
+                display: grid;
+                grid-template-columns: 200px 1fr;
+                gap: 14px;
+            }
+
+            /* School Profile: 4 pills side-by-side */
+            .school-meta-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+
+            /* All tables: zero horizontal scroll */
+            .table-responsive {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+                margin-bottom: 12px;
+            }
+
+            table.entry-table {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                table-layout: fixed;
             }
 
             table.entry-table th:first-child,
             table.entry-table td:first-child {
-                width: 140px !important;
-                min-width: 140px !important;
-                max-width: 155px !important;
-                padding-left: 10px;
-                padding-right: 8px;
-                font-size: 11.5px;
-                line-height: 1.35;
-                white-space: normal;
-                word-break: break-word;
+                position: static !important;
+                box-shadow: none !important;
+                border-right: 1px solid var(--border-light) !important;
             }
 
-            table.fund-table th:first-child,
-            table.fund-table td:first-child {
-                width: 145px !important;
-                min-width: 145px !important;
-                max-width: 160px !important;
-            }
-
-            .table-responsive {
-                margin-bottom: 12px;
-                border-radius: var(--radius-sm);
-            }
-
-            .table-responsive-fund {
-                margin-bottom: 12px !important;
-                border-bottom: 1.5px solid var(--border) !important;
-                border-radius: var(--radius-sm) !important;
-            }
-
-            table.entry-table {
-                min-width: 540px;
-            }
-
-            #secMeal table.entry-table {
-                min-width: 480px;
-            }
-
-            table.entry-table th {
-                font-size: 10.5px;
-                padding: 10px 6px;
-            }
-
-            table.entry-table td {
-                padding: 8px 6px;
-                font-size: 12px;
-            }
-
-            .num-input {
-                height: 40px;
-                font-size: 13.5px;
-                padding: 0 4px;
-                border-radius: 6px;
-            }
-
-            .total-row td {
-                padding: 10px 6px !important;
-            }
-
-            .total-cell-val {
-                font-size: 13px;
-            }
-
-            .total-cell-close {
-                padding: 4px 8px;
-                font-size: 13px;
-            }
-
-            /* Form controls touch friendly */
-            .form-control,
-            .select2-container--default .select2-selection--single {
-                height: 46px !important;
-                font-size: 15px !important;
-            }
-
-            .select2-container--default .select2-selection--single .select2-selection__rendered {
-                line-height: 46px !important;
-                font-size: 14px !important;
-                padding-left: 12px !important;
-                padding-right: 32px !important;
-            }
-
-            .select2-container--default .select2-selection--single .select2-selection__arrow {
-                height: 44px !important;
-                right: 8px !important;
-            }
-
-            .select2-search--dropdown .select2-search__field {
-                height: 44px !important;
-                font-size: 16px !important; /* Prevents iOS auto-zoom on search */
-            }
-
-            .select2-results__option {
-                padding: 12px 14px !important;
-                font-size: 13.5px !important;
-            }
-
-            /* Mobile Sticky Bottom Action Bar */
-            .action-bar-wrapper {
-                position: fixed !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                margin: 0 !important;
-                padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
-                background: rgba(255, 255, 255, 0.96) !important;
-                backdrop-filter: blur(16px) !important;
-                -webkit-backdrop-filter: blur(16px) !important;
-                border-top: 1.5px solid var(--border) !important;
-                box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.1) !important;
-                z-index: 1000 !important;
+            .verification-panel {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                padding: 12px 16px;
             }
 
             .action-bar-glass {
-                background: transparent !important;
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
-                border: none !important;
-                border-radius: 0 !important;
-                padding: 0 !important;
-                box-shadow: none !important;
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 8px !important;
-                max-width: 1040px;
-                margin: 0 auto;
-                width: 100%;
-            }
-
-            .bar-summary {
-                border-bottom: 1px dashed var(--border) !important;
-                padding-bottom: 6px !important;
-                width: 100% !important;
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-            }
-
-            .summary-chip {
-                display: flex !important;
-                flex-direction: row !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                width: 100% !important;
-            }
-
-            .summary-chip span {
-                font-size: 11.5px !important;
-                font-weight: 700 !important;
-                color: var(--text-muted) !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.5px !important;
-            }
-
-            .summary-chip strong {
-                font-size: 17px !important;
-                font-weight: 800 !important;
-                color: var(--primary-dark) !important;
-            }
-
-            .bar-buttons {
-                display: flex !important;
-                flex-direction: row !important;
-                gap: 8px !important;
-                width: 100% !important;
-            }
-
-            .btn {
-                height: 44px !important;
-                min-height: 44px !important;
-                border-radius: 10px !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                box-sizing: border-box !important;
-            }
-
-            .btn-reset {
-                flex: 0 0 auto !important;
-                padding: 0 16px !important;
-                font-size: 13px !important;
-                gap: 6px !important;
-                white-space: nowrap !important;
-            }
-
-            .btn-save {
-                flex: 1 1 auto !important;
-                padding: 0 16px !important;
-                font-size: 13.5px !important;
-                gap: 8px !important;
-                white-space: nowrap !important;
-                letter-spacing: 0.2px !important;
-            }
-
-            /* Verification Panel on tablet */
-            .verification-panel {
-                border-radius: var(--radius-md) !important;
-                border-top: 1.5px solid var(--border) !important;
-                padding: 14px !important;
-                margin-bottom: 12px !important;
-            }
-
-            /* SweetAlert2 Mobile */
-            .swal2-popup {
-                width: 92% !important;
-                max-width: 440px !important;
-                padding: 18px 14px !important;
-                border-radius: var(--radius-lg) !important;
-                box-sizing: border-box !important;
-            }
-
-            .swal2-title {
-                font-size: 17px !important;
-                word-break: break-word !important;
-            }
-
-            .swal2-html-container {
-                font-size: 13px !important;
-                line-height: 1.45 !important;
-                word-break: break-word !important;
-            }
-
-            .swal2-actions {
-                width: 100% !important;
-                gap: 8px !important;
-                margin-top: 16px !important;
-            }
-
-            .swal2-actions button {
-                height: 44px !important;
-                min-height: 44px !important;
-                font-size: 13.5px !important;
-                border-radius: var(--radius-md) !important;
-                flex: 1 !important;
-                margin: 0 !important;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 18px;
             }
         }
 
-        /* Mobile phones (<= 640px) */
+        /* Mobile Viewports (<= 640px) */
         @media (max-width: 640px) {
             body {
-                padding: 12px 10px calc(130px + env(safe-area-inset-bottom, 0px));
+                padding: 12px 8px max(80px, calc(80px + env(safe-area-inset-bottom, 0px)));
             }
 
-            /* TOP NAVBAR MOBILE ADAPTATION */
+            .panel,
+            .form-section {
+                padding: 14px 12px;
+                border-radius: 14px;
+                margin-bottom: 12px;
+            }
+
+            /* Top Navbar: proportional desktop layout */
             .top-navbar {
-                display: grid;
-                grid-template-columns: auto 1fr;
+                display: flex;
+                justify-content: space-between;
                 align-items: center;
-                gap: 12px 10px;
-                padding: 14px 16px;
-                border-radius: var(--radius-md);
-                margin-bottom: 16px;
+                padding: 10px 12px;
+                margin-bottom: 12px;
+                border-radius: 12px;
+                gap: 8px;
             }
 
             .nav-left {
-                display: contents;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-width: 0;
+                flex: 1 1 auto;
             }
 
             .btn-back {
-                grid-column: 1;
-                padding: 8px 12px;
-                font-size: 12px;
-                gap: 6px;
-                border-radius: var(--radius-sm);
-                white-space: nowrap;
-                min-height: 38px;
-                box-sizing: border-box;
+                padding: 6px 10px;
+                font-size: 11.5px;
+                gap: 5px;
+                border-radius: 8px;
+                flex-shrink: 0;
             }
 
             .nav-divider {
-                display: none;
-            }
-
-            .nav-right {
-                grid-column: 2;
-                justify-self: end;
-            }
-
-            .date-badge {
-                padding: 6px 10px;
-                font-size: 11.5px;
-                gap: 6px;
-                white-space: nowrap;
+                display: block;
+                width: 1px;
+                height: 24px;
+                background: var(--border);
+                flex-shrink: 0;
             }
 
             .brand-block {
-                grid-column: 1 / -1;
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                padding-top: 10px;
-                border-top: 1px solid var(--border-light);
-                width: 100%;
+                gap: 8px;
+                min-width: 0;
+                flex: 1 1 auto;
             }
 
             .brand-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-                border-radius: 10px;
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                border-radius: 8px;
                 flex-shrink: 0;
             }
 
@@ -1412,349 +1237,592 @@
             }
 
             .header-title h1 {
-                font-size: 15.5px;
-                line-height: 1.25;
-                word-break: break-word;
-                display: block;
+                font-size: 13px;
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .header-title .tag-portal {
-                font-size: 11px;
-                margin-top: 2px;
+                font-size: 9.5px;
+                margin-top: 1px;
+                white-space: nowrap;
             }
 
-            /* PANELS & FORM SECTIONS */
-            .panel,
-            .form-section {
-                padding: 16px 14px;
-                border-radius: 16px;
-                margin-bottom: 16px;
+            .status-dot {
+                width: 6px;
+                height: 6px;
             }
 
-            .panel-header-row,
-            .section-header {
-                margin-bottom: 14px;
-                padding-bottom: 10px;
-                gap: 8px;
-            }
-
-            .panel-title {
-                font-size: 14.5px;
-                gap: 8px;
-            }
-
-            .panel-title-icon {
-                width: 28px;
-                height: 28px;
-                font-size: 13px;
+            .nav-right {
                 flex-shrink: 0;
             }
 
+            .date-badge {
+                padding: 5px 9px;
+                font-size: 10.5px;
+                gap: 5px;
+                white-space: nowrap;
+            }
+
+            /* Section Headers: desktop alignment scaled down */
+            .panel-header-row,
             .section-header {
-                font-size: 14.5px;
-                flex-direction: row;
-                align-items: center;
+                display: flex;
                 justify-content: space-between;
-                flex-wrap: wrap;
+                align-items: center;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
                 gap: 8px;
             }
 
-            .section-header-left {
-                gap: 10px;
-                flex: 1 1 auto;
-                min-width: 0;
+            .panel-title,
+            .section-header {
+                font-size: 13px;
             }
 
-            .section-header-left div {
-                min-width: 0;
-                flex: 1;
-            }
-
-            .section-header-left strong {
-                word-break: break-word;
-                overflow-wrap: break-word;
-                display: block;
-                line-height: 1.35;
-            }
-
+            .panel-title-icon,
             .section-icon-badge {
+                width: 26px;
+                height: 26px;
+                font-size: 12px;
+                border-radius: 7px;
+                flex-shrink: 0;
+            }
+
+            .step-pill,
+            .section-tag {
+                font-size: 9px;
+                padding: 3px 7px;
+                flex-shrink: 0;
+            }
+
+            /* Selectors Row: 2-column desktop grid */
+            .select-row {
+                display: grid;
+                grid-template-columns: 125px 1fr;
+                gap: 8px;
+                align-items: flex-end;
+            }
+
+            .form-group {
+                gap: 4px;
+                min-width: 0;
+            }
+
+            .form-group label {
+                font-size: 11px;
+                gap: 4px;
+            }
+
+            .form-control,
+            .select2-container--default .select2-selection--single {
+                height: 38px !important;
+                border-radius: 8px !important;
+                font-size: 12.5px !important;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 38px !important;
+                font-size: 12px !important;
+                padding-left: 10px !important;
+                padding-right: 28px !important;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 36px !important;
+                right: 6px !important;
+            }
+
+            /* School Profile Card: 4-column desktop grid */
+            .school-profile-card {
+                padding: 10px 10px;
+                border-radius: 10px;
+            }
+
+            .school-header-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+
+            .school-avatar {
                 width: 32px;
                 height: 32px;
                 font-size: 14px;
                 border-radius: 8px;
-                flex-shrink: 0;
-            }
-
-            .section-tag {
-                font-size: 10px;
-                padding: 3px 8px;
-                flex-shrink: 0;
-            }
-
-            .select-row {
-                gap: 14px;
-            }
-
-            /* SCHOOL PROFILE CARD */
-            .school-profile-card {
-                padding: 14px;
-            }
-
-            .school-header-info {
-                gap: 10px;
-                margin-bottom: 12px;
-                min-width: 0;
-            }
-
-            .school-avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-                border-radius: 10px;
-                flex-shrink: 0;
-            }
-
-            .school-name-text {
-                min-width: 0;
-                flex: 1;
             }
 
             .school-name-text h2 {
-                font-size: 14.5px;
-                line-height: 1.3;
-                word-break: break-word;
-                overflow-wrap: break-word;
+                font-size: 12.5px;
+                line-height: 1.25;
+            }
+
+            .school-name-text span {
+                font-size: 10px;
             }
 
             .school-meta-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
             }
 
             .meta-pill {
-                padding: 8px 10px;
-                border-radius: 8px;
+                padding: 5px 6px;
+                border-radius: 6px;
+                gap: 2px;
                 min-width: 0;
             }
 
             .meta-pill-label {
-                font-size: 10px;
+                font-size: 8px;
+                letter-spacing: 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .meta-pill-value {
-                font-size: 12.5px;
-                word-break: break-word;
-                overflow-wrap: break-word;
+                font-size: 10px;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .status-alert {
-                padding: 10px 14px;
-                font-size: 12.5px;
-                gap: 10px;
-                align-items: flex-start;
-                word-break: break-word;
-            }
-
-            .status-alert i {
-                flex-shrink: 0;
-                margin-top: 2px;
-            }
-
-            /* VERIFICATION PANEL */
-            .verification-panel {
-                grid-template-columns: 1fr;
-                padding: 12px;
-                gap: 10px;
-            }
-
-            .verif-box {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-                padding: 12px;
-            }
-
-            .verif-label {
-                font-size: 12.5px;
-            }
-
-            .verif-controls {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                width: 100%;
-            }
-
-            .verif-controls input,
-            .verif-controls select {
-                width: 100% !important;
-                height: 44px !important;
-                min-height: 44px !important;
-                font-size: 14px !important;
-                box-sizing: border-box !important;
-            }
-
-            .hint-text {
-                font-size: 11.5px;
-                line-height: 1.4;
-            }
-        }
-
-        /* Smaller mobile screens (<= 480px) */
-        @media (max-width: 480px) {
-            .panel,
-            .form-section {
-                padding: 14px 12px;
-                border-radius: 14px;
-            }
-
-            .top-navbar {
-                padding: 12px 12px;
-            }
-
-            .btn-back {
                 padding: 7px 10px;
-                font-size: 11.5px;
-            }
-
-            .date-badge {
-                padding: 5px 8px;
                 font-size: 11px;
+                gap: 8px;
+                border-radius: 8px;
+                margin-top: 10px;
             }
 
-            .brand-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
+            /* =======================================================
+               TABLES: STRICT ZERO HORIZONTAL SCROLL & PROPORTIONAL FIT
+               ======================================================= */
+            .table-responsive {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+                overflow-y: visible !important;
+                margin-bottom: 10px;
+                border-radius: 8px;
+                box-shadow: none;
             }
 
-            .header-title h1 {
-                font-size: 14.5px;
-                line-height: 1.25;
+            table.entry-table {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: collapse;
+            }
+
+            table.entry-table th,
+            table.entry-table td {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
             }
 
             table.entry-table th:first-child,
             table.entry-table td:first-child {
-                width: 130px !important;
-                min-width: 130px !important;
-                max-width: 135px !important;
-                font-size: 11px;
-                padding-left: 8px;
-                padding-right: 6px;
+                position: static !important;
+                box-shadow: none !important;
+                border-right: 1px solid var(--border-light) !important;
+            }
+
+            /* Step 2: Meal Availed Status Table */
+            #secMeal table.entry-table th {
+                font-size: 8.5px;
+                padding: 6px 3px;
+                line-height: 1.15;
+                white-space: normal;
+                letter-spacing: 0;
+            }
+
+            #secMeal table.entry-table td {
+                padding: 5px 3px;
+            }
+
+            #secMeal table.entry-table th:first-child,
+            #secMeal table.entry-table td:first-child {
+                width: 46% !important;
+                min-width: 0 !important;
+                font-size: 10px;
+                line-height: 1.2;
+                padding: 6px 5px !important;
+                text-align: left;
+            }
+
+            #secMeal table.entry-table th:not(:first-child),
+            #secMeal table.entry-table td:not(:first-child) {
+                width: 27% !important;
+                text-align: center;
+            }
+
+            #secMeal .num-input {
+                height: 30px;
+                font-size: 12px;
+                font-weight: 700;
+                padding: 0 2px;
+                border-radius: 6px;
+            }
+
+            /* Step 3: Fund Details (5 Columns Exact Proportional Fit) */
+            table.fund-table th {
+                font-size: 7.5px;
+                padding: 5px 1.5px;
+                line-height: 1.15;
+                letter-spacing: 0;
+                white-space: normal;
+                text-align: center;
+            }
+
+            table.fund-table td {
+                padding: 3px 1.5px;
+                text-align: center;
             }
 
             table.fund-table th:first-child,
             table.fund-table td:first-child {
-                width: 135px !important;
-                min-width: 135px !important;
-                max-width: 140px !important;
+                width: 32% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                font-size: 8px;
+                font-weight: 700;
+                line-height: 1.15;
+                padding: 4px 3px !important;
+                text-align: left;
+                word-break: break-word;
             }
 
-            /* Stack verification controls vertically so date picker has full width */
+            table.fund-table th:nth-child(2), table.fund-table td:nth-child(2),
+            table.fund-table th:nth-child(3), table.fund-table td:nth-child(3),
+            table.fund-table th:nth-child(4), table.fund-table td:nth-child(4),
+            table.fund-table th:nth-child(5), table.fund-table td:nth-child(5) {
+                width: 17% !important;
+                min-width: 0 !important;
+            }
+
+            table.fund-table .num-input {
+                width: 100%;
+                height: 27px;
+                font-size: 9.5px;
+                font-weight: 700;
+                padding: 0 1px;
+                border-radius: 4px;
+                text-align: center;
+                box-sizing: border-box;
+            }
+
+            table.fund-table .total-row td {
+                padding: 4px 1.5px !important;
+                font-size: 8.5px;
+            }
+
+            table.fund-table .total-cell-val {
+                font-size: 9.5px;
+                font-weight: 800;
+            }
+
+            table.fund-table .total-cell-close {
+                font-size: 9.5px;
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
+
+            .row-na-badge {
+                font-size: 8px;
+                padding: 1px 4px;
+                margin-left: 2px;
+            }
+
+            /* Step 4: Verification Sub-Panel (2 Columns Desktop Layout) */
+            .verification-panel {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+                padding: 8px 6px;
+                border-radius: 0 0 8px 8px;
+                margin-bottom: 10px;
+            }
+
+            .verif-box {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 6px 6px;
+                gap: 5px;
+                border-radius: 6px;
+            }
+
+            .verif-label {
+                font-size: 9.5px;
+                line-height: 1.25;
+            }
+
+            .verif-label span {
+                font-size: 8px;
+            }
+
             .verif-controls {
-                grid-template-columns: 1fr !important;
+                display: flex;
+                gap: 4px;
+                width: 100%;
+            }
+
+            .verif-controls select,
+            .verif-controls input {
+                width: 100% !important;
+                height: 28px !important;
+                min-height: 28px !important;
+                font-size: 10px !important;
+                padding: 0 4px !important;
+                border-radius: 4px !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Step 4: Rice Stock Table */
+            #secRice table.entry-table th {
+                font-size: 8px;
+                padding: 5px 2px;
+                line-height: 1.15;
+                white-space: normal;
+                letter-spacing: 0;
+            }
+
+            #secRice table.entry-table td {
+                padding: 4px 2px;
+            }
+
+            #secRice table.entry-table th:first-child,
+            #secRice table.entry-table td:first-child {
+                width: 34% !important;
+                min-width: 0 !important;
+                font-size: 9.5px;
+                line-height: 1.2;
+                padding: 5px 4px !important;
+                text-align: left;
+            }
+
+            #secRice table.entry-table th:not(:first-child),
+            #secRice table.entry-table td:not(:first-child) {
+                width: 22% !important;
+                text-align: center;
+            }
+
+            #secRice .num-input {
+                height: 27px;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 0 1px;
+                border-radius: 4px;
+            }
+
+            .hint-text {
+                font-size: 10.5px;
+                margin-top: 6px;
+            }
+
+            /* Sticky Bottom Action Bar: Desktop Single-Row Layout */
+            .action-bar-wrapper {
+                position: sticky;
+                bottom: 8px;
+                margin-top: 14px;
+                z-index: 100;
+            }
+
+            .action-bar-glass {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 12px;
+                gap: 8px;
+                border-radius: 12px;
+            }
+
+            .bar-summary {
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+                border: none;
+                padding: 0;
+                width: auto;
+            }
+
+            .summary-chip {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .summary-chip span {
+                font-size: 8px;
+                letter-spacing: 0.3px;
+                color: var(--text-muted);
+            }
+
+            .summary-chip strong {
+                font-size: 13px;
+                font-weight: 800;
+                color: var(--primary-dark);
+            }
+
+            .bar-buttons {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 6px;
+                width: auto;
+                flex-shrink: 0;
+            }
+
+            .btn {
+                height: 34px;
+                border-radius: 7px;
+                font-size: 11px;
+                font-weight: 700;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                box-sizing: border-box;
             }
 
             .btn-reset {
-                padding: 0 12px !important;
-                font-size: 12.5px !important;
+                padding: 0 10px;
+                font-size: 11px;
             }
 
             .btn-save {
-                padding: 0 12px !important;
-                font-size: 13px !important;
+                padding: 0 12px;
+                font-size: 11.5px;
             }
         }
 
-        /* Very narrow screens (<= 360px down to 320px) */
-        @media (max-width: 360px) {
+        /* Narrow Phones (<= 375px down to 320px) */
+        @media (max-width: 375px) {
             body {
-                padding: 10px 8px calc(130px + env(safe-area-inset-bottom, 0px));
+                padding: 8px 4px max(70px, calc(70px + env(safe-area-inset-bottom, 0px)));
+            }
+
+            .panel,
+            .form-section {
+                padding: 10px 6px;
+                border-radius: 10px;
+                margin-bottom: 10px;
             }
 
             .top-navbar {
-                padding: 10px 10px;
-                gap: 10px 8px;
+                padding: 8px 8px;
+                gap: 6px;
             }
 
             .btn-back {
-                padding: 6px 8px;
-                font-size: 11px;
-                gap: 5px;
-            }
-
-            .date-badge {
-                padding: 5px 6px;
+                padding: 5px 7px;
                 font-size: 10.5px;
                 gap: 4px;
             }
 
             .brand-icon {
-                width: 34px;
-                height: 34px;
-                font-size: 15px;
+                width: 26px;
+                height: 26px;
+                font-size: 12px;
             }
 
             .header-title h1 {
-                font-size: 13.5px;
+                font-size: 11.5px;
+            }
+
+            .header-title .tag-portal {
+                font-size: 8.5px;
+            }
+
+            .date-badge {
+                padding: 4px 6px;
+                font-size: 9.5px;
+                gap: 3px;
+            }
+
+            .select-row {
+                grid-template-columns: 96px 1fr;
+                gap: 5px;
             }
 
             .school-meta-grid {
-                grid-template-columns: 1fr !important;
+                gap: 3px;
             }
 
-            table.entry-table {
-                min-width: 500px;
+            .meta-pill {
+                padding: 4px 3px;
             }
 
-            #secMeal table.entry-table {
-                min-width: 420px;
+            .meta-pill-label {
+                font-size: 7px;
             }
 
-            table.entry-table th:first-child,
-            table.entry-table td:first-child {
-                width: 120px !important;
-                min-width: 120px !important;
-                max-width: 125px !important;
-                font-size: 10.5px;
-                padding-left: 6px;
-                padding-right: 4px;
+            .meta-pill-value {
+                font-size: 8.5px;
+            }
+
+            table.fund-table th {
+                font-size: 6.8px;
+                padding: 4px 1px;
             }
 
             table.fund-table th:first-child,
             table.fund-table td:first-child {
-                width: 125px !important;
-                min-width: 125px !important;
-                max-width: 130px !important;
+                font-size: 7.5px;
+                padding: 3px 2px !important;
             }
 
-            .num-input {
-                height: 38px;
-                font-size: 13px;
+            table.fund-table .num-input {
+                height: 24px;
+                font-size: 8.5px;
             }
 
-            .action-bar-wrapper {
-                padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+            table.fund-table .total-cell-val {
+                font-size: 8.5px;
             }
 
-            .bar-buttons {
-                gap: 6px !important;
+            table.fund-table .total-cell-close {
+                font-size: 8.5px;
+                padding: 1px 3px;
             }
 
-            .btn-reset {
-                padding: 0 10px !important;
-                font-size: 11.5px !important;
-                gap: 4px !important;
+            .verif-label {
+                font-size: 8.5px;
             }
 
-            .btn-save {
-                padding: 0 10px !important;
-                font-size: 11.5px !important;
-                gap: 6px !important;
+            .verif-label span {
+                font-size: 7.5px;
+            }
+
+            .verif-controls select,
+            .verif-controls input {
+                height: 25px !important;
+                min-height: 25px !important;
+                font-size: 9px !important;
+                padding: 0 2px !important;
             }
 
             .summary-chip strong {
-                font-size: 15px !important;
+                font-size: 11.5px;
+            }
+
+            .btn {
+                height: 31px;
+                font-size: 10px;
+                padding: 0 8px;
+            }
+
+            .btn-save {
+                padding: 0 9px;
             }
         }
     </style>
@@ -2137,11 +2205,9 @@
                         </div>
                         <div class="verif-controls">
                             <input type="date" id="bank_balance_date" name="bank_balance_date"
-                                class="form-control"
-                                style="width: 140px; height: 38px; font-size: 13px; font-weight: 600; padding: 2px 8px;">
-                            <input type="number" step="0.01" inputmode="decimal" class="num-input" id="bank_passbook_balance"
-                                name="bank_passbook_balance" value="0" placeholder="0.00"
-                                style="width: 120px; height: 38px; font-weight: 800; border-color: var(--primary);">
+                                class="form-control verif-date-input">
+                            <input type="number" step="0.01" inputmode="decimal" class="num-input verif-balance-input" id="bank_passbook_balance"
+                                name="bank_passbook_balance" value="0" placeholder="0.00">
                         </div>
                     </div>
 
@@ -2151,8 +2217,7 @@
                             <span>Does sum of Closing Balance match Passbook?</span>
                         </div>
                         <div class="verif-controls">
-                            <select id="bank_match" name="bank_match" class="form-control"
-                                style="height: 38px; width: 110px; font-weight: 800; text-align: center;">
+                            <select id="bank_match" name="bank_match" class="form-control verif-match-select">
                                 <option value="YES" selected>YES</option>
                                 <option value="NO">NO</option>
                             </select>
