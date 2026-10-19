@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js"></script>
+    <script src="/supabase-client.js"></script>
 
     <style>
         body {
@@ -575,7 +575,9 @@
 
                         list.innerHTML = '';
                         schoolsData.forEach(s => {
-                            const fullName = (s.name.includes('(')) ? s.name : (s.name + ' (' + (s.udise || s.code) + ')');
+                            const sName = s.school_name || s.name || s.text || '';
+                            const udise = s.udise || s.udise_code || s.code || '';
+                            const fullName = (sName.includes('(')) ? sName : (sName + (udise ? ' (' + udise + ')' : ''));
                             const div = document.createElement('div');
                             div.className = 'school-item';
                             div.textContent = fullName;

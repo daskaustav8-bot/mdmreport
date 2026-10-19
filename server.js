@@ -153,6 +153,54 @@ app.get(['/', '/index.html', '/index.php'], (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+const fs = require('fs');
+
+// Explicit Static Asset Handlers with strict MIME types and caching (Never return text/html for scripts)
+app.get('/supabase-client.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  const candidates = [
+    path.join(__dirname, 'supabase-client.js'),
+    path.join(__dirname, '..', 'supabase-client.js'),
+    path.join(process.cwd(), 'supabase-client.js')
+  ];
+  const found = candidates.find(p => fs.existsSync(p));
+  if (found) {
+    return res.sendFile(found);
+  }
+  return res.status(404).type('application/javascript').send('// supabase-client.js not found');
+});
+
+app.get('/manage_infrastructure_fields.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  const candidates = [
+    path.join(__dirname, 'manage_infrastructure_fields.js'),
+    path.join(__dirname, '..', 'manage_infrastructure_fields.js'),
+    path.join(process.cwd(), 'manage_infrastructure_fields.js')
+  ];
+  const found = candidates.find(p => fs.existsSync(p));
+  if (found) {
+    return res.sendFile(found);
+  }
+  return res.status(404).type('application/javascript').send('// manage_infrastructure_fields.js not found');
+});
+
+app.get('/style.css', (req, res) => {
+  res.setHeader('Content-Type', 'text/css; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  const candidates = [
+    path.join(__dirname, 'style.css'),
+    path.join(__dirname, '..', 'style.css'),
+    path.join(process.cwd(), 'style.css')
+  ];
+  const found = candidates.find(p => fs.existsSync(p));
+  if (found) {
+    return res.sendFile(found);
+  }
+  return res.status(404).type('text/css').send('/* style.css not found */');
+});
+
 // Serve remaining static assets (CSS, JS, images)
 app.use(express.static(__dirname));
 

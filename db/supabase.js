@@ -2,13 +2,33 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
+// Resolve Supabase database connection details with IPv4 pooler support for Vercel/serverless
+let dbHost = process.env.SUPABASE_DB_HOST || 'aws-0-ap-southeast-1.pooler.supabase.com';
+let dbPort = parseInt(process.env.SUPABASE_DB_PORT || '6543', 10);
+let dbUser = process.env.SUPABASE_DB_USER || 'postgres.vaaukirzwhufortgafmn';
+let dbPass = process.env.SUPABASE_DB_PASSWORD;
+let dbName = process.env.SUPABASE_DB_NAME || 'postgres';
+
+// If configured host is an IPv6-only direct host (db.<project-ref>.supabase.co),
+// automatically map to the IPv4-compatible Supabase connection pooler to prevent ENOTFOUND on serverless
+if (dbHost && dbHost.startsWith('db.') && dbHost.endsWith('.supabase.co')) {
+  const projectRef = dbHost.replace(/^db\./, '').replace(/\.supabase\.co$/, '');
+  dbHost = 'aws-0-ap-southeast-1.pooler.supabase.com';
+  if (dbPort === 5432) {
+    dbPort = 6543; // Transaction mode for serverless pooler
+  }
+  if (!dbUser.includes('.')) {
+    dbUser = `${dbUser}.${projectRef}`;
+  }
+}
+
 // High-performance connection pool with TCP keep-alive and persistent warm connections
 const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST,
-  port: parseInt(process.env.SUPABASE_DB_PORT || '5432', 10),
-  user: process.env.SUPABASE_DB_USER,
-  password: process.env.SUPABASE_DB_PASSWORD,
-  database: process.env.SUPABASE_DB_NAME,
+  host: dbHost,
+  port: dbPort,
+  user: dbUser,
+  password: dbPass,
+  database: dbName,
   ssl: { rejectUnauthorized: false },
   max: 20,
   min: 0,
@@ -172,12 +192,69 @@ async function getSchools(forceRefresh = false) {
 
     return cachedSchools;
   } catch (err) {
-    console.error('getSchools database error:', err.message);
-    if (cachedSchools) {
-      console.warn('Returning stale cached schools due to database error.');
+    console.error('getSchools database query notice:', err.message);
+    if (cachedSchools && cachedSchools.length > 0) {
+      console.warn('Returning stale cached schools due to database notice.');
+      return cachedSchools;
+    }
+    // High-resilience fallback to packaged authoritative school master CSV
+    const csvSchools = loadSchoolsFromCsv();
+    if (csvSchools.length > 0) {
+      console.warn(`Serving ${csvSchools.length} authoritative schools from packaged master CSV fallback.`);
+      cachedSchools = csvSchools;
+      cachedSchoolsMap = null;
+      cacheTimestamp = now;
       return cachedSchools;
     }
     throw err;
+  }
+}
+
+/**
+ * Load authoritative school master list from packaged CSV fallback
+ *
+ * @returns {Array}
+ */
+function loadSchoolsFromCsv() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const candidates = [
+      path.join(__dirname, '..', 'school_master.csv'),
+      path.join(__dirname, 'school_master.csv'),
+      path.join(process.cwd(), 'school_master.csv')
+    ];
+    const csvPath = candidates.find(p => fs.existsSync(p));
+    if (!csvPath) return [];
+
+    const content = fs.readFileSync(csvPath, 'utf8');
+    const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 2) return [];
+
+    const schools = [];
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length >= 5) {
+        const sName = parts[0].trim();
+        const cat = parts[1].trim();
+        const udise = parts[2].trim();
+        const circle = parts[3].trim();
+        const gp = parts[4].trim();
+        const isPrimary = (cat === 'PRIMARY ONLY' || (cat.toUpperCase().includes('PRIMARY') && !cat.toUpperCase().includes('UPPER')));
+        schools.push({
+          udise, code: udise, id: udise,
+          name: sName, school_name: sName, text: sName,
+          category: cat, catergory: cat,
+          circle, circle_name: circle,
+          gp, gp_name: gp,
+          type: isPrimary ? 'P' : 'U'
+        });
+      }
+    }
+    return schools;
+  } catch (csvErr) {
+    console.error('Error reading fallback CSV:', csvErr.message);
+    return [];
   }
 }
 
