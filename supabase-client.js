@@ -41,7 +41,7 @@ async function logout(type = '') {
     sessionStorage.removeItem(CACHE_TIME_KEY);
     _inMemorySchools = null;
   } catch (e) {}
-  window.location.href = 'index.html';
+  window.location.href = '/';
 }
 
 /**

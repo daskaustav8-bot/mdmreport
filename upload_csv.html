@@ -247,7 +247,7 @@
 
     </div>
 
-    <a href="admin_dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    <a href="/admin_dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
 
     <script>
         // Enforce Main Admin Authentication Session
@@ -263,11 +263,11 @@
             })
             .then(function (data) {
                 if (!data || !data.authenticated || data.admin_type !== 'main') {
-                    window.location.replace('admin_login.html');
+                    window.location.replace('/admin_login');
                 }
             })
             .catch(function () {
-                window.location.replace('admin_login.html');
+                window.location.replace('/admin_login');
             });
         })();
 
@@ -378,7 +378,7 @@
                             });
 
                             if (res.status === 401) {
-                                window.location.href = 'admin_login.html';
+                                window.location.href = '/admin_login';
                                 return;
                             }
 

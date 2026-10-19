@@ -27,7 +27,7 @@
 <div class="container">
     <div class="header">
         <div>
-            <a href="admin_rice_view.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to List</a>
+            <a href="/admin_rice_view" class="btn-back"><i class="fas fa-arrow-left"></i> Back to List</a>
         </div>
         <button onclick="window.print()" class="btn-print"><i class="fas fa-print"></i> Print</button>
     </div>
@@ -58,7 +58,7 @@
 <script>
     // Check login
     if (sessionStorage.getItem('admin_logged_in') !== 'true') {
-        window.location.href = 'admin_login.html';
+        window.location.href = '/admin_login';
     }
 
     const params = new URLSearchParams(window.location.search);

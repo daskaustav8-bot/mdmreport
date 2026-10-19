@@ -64,7 +64,7 @@ async function handleLogin(req, res, forcedType = null) {
     const token = createSessionToken(user);
     setSessionCookie(res, token, req);
 
-    const redirectPath = user.admin_type === 'infrastructure' ? 'basicinfrastructure.html' : 'admin_dashboard.html';
+    const redirectPath = user.admin_type === 'infrastructure' ? '/basicinfrastructure' : '/admin_dashboard';
 
     return res.status(200).json({
       success: true,
@@ -103,7 +103,7 @@ function handleSessionCheck(req, res, expectedType = null) {
     });
   }
 
-  const redirectPath = req.session.admin_type === 'infrastructure' ? 'basicinfrastructure.html' : 'admin_dashboard.html';
+  const redirectPath = req.session.admin_type === 'infrastructure' ? '/basicinfrastructure' : '/admin_dashboard';
 
   return res.json({
     authenticated: true,
@@ -121,7 +121,7 @@ function handleLogout(req, res) {
   clearSessionCookie(res);
 
   const reqType = req.query.type || (req.originalUrl.includes('infra') ? 'infrastructure' : 'main');
-  const redirectTarget = reqType === 'infrastructure' ? 'infra_login.html' : 'admin_login.html';
+  const redirectTarget = reqType === 'infrastructure' ? '/infra_login' : '/admin_login';
 
   const isAjax = req.xhr || 
     (req.headers.accept && req.headers.accept.includes('application/json')) ||
@@ -154,7 +154,7 @@ router.get('/infra_login_handler.php', (req, res) => {
   if (req.query.action === 'check_session' || req.query.check !== undefined) {
     return handleSessionCheck(req, res, 'infrastructure');
   }
-  return res.redirect(req.session?.admin_type === 'infrastructure' ? 'basicinfrastructure.html' : 'infra_login.html');
+  return res.redirect(req.session?.admin_type === 'infrastructure' ? '/basicinfrastructure' : '/infra_login');
 });
 router.get('/infra_session_check.php', (req, res) => handleSessionCheck(req, res, 'infrastructure'));
 
@@ -164,7 +164,7 @@ router.get('/admin_login_handler.php', (req, res) => {
   if (req.query.action === 'check_session' || req.query.check !== undefined) {
     return handleSessionCheck(req, res, 'main');
   }
-  return res.redirect(req.session?.admin_type === 'main' ? 'admin_dashboard.html' : 'admin_login.html');
+  return res.redirect(req.session?.admin_type === 'main' ? '/admin_dashboard' : '/admin_login');
 });
 router.get('/admin_session_check.php', (req, res) => handleSessionCheck(req, res, 'main'));
 

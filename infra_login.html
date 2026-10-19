@@ -171,7 +171,7 @@
             <button type="submit" name="login_btn" id="loginBtn" class="btn">Login</button>
         </form>
 
-        <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+        <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
     </div>
 
     <script>
@@ -189,7 +189,7 @@
                 })
                 .then(function (data) {
                     if (data && data.authenticated && data.admin_type === 'infrastructure') {
-                        window.location.replace(data.redirect || 'basicinfrastructure.html');
+                        window.location.replace(data.redirect || '/basicinfrastructure');
                     }
                 })
                 .catch(function (err) {
@@ -291,7 +291,7 @@
                 if (res.ok && res.data && res.data.success) {
                     sessionStorage.setItem('infra_access', 'true');
                     sessionStorage.setItem('circle_name', res.data.circle_name || 'Pandua Block Admin');
-                    window.location.href = res.data.redirect || 'basicinfrastructure.html';
+                    window.location.href = res.data.redirect || '/basicinfrastructure';
                 } else {
                     showError(res.data && res.data.error ? res.data.error : 'ভুল ইউজারনেম বা পাসওয়ার্ড!');
                     loginBtn.disabled = false;

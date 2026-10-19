@@ -198,7 +198,7 @@ function requireAuth(requiredType) {
       (req.headers.accept && req.headers.accept.includes('application/json')) ||
       (req.headers['content-type'] && req.headers['content-type'].includes('application/json'));
 
-    const redirectTarget = requiredType === 'infrastructure' ? '/infra_login.html' : '/admin_login.html';
+    const redirectTarget = requiredType === 'infrastructure' ? '/infra_login' : '/admin_login';
 
     // 1. Not authenticated
     if (!req.session) {

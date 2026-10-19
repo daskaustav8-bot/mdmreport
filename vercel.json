@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "builds": [
     {
       "src": "api/index.js",
@@ -38,6 +39,110 @@
     {
       "src": "/logout",
       "dest": "/api/index.js"
+    },
+    {
+      "src": "^/infrastructure\\.php$",
+      "headers": { "Location": "/infrastructure" },
+      "status": 308
+    },
+    {
+      "src": "^/basicinfrastructure\\.php$",
+      "headers": { "Location": "/basicinfrastructure" },
+      "status": 308
+    },
+    {
+      "src": "^/admin_login\\.php$",
+      "headers": { "Location": "/admin_login" },
+      "status": 308
+    },
+    {
+      "src": "^/infra_login\\.php$",
+      "headers": { "Location": "/infra_login" },
+      "status": 308
+    },
+    {
+      "src": "^/admin_dashboard\\.php$",
+      "headers": { "Location": "/admin_dashboard" },
+      "status": 308
+    },
+    {
+      "src": "^/admin_rice_view\\.php$",
+      "headers": { "Location": "/admin_rice_view" },
+      "status": 308
+    },
+    {
+      "src": "^/admin_student_view\\.php$",
+      "headers": { "Location": "/admin_student_view" },
+      "status": 308
+    },
+    {
+      "src": "^/ricerequirement\\.php$",
+      "headers": { "Location": "/ricerequirement" },
+      "status": 308
+    },
+    {
+      "src": "^/rice_report_view\\.php$",
+      "headers": { "Location": "/rice_report_view" },
+      "status": 308
+    },
+    {
+      "src": "^/rice_report_panel\\.php$",
+      "headers": { "Location": "/rice_report_panel" },
+      "status": 308
+    },
+    {
+      "src": "^/student_update\\.php$",
+      "headers": { "Location": "/student_update" },
+      "status": 308
+    },
+    {
+      "src": "^/update_monthly_report\\.php$",
+      "headers": { "Location": "/update_monthly_report" },
+      "status": 308
+    },
+    {
+      "src": "^/monthlyreport\\.php$",
+      "headers": { "Location": "/monthlyreport" },
+      "status": 308
+    },
+    {
+      "src": "^/monthly_view\\.php$",
+      "headers": { "Location": "/monthly_view" },
+      "status": 308
+    },
+    {
+      "src": "^/manage_infrastructure_fields\\.php$",
+      "headers": { "Location": "/manage_infrastructure_fields" },
+      "status": 308
+    },
+    {
+      "src": "^/upload_infrastructure\\.php$",
+      "methods": ["GET"],
+      "headers": { "Location": "/upload_infrastructure" },
+      "status": 308
+    },
+    {
+      "src": "^/upload_csv\\.php$",
+      "methods": ["GET"],
+      "headers": { "Location": "/upload_csv" },
+      "status": 308
+    },
+    {
+      "src": "^/admin_upload\\.php$",
+      "methods": ["GET"],
+      "headers": { "Location": "/admin_upload" },
+      "status": 308
+    },
+    {
+      "src": "^/upload_monthly_report\\.php$",
+      "methods": ["GET"],
+      "headers": { "Location": "/upload_monthly_report" },
+      "status": 308
+    },
+    {
+      "src": "^/index\\.php$",
+      "headers": { "Location": "/" },
+      "status": 308
     },
     {
       "src": "/(.*)",

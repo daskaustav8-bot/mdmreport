@@ -1363,7 +1363,12 @@ async function handleClosingBalance(req, res) {
   const isReportBody = req.query?.render === 'report_body';
 
   if (!isReportBody) {
-    // If browser visits closingbalance.php directly, redirect or serve closingbalance.html
+    if (req.path === '/closingbalance.php') {
+      const queryIdx = req.url.indexOf('?');
+      const queryString = queryIdx !== -1 ? req.url.slice(queryIdx) : '';
+      return res.redirect(308, '/closingbalance' + queryString);
+    }
+    // If browser visits /closingbalance directly, serve the HTML page
     return res.sendFile(path.join(__dirname, '..', 'closingbalance.html'));
   }
 
@@ -1562,7 +1567,7 @@ const handleUploadCsv = async (req, res) => {
       return res.json({ status, message: msg, count, ...details });
     }
     const param = (status === 'success' ? 'msg_' : 'err_') + (isPrimary ? 'primary' : 'upper');
-    return res.redirect(`/upload_csv.html?${param}=${encodeURIComponent(msg)}`);
+    return res.redirect(`/upload_csv?${param}=${encodeURIComponent(msg)}`);
   };
 
   if (!month || month === 'Select Month' || !year) {
@@ -1776,7 +1781,7 @@ async function handleSaveLegacyMdcfData(req, res) {
     if (req.headers.accept?.includes('application/json')) {
       return res.json({ status: 'success', message: 'Data saved successfully!' });
     }
-    return res.send("<script>alert('Data saved successfully!'); window.location.href = 'index.html';</script>");
+    return res.send("<script>alert('Data saved successfully!'); window.location.href = '/';</script>");
   } catch (err) {
     console.error('Error saving mdcf_data:', err.message);
     if (req.headers.accept?.includes('application/json')) {
@@ -1800,7 +1805,7 @@ router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv'
       return res.json({ status, message: msg, inserted, updated });
     }
     const param = status === 'success' ? 'msg' : 'err';
-    return res.redirect(`/upload_monthly_report.html?${param}=${encodeURIComponent(msg)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`);
+    return res.redirect(`/upload_monthly_report?${param}=${encodeURIComponent(msg)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`);
   };
 
   if (!fileObj || !fileObj.buffer) {

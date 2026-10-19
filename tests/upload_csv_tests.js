@@ -10,8 +10,10 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const { pool, getSchoolsMap } = require('../db/supabase');
 const { createSessionToken } = require('../middleware/auth');
+const app = require('../server');
 
-const TEST_PORT = 3000;
+const TEST_PORT = 3556;
+let serverInstance;
 let testsPassed = 0;
 let testsFailed = 0;
 
@@ -60,6 +62,10 @@ async function runTests() {
   console.log('  STARTING INTEGRATION TESTS: UPLOAD_CSV.HTML & SUPABASE');
   console.log('================================================================\n');
 
+  await new Promise(resolve => {
+    serverInstance = app.listen(TEST_PORT, resolve);
+  });
+
   const mainAdminToken = createSessionToken({
     id: 3,
     username: 'admin',
@@ -74,18 +80,23 @@ async function runTests() {
   });
   const infraCookie = `admin_session=${infraAdminToken}`;
 
-  // Test 1: Page Route Serves upload_csv.html
+  // Test 1: Page Route Serves upload_csv via clean URL and 308 on .html
   try {
-    const res = await makeRequest('/upload_csv.html', {
+    const res = await makeRequest('/upload_csv', {
       headers: { 'Cookie': mainCookie }
     });
     const hasHeader = res.body.includes('Upload Monthly Reports');
     const hasPrimaryCard = res.body.includes('Primary Schools');
     const hasUpperCard = res.body.includes('Upper Primary Schools');
     const zeroPhp = !res.body.includes('<?php') && !res.body.includes('$_POST');
-    logResult('upload_csv.html renders with complete UI and zero PHP', res.status === 200 && hasHeader && hasPrimaryCard && hasUpperCard && zeroPhp);
+    logResult('/upload_csv renders with complete UI and zero PHP', res.status === 200 && hasHeader && hasPrimaryCard && hasUpperCard && zeroPhp);
+
+    const legacyRes = await makeRequest('/upload_csv.html', {
+      headers: { 'Cookie': mainCookie }
+    });
+    logResult('/upload_csv.html redirects with HTTP 308 to /upload_csv', legacyRes.status === 308 && legacyRes.headers.location === '/upload_csv');
   } catch (e) {
-    logResult('upload_csv.html renders', false, e.message);
+    logResult('upload_csv renders', false, e.message);
   }
 
   // Test 2: Unauthenticated upload is blocked
@@ -311,6 +322,9 @@ async function runTests() {
   // Clean up test rows
   await pool.query('DELETE FROM public.mdm_monthly_report WHERE u_dise IN ($1, $2, $3) AND month_name = $4 AND year = $5', [testUdise, testUpperUdise, unknownUdise, testMonth, testYear]);
 
+  if (serverInstance) await new Promise(res => serverInstance.close(res));
+  await pool.end();
+
   console.log('\n================================================================');
   console.log(`TEST SUMMARY: ${testsPassed}/${testsPassed + testsFailed} PASSED`);
   if (testsFailed === 0) {
@@ -323,7 +337,9 @@ async function runTests() {
   process.exit(0);
 }
 
-runTests().catch(err => {
+runTests().catch(async err => {
   console.error('Fatal test error:', err);
+  if (serverInstance) await new Promise(res => serverInstance.close(res));
+  await pool.end();
   process.exit(1);
 });

@@ -46,12 +46,12 @@
       if (!res.ok) throw new Error('Session check failed');
       const data = await res.json();
       if (!data || !data.authenticated || data.admin_type !== 'main') {
-        window.location.replace('admin_login.html');
+        window.location.replace('/admin_login');
         return false;
       }
       return true;
     } catch (err) {
-      window.location.replace('admin_login.html');
+      window.location.replace('/admin_login');
       return false;
     }
   }
@@ -67,7 +67,7 @@
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          window.location.replace('admin_login.html');
+          window.location.replace('/admin_login');
           return null;
         }
         throw new Error(`Server returned HTTP ${res.status}`);
@@ -96,7 +96,7 @@
 
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
-        window.location.replace('admin_login.html');
+        window.location.replace('/admin_login');
         return null;
       }
       const errData = await res.json().catch(() => ({}));

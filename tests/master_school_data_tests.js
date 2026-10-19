@@ -317,7 +317,7 @@ async function runMasterVerificationTests() {
       `HTTP ${resClosingRender.statusCode}`
     );
 
-    // C. GET /closingbalance.php without render (direct visit)
+    // C. GET /closingbalance.php without render (direct visit redirects 308 to /closingbalance)
     const resClosingDirect = await request({
       hostname: 'localhost',
       port: TEST_PORT,
@@ -325,30 +325,44 @@ async function runMasterVerificationTests() {
       method: 'GET'
     });
     recordResult(
-      'GET /closingbalance.php serves closingbalance.html transparently',
-      resClosingDirect.statusCode === 200 && resClosingDirect.body.includes('Monthly Report'),
-      `HTTP ${resClosingDirect.statusCode}`
+      'GET /closingbalance.php redirects with HTTP 308 to /closingbalance',
+      resClosingDirect.statusCode === 308 && resClosingDirect.headers.location === '/closingbalance',
+      `HTTP ${resClosingDirect.statusCode} -> ${resClosingDirect.headers.location}`
+    );
+
+    // Direct clean route GET /closingbalance serves closingbalance.html
+    const resClosingClean = await request({
+      hostname: 'localhost',
+      port: TEST_PORT,
+      path: '/closingbalance',
+      method: 'GET'
+    });
+    recordResult(
+      'GET /closingbalance serves closingbalance.html directly',
+      resClosingClean.statusCode === 200 && resClosingClean.body.includes('Monthly Report'),
+      `HTTP ${resClosingClean.statusCode}`
     );
 
     // -------------------------------------------------------------
     // 6. View Routes Verification
     // -------------------------------------------------------------
-    console.log('\n--- Phase 6: Pure HTML View Routes ---');
+    console.log('\n--- Phase 6: Clean HTML View Routes & 308 Redirects ---');
 
     const viewsToTest = [
-      { path: '/monthlyreport.html', title: 'School Monthly Report' },
-      { path: '/monthly_view.html', title: 'Monthly Report Card' },
-      { path: '/rice_report_view.html', title: 'Rice Requirement' },
-      { path: '/rice_report_panel.html', title: 'Rice Requirement Report Panel' },
-      { path: '/status_table.html', title: 'Recently Submitted Schools' },
-      { path: '/upload_monthly_report.html', title: 'Upload Monthly Report' },
-      { path: '/upload_csv.html', title: 'Admin Upload' },
-      { path: '/admin_upload.html', title: 'Admin Upload' },
-      { path: '/student_update.html', title: 'Student Enrolment' },
-      { path: '/ricerequirement.html', title: 'Rice Requirement' }
+      { path: '/monthlyreport', legacyPath: '/monthlyreport.html', title: 'School Monthly Report' },
+      { path: '/monthly_view', legacyPath: '/monthly_view.html', title: 'Monthly Report Card' },
+      { path: '/rice_report_view', legacyPath: '/rice_report_view.html', title: 'Rice Requirement' },
+      { path: '/rice_report_panel', legacyPath: '/rice_report_panel.html', title: 'Rice Requirement Report Panel' },
+      { path: '/status_table', legacyPath: '/status_table.html', title: 'Recently Submitted Schools' },
+      { path: '/upload_monthly_report', legacyPath: '/upload_monthly_report.html', title: 'Upload Monthly Report' },
+      { path: '/upload_csv', legacyPath: '/upload_csv.html', title: 'Admin Upload' },
+      { path: '/admin_upload', legacyPath: '/admin_upload.html', title: 'Admin Upload' },
+      { path: '/student_update', legacyPath: '/student_update.html', title: 'Student Enrolment' },
+      { path: '/ricerequirement', legacyPath: '/ricerequirement.html', title: 'Rice Requirement' }
     ];
 
     for (const v of viewsToTest) {
+      // Test clean extensionless route
       const resView = await request({
         hostname: 'localhost',
         port: TEST_PORT,
@@ -357,9 +371,23 @@ async function runMasterVerificationTests() {
         headers: { Cookie: adminCookie }
       });
       recordResult(
-        `View route ${v.path} renders successfully`,
+        `Clean route ${v.path} renders successfully`,
         resView.statusCode === 200 && resView.body.includes(v.title),
         `HTTP ${resView.statusCode}`
+      );
+
+      // Test legacy .html route 308 redirect
+      const resLegacy = await request({
+        hostname: 'localhost',
+        port: TEST_PORT,
+        path: v.legacyPath,
+        method: 'GET',
+        headers: { Cookie: adminCookie }
+      });
+      recordResult(
+        `Legacy route ${v.legacyPath} redirects to ${v.path} (HTTP 308)`,
+        resLegacy.statusCode === 308 && resLegacy.headers.location === v.path,
+        `HTTP ${resLegacy.statusCode} -> ${resLegacy.headers.location}`
       );
     }
 

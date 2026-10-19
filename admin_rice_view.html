@@ -289,11 +289,11 @@
             })
             .then(function (data) {
                 if (!data || !data.authenticated || data.admin_type !== 'main') {
-                    window.location.replace('admin_login.html');
+                    window.location.replace('/admin_login');
                 }
             })
             .catch(function () {
-                window.location.replace('admin_login.html');
+                window.location.replace('/admin_login');
             });
         })();
 
@@ -323,7 +323,7 @@
             fetch('/api/rice/data?q=' + encodeURIComponent(q), { cache: 'no-store' })
                 .then(function (response) {
                     if (response.status === 401) {
-                        window.location.replace('admin_login.html');
+                        window.location.replace('/admin_login');
                         return null;
                     }
                     if (!response.ok) {

@@ -183,7 +183,7 @@
     <div class="container">
         <div class="header">
             <h2 style="margin:0;">Student Update Monitoring</h2>
-            <a href="admin_dashboard.html" class="btn-back">
+            <a href="/admin_dashboard" class="btn-back">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
             </a>
         </div>
@@ -244,11 +244,11 @@
             })
             .then(function (data) {
                 if (!data || !data.authenticated || data.admin_type !== 'main') {
-                    window.location.replace('admin_login.html');
+                    window.location.replace('/admin_login');
                 }
             })
             .catch(function () {
-                window.location.replace('admin_login.html');
+                window.location.replace('/admin_login');
             });
         })();
 

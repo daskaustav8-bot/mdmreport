@@ -188,7 +188,7 @@
                 <i class="fas fa-user-shield"></i> Admin Dashboard
             </div>
             <div>
-                <a href="index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="/"><i class="fas fa-home"></i> Home</a>
                 <a href="/api/auth/logout?type=main" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
@@ -197,7 +197,7 @@
 
         <div class="grid">
 
-            <a href="admin_rice_view.html" class="card blue">
+            <a href="/admin_rice_view" class="card blue">
                 <div class="icon"><i class="fas fa-file-download"></i></div>
                 <div class="card-title">View & Download Submitted Rice Reports</div>
                 <div class="card-desc">
@@ -205,7 +205,7 @@
                 </div>
             </a>
 
-            <a href="upload_csv.html" class="card purple">
+            <a href="/upload_csv" class="card purple">
                 <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
                 <div class="card-title">Upload Monthly(MDCF) CSV</div>
                 <div class="card-desc">
@@ -213,7 +213,7 @@
                 </div>
             </a>
 
-            <a href="upload_monthly_report.html" class="card teal">
+            <a href="/upload_monthly_report" class="card teal">
                 <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
                 <div class="card-title">Modified Monthly Report</div>
                 <div class="card-desc">
@@ -221,7 +221,7 @@
                 </div>
             </a>
 
-            <a href="upload_infrastructure.html" class="card blue">
+            <a href="/upload_infrastructure" class="card blue">
                 <div class="icon"><i class="fas fa-tools"></i></div>
                 <div class="card-title">Upload Basic Infrastructure</div>
                 <div class="card-desc">
@@ -229,7 +229,7 @@
                 </div>
             </a>
 
-            <a href="manage_infrastructure_fields.html" class="card purple">
+            <a href="/manage_infrastructure_fields" class="card purple">
                 <div class="icon"><i class="fas fa-sliders-h"></i></div>
                 <div class="card-title">Manage Infrastructure Fields</div>
                 <div class="card-desc">
@@ -237,7 +237,7 @@
                 </div>
             </a>
 
-            <a href="admin_student_view.html" class="card blue">
+            <a href="/admin_student_view" class="card blue">
                 <div class="icon"><i class="fas fa-users-cog"></i></div>
                 <div class="card-title">View & Download Student Update</div>
                 <div class="card-desc">
@@ -270,11 +270,11 @@
             })
             .then(function (data) {
                 if (!data || !data.authenticated || data.admin_type !== 'main') {
-                    window.location.replace('admin_login.html');
+                    window.location.replace('/admin_login');
                 }
             })
             .catch(function () {
-                window.location.replace('admin_login.html');
+                window.location.replace('/admin_login');
             });
         })();
     </script>

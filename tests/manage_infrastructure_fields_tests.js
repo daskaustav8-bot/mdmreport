@@ -97,7 +97,7 @@ async function runTests() {
     const hasFontAwesome = htmlContent.includes('font-awesome');
     const hasTailwind = htmlContent.includes('tailwindcss');
     const hasOriginalTitle = htmlContent.includes('Manage Infrastructure Fields');
-    const hasBackToDashboard = htmlContent.includes('admin_dashboard.html');
+    const hasBackToDashboard = htmlContent.includes('admin_dashboard');
     const hasNotifications = htmlContent.includes('successNotification') && htmlContent.includes('errorNotification');
 
     recordResult('manage_infrastructure_fields.html exists with zero PHP dependencies', hasZeroPhp, 'Pure HTML5 markup');
@@ -366,30 +366,40 @@ async function runTests() {
     recordResult('Enforcement: Once unlocked in Supabase, field becomes editable again', unlockedNowEditable, `kitchen_status = "${afterUnlockRecord.kitchen_status}"`);
 
     // -------------------------------------------------------------
-    // Test 12: Route Protection on manage_infrastructure_fields.html
+    // Test 12: Route Protection on manage_infrastructure_fields
     // -------------------------------------------------------------
-    // Accessing /manage_infrastructure_fields.html unauthenticated redirects to admin_login.html
+    // Accessing /manage_infrastructure_fields unauthenticated redirects to /admin_login
     const pageUnauthRes = await request({
+      hostname: 'localhost',
+      port: TEST_PORT,
+      path: '/manage_infrastructure_fields',
+      method: 'GET'
+    });
+    const pageRedirectsUnauth = pageUnauthRes.statusCode === 302 && pageUnauthRes.headers.location === '/admin_login';
+    recordResult('manage_infrastructure_fields rejects unauthenticated access (HTTP 302)', pageRedirectsUnauth, 'Redirects to /admin_login');
+
+    // Accessing legacy /manage_infrastructure_fields.html redirects with HTTP 308 to /manage_infrastructure_fields
+    const pageLegacyRes = await request({
       hostname: 'localhost',
       port: TEST_PORT,
       path: '/manage_infrastructure_fields.html',
       method: 'GET'
     });
-    const pageRedirectsUnauth = pageUnauthRes.statusCode === 302 && pageUnauthRes.headers.location === '/admin_login.html';
-    recordResult('manage_infrastructure_fields.html rejects unauthenticated access (HTTP 302)', pageRedirectsUnauth, 'Redirects to /admin_login.html');
+    const pageLegacyRedirect = pageLegacyRes.statusCode === 308 && pageLegacyRes.headers.location === '/manage_infrastructure_fields';
+    recordResult('manage_infrastructure_fields.html redirects to clean URL (HTTP 308)', pageLegacyRedirect, 'HTTP 308 to /manage_infrastructure_fields');
 
-    // Accessing with Main Admin auth renders HTML page (HTTP 200)
+    // Accessing clean route with Main Admin auth renders HTML page (HTTP 200)
     const pageAuthRes = await request({
       hostname: 'localhost',
       port: TEST_PORT,
-      path: '/manage_infrastructure_fields.html',
+      path: '/manage_infrastructure_fields',
       method: 'GET',
       headers: {
         'Cookie': `admin_session=${mainToken}`
       }
     });
     const pageRendersForAdmin = pageAuthRes.statusCode === 200 && pageAuthRes.body.includes('Manage Infrastructure Fields');
-    recordResult('manage_infrastructure_fields.html renders with full UI for Main Admin', pageRendersForAdmin, 'HTTP 200, contains full page structure');
+    recordResult('manage_infrastructure_fields renders with full UI for Main Admin', pageRendersForAdmin, 'HTTP 200, contains full page structure');
 
   } catch (err) {
     console.error('Test execution error:', err);

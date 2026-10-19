@@ -177,7 +177,7 @@
             <button type="submit" id="loginBtn" class="btn-login">Sign In</button>
         </form>
 
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Return to Dashboard</a>
+        <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Return to Dashboard</a>
     </div>
 
     <script>
@@ -201,7 +201,7 @@
                             sessionStorage.setItem('admin_user', data.username);
                         }
                     } catch (e) {}
-                    window.location.replace(data.redirect || 'admin_dashboard.html');
+                    window.location.replace(data.redirect || '/admin_dashboard');
                 } else {
                     try {
                         sessionStorage.removeItem('admin_logged_in');
@@ -309,7 +309,7 @@
                             sessionStorage.setItem('admin_user', res.data.username);
                         }
                     } catch (e) {}
-                    window.location.href = res.data.redirect || 'admin_dashboard.html';
+                    window.location.href = res.data.redirect || '/admin_dashboard';
                 } else {
                     const msg = (res.data && res.data.error) ? res.data.error : 'Invalid Username or Password!';
                     showError(msg);

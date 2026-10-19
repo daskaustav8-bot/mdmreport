@@ -1156,11 +1156,11 @@
             })
             .then(function (data) {
                 if (!data || !data.authenticated || data.admin_type !== 'infrastructure') {
-                    window.location.replace('infra_login.html');
+                    window.location.replace('/infra_login');
                 }
             })
             .catch(function () {
-                window.location.replace('infra_login.html');
+                window.location.replace('/infra_login');
             });
         })();
 
@@ -1168,7 +1168,7 @@
         fetch('/api/infrastructure/options', { cache: 'no-store' })
             .then(function (response) {
                 if (response.status === 401) {
-                    window.location.replace('infra_login.html');
+                    window.location.replace('/infra_login');
                     return null;
                 }
                 if (!response.ok) {
@@ -1268,7 +1268,7 @@
                 })
                     .then(function (response) {
                         if (response.status === 401) {
-                            window.location.replace('infra_login.html');
+                            window.location.replace('/infra_login');
                             return null;
                         }
                         return response.json();
@@ -1466,7 +1466,7 @@
             })
                 .then(function (response) {
                     if (response.status === 401) {
-                        window.location.replace('infra_login.html');
+                        window.location.replace('/infra_login');
                         return null;
                     }
                     return response.text();

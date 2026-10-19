@@ -157,30 +157,30 @@ async function runTests() {
 
   // 4. Authorization Boundary Tests (Cross-Access Prevention)
   {
-    // Infrastructure session accessing main dashboard route -> Must be Rejected (302 redirect)
+    // Infrastructure session accessing main dashboard route -> Must be Rejected (302 redirect to /admin_login)
     const res = await request({
       hostname: 'localhost',
       port: TEST_PORT,
-      path: '/admin_dashboard.html',
+      path: '/admin_dashboard',
       method: 'GET',
       headers: { Cookie: infraCookie }
     });
 
-    const rejected = res.statusCode === 302 && res.headers.location === '/admin_login.html';
+    const rejected = res.statusCode === 302 && res.headers.location === '/admin_login';
     recordResult('Authorization Boundary: Infrastructure session CANNOT access Main Admin route', rejected, `HTTP ${res.statusCode} redirected to ${res.headers.location}`);
   }
 
   {
-    // Main admin session accessing infrastructure dashboard route -> Must be Rejected (302 redirect)
+    // Main admin session accessing infrastructure dashboard route -> Must be Rejected (302 redirect to /infra_login)
     const res = await request({
       hostname: 'localhost',
       port: TEST_PORT,
-      path: '/basicinfrastructure.html',
+      path: '/basicinfrastructure',
       method: 'GET',
       headers: { Cookie: mainCookie }
     });
 
-    const rejected = res.statusCode === 302 && res.headers.location === '/infra_login.html';
+    const rejected = res.statusCode === 302 && res.headers.location === '/infra_login';
     recordResult('Authorization Boundary: Main Admin session CANNOT access Infrastructure route', rejected, `HTTP ${res.statusCode} redirected to ${res.headers.location}`);
   }
 
@@ -189,7 +189,7 @@ async function runTests() {
     const res = await request({
       hostname: 'localhost',
       port: TEST_PORT,
-      path: '/basicinfrastructure.html',
+      path: '/basicinfrastructure',
       method: 'GET',
       headers: { Cookie: infraCookie }
     });
@@ -199,11 +199,11 @@ async function runTests() {
   }
 
   {
-    // Main admin session accessing main admin dashboard route -> Must SUCCEED (200)
+    // Main Admin session accessing main admin dashboard route -> Must SUCCEED (200)
     const res = await request({
       hostname: 'localhost',
       port: TEST_PORT,
-      path: '/admin_dashboard.html',
+      path: '/admin_dashboard',
       method: 'GET',
       headers: { Cookie: mainCookie }
     });
@@ -212,24 +212,42 @@ async function runTests() {
     recordResult('Main Admin session authorized to access Main Admin dashboard', ok, `HTTP ${res.statusCode}`);
   }
 
-  // 5. Unauthenticated Direct Access Tests
+  // 5. Unauthenticated Direct Access & Clean URL Redirect Tests
   {
     const res1 = await request({
+      hostname: 'localhost',
+      port: TEST_PORT,
+      path: '/admin_dashboard',
+      method: 'GET'
+    });
+    const res2 = await request({
+      hostname: 'localhost',
+      port: TEST_PORT,
+      path: '/basicinfrastructure',
+      method: 'GET'
+    });
+
+    const unauthRejected = (res1.statusCode === 302 && res1.headers.location === '/admin_login') &&
+                           (res2.statusCode === 302 && res2.headers.location === '/infra_login');
+    recordResult('Direct unauthenticated access to dashboards is strictly rejected', unauthRejected, 'Redirected to respective clean login pages');
+
+    // Legacy .html routes issue 308 permanent redirect to clean URLs
+    const legacyAdminHtml = await request({
       hostname: 'localhost',
       port: TEST_PORT,
       path: '/admin_dashboard.html',
       method: 'GET'
     });
-    const res2 = await request({
+    const legacyInfraHtml = await request({
       hostname: 'localhost',
       port: TEST_PORT,
       path: '/basicinfrastructure.html',
       method: 'GET'
     });
 
-    const unauthRejected = (res1.statusCode === 302 && res1.headers.location === '/admin_login.html') &&
-                           (res2.statusCode === 302 && res2.headers.location === '/infra_login.html');
-    recordResult('Direct unauthenticated access to dashboards is strictly rejected', unauthRejected, 'Redirected to respective login pages');
+    const legacyRedirectOk = (legacyAdminHtml.statusCode === 308 && legacyAdminHtml.headers.location === '/admin_dashboard') &&
+                             (legacyInfraHtml.statusCode === 308 && legacyInfraHtml.headers.location === '/basicinfrastructure');
+    recordResult('Legacy .html URLs issue HTTP 308 redirects to clean extensionless URLs', legacyRedirectOk, '308 redirects verified');
   }
 
   // 6. Anti-Tampering & Forgery Test
@@ -238,12 +256,12 @@ async function runTests() {
     const res = await request({
       hostname: 'localhost',
       port: TEST_PORT,
-      path: '/admin_dashboard.html',
+      path: '/admin_dashboard',
       method: 'GET',
       headers: { Cookie: forgedCookie }
     });
 
-    const forgeryRejected = res.statusCode === 302 && res.headers.location === '/admin_login.html';
+    const forgeryRejected = res.statusCode === 302 && res.headers.location === '/admin_login';
     recordResult('Tampered or forged session token is detected and rejected', forgeryRejected, 'Server verification blocks unauthorized access');
   }
 

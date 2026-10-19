@@ -468,7 +468,7 @@
         <div class="select-box">
             <h3 style="margin:0 0 10px 0; color:#7B68C8;">নিচের ড্রপডাউন থেকে নিজেদের স্কুল সিলেক্ট করুন</h3>
             <p style="color:#64748b; margin-bottom:15px;">Month: <strong id="displayMonth"></strong></p>
-            <form method="GET" id="schoolForm" action="closingbalance.html">
+            <form method="GET" id="schoolForm" action="/closingbalance">
                 <input type="hidden" name="month" id="formMonth">
                 <input type="hidden" name="school" id="selectedSchool">
 
@@ -529,7 +529,7 @@
                 content.appendChild(template.content.cloneNode(true));
             } else if (selectedMonth && !selectedSchool) {
                 // State 2: School selection
-                topNav.innerHTML = '<a href="closingbalance.html" class="btn-back"><i class="fas fa-arrow-left"></i> Select Month</a>';
+                topNav.innerHTML = '<a href="/closingbalance" class="btn-back"><i class="fas fa-arrow-left"></i> Select Month</a>';
                 const template = document.getElementById('schoolSelectionTemplate');
                 content.innerHTML = '';
                 content.appendChild(template.content.cloneNode(true));

@@ -58,7 +58,7 @@
 </head>
 
 <body>
-    <a href="admin_dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    <a href="/admin_dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
     <div class="container">
         <div class="header">
             <h1>Upload Infrastructure</h1>
@@ -125,7 +125,7 @@
     <script>
         // Check login
         if (sessionStorage.getItem('admin_logged_in') !== 'true') {
-            window.location.href = 'admin_login.html';
+            window.location.href = '/admin_login';
         }
 
         // Fetch recent updates
