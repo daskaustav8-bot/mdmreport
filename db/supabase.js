@@ -11,9 +11,9 @@ const pool = new Pool({
   database: process.env.SUPABASE_DB_NAME,
   ssl: { rejectUnauthorized: false },
   max: 20,
-  min: 2, // Always keep at least 2 connections warm to eliminate TLS handshake latency
+  min: 0,
   idleTimeoutMillis: 300000, // 5 minutes before idle connection is released
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 30000, // 30 seconds for reliable cloud connections
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000
 });
