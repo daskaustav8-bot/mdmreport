@@ -284,8 +284,43 @@ app.get('/style.css', (req, res) => {
   return res.status(404).type('text/css').send('/* style.css not found */');
 });
 
-// Serve remaining static assets (CSS, JS, images)
+// Explicit Image / Static Asset handler to ensure images are always found and served with correct MIME types
+const STATIC_IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.svg', '.ico', '.webp', '.gif']);
+const IMAGE_MIME_TYPES = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif'
+};
+
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const ext = path.extname(req.path).toLowerCase();
+  if (!STATIC_IMAGE_EXTS.has(ext)) return next();
+
+  const relPath = req.path.replace(/^\//, '');
+  const candidates = [
+    path.join(__dirname, relPath),
+    path.join(process.cwd(), relPath),
+    path.join(__dirname, '..', relPath)
+  ];
+  const found = candidates.find(p => fs.existsSync(p));
+  if (found) {
+    const mime = IMAGE_MIME_TYPES[ext];
+    if (mime) res.setHeader('Content-Type', mime);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(found);
+  }
+  next();
+});
+
+// Serve remaining static assets across all possible Vercel deployment paths
 app.use(express.static(__dirname));
+app.use(express.static(process.cwd()));
+app.use(express.static(path.join(__dirname, '..')));
 
 // 404 handler for unmatched routes
 app.use((req, res) => {

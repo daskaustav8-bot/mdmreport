@@ -11,7 +11,14 @@
           "manage_infrastructure_fields.js",
           "style.css",
           "school_master.csv",
-          "*.html"
+          "*.html",
+          "*.png",
+          "*.jpg",
+          "*.jpeg",
+          "*.svg",
+          "*.ico",
+          "*.webp",
+          "design_references/**"
         ]
       }
     }
