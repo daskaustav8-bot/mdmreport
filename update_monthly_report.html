@@ -569,6 +569,28 @@
             font-size: 16px;
         }
 
+        .status-loading {
+            background: #f8fafc;
+            color: #334155;
+            border: 1.5px solid #cbd5e1;
+        }
+
+        .status-loading i {
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .status-error {
+            background: #fff1f2;
+            color: #9f1239;
+            border: 1.5px solid #fecdd3;
+        }
+
+        .status-error i {
+            color: #e11d48;
+            font-size: 16px;
+        }
+
         /* =========================================
            FORM SECTIONS & CARDS
            ========================================= */
@@ -1735,213 +1757,6 @@
                 font-size: 15px !important;
             }
         }
-    
-        /* =========================================
-           MOBILE TABLE CARDS — NO SIDEWAYS SCROLLING
-           Keeps the same colors and box styling while
-           arranging each table row vertically on phones.
-           ========================================= */
-        @media (max-width: 768px) {
-            .table-scroll-hint {
-                display: none !important;
-            }
-
-            .table-responsive,
-            .table-responsive-fund {
-                width: 100% !important;
-                max-width: 100% !important;
-                min-width: 0 !important;
-                overflow: visible !important;
-                -webkit-overflow-scrolling: auto !important;
-                border: 0 !important;
-                border-radius: 0 !important;
-                background: transparent !important;
-                box-shadow: none !important;
-                margin-bottom: 12px !important;
-            }
-
-            table.entry-table,
-            table.entry-table.fund-table,
-            #secMeal table.entry-table,
-            #secRice table.entry-table {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important;
-                max-width: 100% !important;
-                table-layout: auto !important;
-                border: 0 !important;
-                border-collapse: separate !important;
-                border-spacing: 0 !important;
-                font-size: 13px;
-            }
-
-            table.entry-table thead {
-                position: absolute !important;
-                width: 1px !important;
-                height: 1px !important;
-                padding: 0 !important;
-                margin: -1px !important;
-                overflow: hidden !important;
-                clip: rect(0, 0, 0, 0) !important;
-                clip-path: inset(50%) !important;
-                white-space: nowrap !important;
-                border: 0 !important;
-            }
-
-            table.entry-table tbody {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important;
-            }
-
-            table.entry-table tbody tr {
-                display: grid !important;
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-                gap: 8px !important;
-                width: 100% !important;
-                min-width: 0 !important;
-                margin: 0 0 12px !important;
-                padding: 12px !important;
-                border: 1.5px solid var(--border) !important;
-                border-radius: var(--radius-md) !important;
-                background: #ffffff !important;
-                box-shadow: var(--shadow-sm) !important;
-            }
-
-            table.entry-table tbody tr[style*="display: none"] {
-                display: none !important;
-            }
-
-            table.entry-table tbody tr > td {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: stretch !important;
-                justify-content: center !important;
-                gap: 6px !important;
-                position: static !important;
-                inset: auto !important;
-                width: auto !important;
-                min-width: 0 !important;
-                max-width: 100% !important;
-                padding: 8px !important;
-                border: 1px solid var(--border-light) !important;
-                border-radius: 9px !important;
-                text-align: left !important;
-                vertical-align: middle !important;
-                white-space: normal !important;
-                word-break: break-word !important;
-                overflow-wrap: anywhere !important;
-                background: #f8fafc !important;
-                box-shadow: none !important;
-                font-size: 12px !important;
-            }
-
-            table.entry-table tbody tr > td[style*="display: none"] {
-                display: none !important;
-            }
-
-            table.entry-table tbody tr > td:first-child {
-                display: block !important;
-                grid-column: 1 / -1 !important;
-                width: 100% !important;
-                min-width: 0 !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 0 9px !important;
-                border: 0 !important;
-                border-bottom: 1px dashed var(--border) !important;
-                border-radius: 0 !important;
-                background: transparent !important;
-                box-shadow: none !important;
-                color: #1e293b !important;
-                font-size: 13px !important;
-                font-weight: 800 !important;
-                line-height: 1.4 !important;
-                text-align: left !important;
-                overflow-wrap: anywhere !important;
-            }
-
-            table.entry-table tbody tr > td:not(:first-child)::before {
-                content: attr(data-mobile-label);
-                display: block;
-                color: var(--text-muted);
-                font-size: 9.5px;
-                font-weight: 800;
-                line-height: 1.3;
-                letter-spacing: 0.35px;
-                text-transform: uppercase;
-                overflow-wrap: anywhere;
-            }
-
-            table.entry-table .num-input {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important;
-                max-width: 100% !important;
-                height: 40px !important;
-                min-height: 40px !important;
-                margin: 0 !important;
-                padding: 0 5px !important;
-                border-radius: 7px !important;
-                font-size: 14px !important;
-                text-align: center !important;
-                box-sizing: border-box !important;
-            }
-
-            table.entry-table tbody tr.total-row > td:not(:first-child) {
-                background: #f1f5f9 !important;
-                border-color: var(--border) !important;
-                font-weight: 800 !important;
-            }
-
-            table.entry-table tbody tr.total-row > td:first-child {
-                background: transparent !important;
-            }
-
-            table.entry-table tbody tr.input-disabled-row > td:not(:first-child) {
-                background: #f8fafc !important;
-            }
-
-            table.entry-table .total-cell-val {
-                font-size: 13px !important;
-                overflow-wrap: anywhere;
-            }
-
-            /* Remove all sticky-column behavior in the stacked layout. */
-            table.entry-table th:first-child,
-            table.entry-table td:first-child,
-            table.entry-table tr:hover td:first-child,
-            table.entry-table .total-row td:first-child,
-            table.entry-table .input-disabled-row td:first-child {
-                position: static !important;
-                left: auto !important;
-                z-index: auto !important;
-                box-shadow: none !important;
-            }
-        }
-
-        @media (max-width: 380px) {
-            table.entry-table tbody tr {
-                padding: 9px !important;
-                gap: 7px !important;
-            }
-
-            table.entry-table tbody tr > td {
-                padding: 7px !important;
-            }
-
-            table.entry-table tbody tr > td:not(:first-child)::before {
-                font-size: 9px;
-                letter-spacing: 0.1px;
-            }
-
-            table.entry-table .num-input {
-                height: 38px !important;
-                min-height: 38px !important;
-                font-size: 13.5px !important;
-            }
-        }
-
     </style>
 </head>
 
@@ -2472,37 +2287,54 @@
 
         async function loadSchools() {
             try {
+                let sbData = null;
                 if (typeof window.fetchSupabaseSchools === 'function') {
                     try {
-                        const sbData = await window.fetchSupabaseSchools();
-                        if (Array.isArray(sbData) && sbData.length > 0) {
-                            schools = sbData.map(s => ({
-                                id: s.udise,
-                                text: s.name + ' (' + s.udise + ')',
-                                category: s.category,
-                                circle: s.circle,
-                                gp: s.gp
-                            }));
-                            populateSchoolSelect();
-                            return;
-                        }
+                        sbData = await window.fetchSupabaseSchools();
                     } catch (sbErr) {
-                        console.warn("Supabase load error, falling back to backend adapter:", sbErr);
+                        console.warn("Supabase load error, falling back to /api/schools:", sbErr);
                     }
                 }
 
-                // Call backend adapter which fetches from Supabase
-                const response = await fetch('/api/schools');
-                if (!response.ok) {
-                    const errJson = await response.json().catch(() => ({}));
-                    throw new Error(errJson.message || 'HTTP ' + response.status);
+                if (!Array.isArray(sbData) || sbData.length === 0) {
+                    // Call backend adapter which fetches from Supabase
+                    const response = await fetch('/api/schools');
+                    if (!response.ok) {
+                        const errJson = await response.json().catch(() => ({}));
+                        throw new Error(errJson.message || 'HTTP ' + response.status);
+                    }
+                    sbData = await response.json();
                 }
-                const data = await response.json();
-                if (!Array.isArray(data) || data.length === 0) {
+
+                if (!Array.isArray(sbData) || sbData.length === 0) {
                     throw new Error('No schools returned from Supabase.');
                 }
-                schools = data;
+
+                schools = sbData.map(s => {
+                    const rawName = s.school_name || s.name || s.text || '';
+                    const udise = s.udise || s.id || s.code || '';
+                    const cleanName = rawName.includes(udise) ? rawName : `${rawName} (${udise})`;
+                    return {
+                        id: udise,
+                        text: cleanName,
+                        schoolNameOnly: rawName.replace(/\s*\([^)]*\)\s*$/, '').trim(),
+                        category: s.category || s.catergory || '',
+                        circle: s.circle || s.circle_name || '',
+                        gp: s.gp || s.gp_name || ''
+                    };
+                });
                 populateSchoolSelect();
+
+                // Check URL parameters for direct linking (e.g. ?u_dise=19120500703&month=October)
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialUdise = urlParams.get('u_dise') || urlParams.get('udise');
+                const initialMonth = urlParams.get('month') || urlParams.get('month_name');
+                const initialYear = urlParams.get('year');
+                if (initialMonth) $('#selectMonth').val(initialMonth);
+                if (initialYear) $('#selectYear').val(initialYear);
+                if (initialUdise && schools.some(s => s.id === initialUdise)) {
+                    $('#selectSchool').val(initialUdise).trigger('change');
+                }
             } catch (err) {
                 console.error("Failed to load school master data from Supabase:", err);
                 Swal.fire({
@@ -2808,7 +2640,7 @@
 
                 const school = schools.find(s => s.id === udise);
                 if (school) {
-                    $('#badgeSchoolName').text(school.text);
+                    $('#badgeSchoolName').text(school.schoolNameOnly || school.text);
                     $('#badgeUdise').text(school.id);
                     $('#badgeCategory').html(`<span class="category-chip">${school.category}</span>`);
                     $('#badgeCircle').text(school.circle);
@@ -2865,6 +2697,10 @@
                     // Reset inputs to 0 first
                     resetInputs();
 
+                    // Show loading status in status alert
+                    $('#statusAlertText').html('<i class="fa-solid fa-spinner fa-spin"></i> Checking Supabase database for <b>' + month + ' ' + year + '</b>...');
+                    $('#statusAlert').removeClass('status-existing status-new status-error').addClass('status-loading').css('display', 'flex').show();
+
                     // Fetch existing data via AJAX
                     $.ajax({
                         url: '/api/monthly-report',
@@ -2874,78 +2710,79 @@
                         success: function (res) {
                             if (res.status === 'success' && res.data) {
                                 const d = res.data;
+                                const fj = (typeof d.fund_details_json === 'string' ? JSON.parse(d.fund_details_json) : d.fund_details_json) || {};
+                                const getVal = (col, grp, sub) => {
+                                    if (d[col] !== undefined && d[col] !== null && d[col] !== '') return d[col];
+                                    if (fj[grp] && fj[grp][sub] !== undefined && fj[grp][sub] !== null) return fj[grp][sub];
+                                    return 0;
+                                };
+
                                 // Populate Meal Days
-                                $('#bv_days').val(d.bv_days || 0);
-                                $('#p_days').val(d.p_days || 0);
-                                $('#up_days').val(d.up_days || 0);
-                                $('#bv_actual').val(d.bv_actual || 0);
-                                $('#p_actual').val(d.p_actual || 0);
-                                $('#up_actual').val(d.up_actual || 0);
-                                $('#bv_meals').val(d.bv_meals || 0);
-                                $('#p_meals').val(d.p_meals || 0);
-                                $('#up_meals').val(d.up_meals || 0);
+                                $('#bv_days').val(d.bv_days != null ? d.bv_days : 0);
+                                $('#p_days').val(d.p_days != null ? d.p_days : 0);
+                                $('#up_days').val(d.up_days != null ? d.up_days : 0);
+                                $('#bv_actual').val(d.bv_actual != null ? d.bv_actual : 0);
+                                $('#p_actual').val(d.p_actual != null ? d.p_actual : 0);
+                                $('#up_actual').val(d.up_actual != null ? d.up_actual : 0);
+                                $('#bv_meals').val(d.bv_meals != null ? d.bv_meals : 0);
+                                $('#p_meals').val(d.p_meals != null ? d.p_meals : 0);
+                                $('#up_meals').val(d.up_meals != null ? d.up_meals : 0);
 
                                 // Populate Fund Details
                                 if (isPrimary) {
-                                    $('#cc_bv_open').val(d.cc_bv_open || 0);
-                                    $('#cc_bv_recv').val(d.cc_bv_recv || 0);
-                                    $('#cc_bv_exp').val(d.cc_bv_exp || 0);
+                                    $('#cc_bv_open').val(getVal('cc_bv_open', 'material_cost_bv', 'open'));
+                                    $('#cc_bv_recv').val(getVal('cc_bv_recv', 'material_cost_bv', 'recv'));
+                                    $('#cc_bv_exp').val(getVal('cc_bv_exp', 'material_cost_bv', 'exp'));
 
-                                    $('#cc_up_open').val(0);
-                                    $('#cc_up_recv').val(0);
-                                    $('#cc_up_exp').val(0);
-                                    $('#cc_up_close').val(0);
+                                    $('#cc_up_open, #cc_up_recv, #cc_up_exp, #cc_up_close').val(0);
                                 } else {
-                                    $('#cc_bv_open').val(0);
-                                    $('#cc_bv_recv').val(0);
-                                    $('#cc_bv_exp').val(0);
-                                    $('#cc_bv_close').val(0);
+                                    $('#cc_bv_open, #cc_bv_recv, #cc_bv_exp, #cc_bv_close').val(0);
 
-                                    $('#cc_up_open').val(d.cc_up_open || 0);
-                                    $('#cc_up_recv').val(d.cc_up_recv || 0);
-                                    $('#cc_up_exp').val(d.cc_up_exp || 0);
+                                    $('#cc_up_open').val(getVal('cc_up_open', 'material_cost_up', 'open'));
+                                    $('#cc_up_recv').val(getVal('cc_up_recv', 'material_cost_up', 'recv'));
+                                    $('#cc_up_exp').val(getVal('cc_up_exp', 'material_cost_up', 'exp'));
                                 }
 
-                                $('#cc_p_open').val(d.cc_p_open || 0);
-                                $('#cc_p_recv').val(d.cc_p_recv || 0);
-                                $('#cc_p_exp').val(d.cc_p_exp || 0);
+                                $('#cc_p_open').val(getVal('cc_p_open', 'material_cost_p', 'open'));
+                                $('#cc_p_recv').val(getVal('cc_p_recv', 'material_cost_p', 'recv'));
+                                $('#cc_p_exp').val(getVal('cc_p_exp', 'material_cost_p', 'exp'));
 
-                                $('#bi_open').val(d.bi_open || 0);
-                                $('#bi_recv').val(d.bi_recv || 0);
-                                $('#bi_exp').val(d.bi_exp || 0);
+                                $('#bi_open').val(getVal('bi_open', 'bank_interest', 'open'));
+                                $('#bi_recv').val(getVal('bi_recv', 'bank_interest', 'recv'));
+                                $('#bi_exp').val(getVal('bi_exp', 'bank_interest', 'exp'));
 
-                                $('#lpg_open').val(d.lpg_open || 0);
-                                $('#lpg_recv').val(d.lpg_recv || 0);
-                                $('#lpg_exp').val(d.lpg_exp || 0);
+                                $('#lpg_open').val(getVal('lpg_open', 'lpg_subsidy', 'open'));
+                                $('#lpg_recv').val(getVal('lpg_recv', 'lpg_subsidy', 'recv'));
+                                $('#lpg_exp').val(getVal('lpg_exp', 'lpg_subsidy', 'exp'));
 
-                                $('#nutri_open').val(d.nutri_open || 0);
-                                $('#nutri_recv').val(d.nutri_recv || 0);
-                                $('#nutri_exp').val(d.nutri_exp || 0);
+                                $('#nutri_open').val(getVal('nutri_open', 'supplementary_nutrition', 'open'));
+                                $('#nutri_recv').val(getVal('nutri_recv', 'supplementary_nutrition', 'recv'));
+                                $('#nutri_exp').val(getVal('nutri_exp', 'supplementary_nutrition', 'exp'));
 
-                                $('#mme_open').val(d.mme_open || 0);
-                                $('#mme_recv').val(d.mme_recv || 0);
-                                $('#mme_exp').val(d.mme_exp || 0);
+                                $('#mme_open').val(getVal('mme_open', 'school_expenses_mme', 'open'));
+                                $('#mme_recv').val(getVal('mme_recv', 'school_expenses_mme', 'recv'));
+                                $('#mme_exp').val(getVal('mme_exp', 'school_expenses_mme', 'exp'));
 
-                                $('#kd_open').val(d.kd_open || 0);
-                                $('#kd_recv').val(d.kd_recv || 0);
-                                $('#kd_exp').val(d.kd_exp || 0);
+                                $('#kd_open').val(getVal('kd_open', 'kitchen_devices', 'open'));
+                                $('#kd_recv').val(getVal('kd_recv', 'kitchen_devices', 'recv'));
+                                $('#kd_exp').val(getVal('kd_exp', 'kitchen_devices', 'exp'));
 
-                                $('#ks_open').val(d.ks_open || 0);
-                                $('#ks_recv').val(d.ks_recv || 0);
-                                $('#ks_exp').val(d.ks_exp || 0);
+                                $('#ks_open').val(getVal('ks_open', 'kitchen_shed_repair', 'open'));
+                                $('#ks_recv').val(getVal('ks_recv', 'kitchen_shed_repair', 'recv'));
+                                $('#ks_exp').val(getVal('ks_exp', 'kitchen_shed_repair', 'exp'));
 
-                                $('#ng_open').val(d.ng_open || 0);
-                                $('#ng_recv').val(d.ng_recv || 0);
-                                $('#ng_exp').val(d.ng_exp || 0);
+                                $('#ng_open').val(getVal('ng_open', 'nutrition_garden', 'open'));
+                                $('#ng_recv').val(getVal('ng_recv', 'nutrition_garden', 'recv'));
+                                $('#ng_exp').val(getVal('ng_exp', 'nutrition_garden', 'exp'));
 
-                                $('#bc_open').val(d.bc_open || 0);
-                                $('#bc_recv').val(d.bc_recv || 0);
-                                $('#bc_exp').val(d.bc_exp || 0);
+                                $('#bc_open').val(getVal('bc_open', 'bank_charges', 'open'));
+                                $('#bc_recv').val(getVal('bc_recv', 'bank_charges', 'recv'));
+                                $('#bc_exp').val(getVal('bc_exp', 'bank_charges', 'exp'));
 
-                                $('#bank_match').val(d.bank_match || 'YES');
-                                $('#bank_passbook_balance').val(d.bank_passbook_balance || 0);
-                                if (d.bank_balance_date) {
-                                    $('#bank_balance_date').val(d.bank_balance_date).data('autofilled', false);
+                                $('#bank_match').val(d.bank_match || fj.bank_match || 'YES');
+                                $('#bank_passbook_balance').val(d.bank_passbook_balance != null ? d.bank_passbook_balance : (fj.bank_passbook_balance != null ? fj.bank_passbook_balance : 0));
+                                if (d.bank_balance_date || fj.bank_balance_date) {
+                                    $('#bank_balance_date').val(d.bank_balance_date || fj.bank_balance_date).data('autofilled', false);
                                 } else {
                                     setDefaultBankDate();
                                 }
@@ -2953,35 +2790,40 @@
                                 recalculateFundTotals();
 
                                 // Populate Rice Details
-                                $('#rice_bv_open').val(d.rice_bv_open || 0);
-                                $('#rice_bv_recv').val(d.rice_bv_recv || 0);
-                                $('#rice_bv_cons').val(d.rice_bv_cons || 0);
-                                $('#rice_bv_close').val(d.rice_bv_close || 0);
+                                $('#rice_bv_open').val(d.rice_bv_open != null ? d.rice_bv_open : 0);
+                                $('#rice_bv_recv').val(d.rice_bv_recv != null ? d.rice_bv_recv : 0);
+                                $('#rice_bv_cons').val(d.rice_bv_cons != null ? d.rice_bv_cons : 0);
+                                $('#rice_bv_close').val(d.rice_bv_close != null ? d.rice_bv_close : 0);
 
-                                $('#rice_p_open').val(d.rice_p_open || 0);
-                                $('#rice_p_recv').val(d.rice_p_recv || 0);
-                                $('#rice_p_cons').val(d.rice_p_cons || 0);
-                                $('#rice_p_close').val(d.rice_p_close || 0);
+                                $('#rice_p_open').val(d.rice_p_open != null ? d.rice_p_open : 0);
+                                $('#rice_p_recv').val(d.rice_p_recv != null ? d.rice_p_recv : 0);
+                                $('#rice_p_cons').val(d.rice_p_cons != null ? d.rice_p_cons : 0);
+                                $('#rice_p_close').val(d.rice_p_close != null ? d.rice_p_close : 0);
 
-                                $('#rice_up_open').val(d.rice_up_open || 0);
-                                $('#rice_up_recv').val(d.rice_up_recv || 0);
-                                $('#rice_up_cons').val(d.rice_up_cons || 0);
-                                $('#rice_up_close').val(d.rice_up_close || 0);
+                                $('#rice_up_open').val(d.rice_up_open != null ? d.rice_up_open : 0);
+                                $('#rice_up_recv').val(d.rice_up_recv != null ? d.rice_up_recv : 0);
+                                $('#rice_up_cons').val(d.rice_up_cons != null ? d.rice_up_cons : 0);
+                                $('#rice_up_close').val(d.rice_up_close != null ? d.rice_up_close : 0);
 
-                                $('#statusAlertText').html('<strong>Existing report found!</strong> Loaded saved data for <b>' + month + ' ' + year + '</b>. You can review and update values below.');
-                                $('#statusAlert').removeClass('status-new').addClass('status-existing').css('display', 'flex').hide().slideDown();
+                                $('#statusAlertText').html('<i class="fa-solid fa-circle-check" style="color: #2563eb; font-size: 16px;"></i> <div><strong>Existing report found!</strong> Loaded saved production data for <b>' + month + ' ' + year + '</b> from Supabase. You can review and update values below.</div>');
+                                $('#statusAlert').removeClass('status-new status-loading status-error').addClass('status-existing').css('display', 'flex').hide().slideDown();
                             } else {
-                                $('#statusAlertText').html('<strong>New Entry:</strong> No prior record found for <b>' + month + ' ' + year + '</b>. Enter values below and click Save.');
-                                $('#statusAlert').removeClass('status-existing').addClass('status-new').css('display', 'flex').hide().slideDown();
+                                $('#statusAlertText').html('<i class="fa-solid fa-file-circle-plus" style="color: #059669; font-size: 16px;"></i> <div><strong>No saved report found</strong> for <b>' + month + ' ' + year + '</b> in Supabase. Ready to enter new report values below.</div>');
+                                $('#statusAlert').removeClass('status-existing status-loading status-error').addClass('status-new').css('display', 'flex').hide().slideDown();
                                 setDefaultBankDate();
                             }
 
                             $('.form-section').fadeIn();
                             $('#actionBar').fadeIn();
                         },
-                        error: function () {
-                            $('#statusAlertText').html('Ready to enter report details for <b>' + month + ' ' + year + '</b>.');
-                            $('#statusAlert').removeClass('status-existing').addClass('status-new').css('display', 'flex').hide().slideDown();
+                        error: function (xhr) {
+                            if (xhr.status === 404) {
+                                $('#statusAlertText').html('<i class="fa-solid fa-file-circle-plus" style="color: #059669; font-size: 16px;"></i> <div><strong>No prior report found</strong> for <b>' + month + ' ' + year + '</b> in Supabase. Ready to enter new report values below.</div>');
+                                $('#statusAlert').removeClass('status-existing status-loading status-error').addClass('status-new').css('display', 'flex').hide().slideDown();
+                            } else {
+                                $('#statusAlertText').html('<i class="fa-solid fa-triangle-exclamation" style="color: #b91c1c; font-size: 16px;"></i> <div><strong>Supabase Notice:</strong> Ready to enter report details for <b>' + month + ' ' + year + '</b>.</div>');
+                                $('#statusAlert').removeClass('status-existing status-loading status-error').addClass('status-new').css('display', 'flex').hide().slideDown();
+                            }
                             setDefaultBankDate();
                             $('.form-section').fadeIn();
                             $('#actionBar').fadeIn();
@@ -3188,41 +3030,5 @@
             });
         });
     </script>
-
-
-    <script>
-        // Add mobile-friendly labels to existing table cells without
-        // changing report data, input IDs, or calculation behavior.
-        (function addMobileTableLabels() {
-            function applyLabels() {
-                document.querySelectorAll('table.entry-table').forEach(function (table) {
-                    var headerRow = table.querySelector('thead tr:last-child');
-                    if (!headerRow) return;
-
-                    var headers = Array.from(headerRow.querySelectorAll('th')).map(function (header) {
-                        var clone = header.cloneNode(true);
-                        clone.querySelectorAll('.col-badge').forEach(function (badge) {
-                            badge.remove();
-                        });
-                        return clone.textContent.replace(/\s+/g, ' ').trim();
-                    });
-
-                    table.querySelectorAll('tbody tr').forEach(function (row) {
-                        Array.from(row.querySelectorAll(':scope > td')).forEach(function (cell, index) {
-                            cell.setAttribute('data-mobile-label', headers[index] || ('Column ' + (index + 1)));
-                        });
-                    });
-                });
-            }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', applyLabels, { once: true });
-            } else {
-                applyLabels();
-            }
-        })();
-    </script>
-
 </body>
-
 </html>

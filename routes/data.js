@@ -1180,6 +1180,23 @@ async function handleSaveMonthlyReport(req, res) {
     const circleName = master.circle_name || b.circle_name || 'N/A';
     const gpName = master.gp_name || b.gp_name || 'N/A';
 
+    const fundDetailsObj = {
+      material_cost_bv: { open: toFloat(b.cc_bv_open), recv: toFloat(b.cc_bv_recv), exp: toFloat(b.cc_bv_exp), close: toFloat(b.cc_bv_close) },
+      material_cost_p: { open: toFloat(b.cc_p_open), recv: toFloat(b.cc_p_recv), exp: toFloat(b.cc_p_exp), close: toFloat(b.cc_p_close) },
+      material_cost_up: { open: toFloat(b.cc_up_open), recv: toFloat(b.cc_up_recv), exp: toFloat(b.cc_up_exp), close: toFloat(b.cc_up_close) },
+      bank_interest: { open: toFloat(b.bi_open), recv: toFloat(b.bi_recv), exp: toFloat(b.bi_exp), close: toFloat(b.bi_close) },
+      lpg_subsidy: { open: toFloat(b.lpg_open), recv: toFloat(b.lpg_recv), exp: toFloat(b.lpg_exp), close: toFloat(b.lpg_close) },
+      supplementary_nutrition: { open: toFloat(b.nutri_open), recv: toFloat(b.nutri_recv), exp: toFloat(b.nutri_exp), close: toFloat(b.nutri_close) },
+      school_expenses_mme: { open: toFloat(b.mme_open), recv: toFloat(b.mme_recv), exp: toFloat(b.mme_exp), close: toFloat(b.mme_close) },
+      kitchen_devices: { open: toFloat(b.kd_open), recv: toFloat(b.kd_recv), exp: toFloat(b.kd_exp), close: toFloat(b.kd_close) },
+      kitchen_shed_repair: { open: toFloat(b.ks_open), recv: toFloat(b.ks_recv), exp: toFloat(b.ks_exp), close: toFloat(b.ks_close) },
+      nutrition_garden: { open: toFloat(b.ng_open), recv: toFloat(b.ng_recv), exp: toFloat(b.ng_exp), close: toFloat(b.ng_close) },
+      bank_charges: { open: toFloat(b.bc_open), recv: toFloat(b.bc_recv), exp: toFloat(b.bc_exp), close: toFloat(b.bc_close) },
+      bank_match: String(b.bank_match || 'YES').trim(),
+      bank_passbook_balance: toFloat(b.bank_passbook_balance),
+      bank_balance_date: String(b.bank_balance_date || '').trim()
+    };
+
     const query = `
       INSERT INTO public.mdm_monthly_report (
         month_name, year, u_dise, school_name, circle_name, gp_name,
@@ -1189,6 +1206,14 @@ async function handleSaveMonthlyReport(req, res) {
         cc_up_open, cc_up_recv, cc_up_exp, cc_up_close,
         cch_open, cch_recv, cch_exp, cch_close,
         mme_open, mme_recv, mme_exp, mme_close,
+        bi_open, bi_recv, bi_exp, bi_close,
+        lpg_open, lpg_recv, lpg_exp, lpg_close,
+        nutri_open, nutri_recv, nutri_exp, nutri_close,
+        kd_open, kd_recv, kd_exp, kd_close,
+        ks_open, ks_recv, ks_exp, ks_close,
+        ng_open, ng_recv, ng_exp, ng_close,
+        bc_open, bc_recv, bc_exp, bc_close,
+        bank_match, bank_passbook_balance, bank_balance_date, fund_details_json,
         rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
         rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
         rice_up_open, rice_up_recv, rice_up_cons, rice_up_close
@@ -1202,7 +1227,15 @@ async function handleSaveMonthlyReport(req, res) {
         $32, $33, $34, $35,
         $36, $37, $38, $39,
         $40, $41, $42, $43,
-        $44, $45, $46, $47
+        $44, $45, $46, $47,
+        $48, $49, $50, $51,
+        $52, $53, $54, $55,
+        $56, $57, $58, $59,
+        $60, $61, $62, $63,
+        $64, $65, $66, $67,
+        $68, $69, $70, $71,
+        $72, $73, $74, $75,
+        $76, $77, $78, $79
       )
       ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
         school_name = EXCLUDED.school_name,
@@ -1222,6 +1255,14 @@ async function handleSaveMonthlyReport(req, res) {
         cc_up_open = EXCLUDED.cc_up_open, cc_up_recv = EXCLUDED.cc_up_recv, cc_up_exp = EXCLUDED.cc_up_exp, cc_up_close = EXCLUDED.cc_up_close,
         cch_open = EXCLUDED.cch_open, cch_recv = EXCLUDED.cch_recv, cch_exp = EXCLUDED.cch_exp, cch_close = EXCLUDED.cch_close,
         mme_open = EXCLUDED.mme_open, mme_recv = EXCLUDED.mme_recv, mme_exp = EXCLUDED.mme_exp, mme_close = EXCLUDED.mme_close,
+        bi_open = EXCLUDED.bi_open, bi_recv = EXCLUDED.bi_recv, bi_exp = EXCLUDED.bi_exp, bi_close = EXCLUDED.bi_close,
+        lpg_open = EXCLUDED.lpg_open, lpg_recv = EXCLUDED.lpg_recv, lpg_exp = EXCLUDED.lpg_exp, lpg_close = EXCLUDED.lpg_close,
+        nutri_open = EXCLUDED.nutri_open, nutri_recv = EXCLUDED.nutri_recv, nutri_exp = EXCLUDED.nutri_exp, nutri_close = EXCLUDED.nutri_close,
+        kd_open = EXCLUDED.kd_open, kd_recv = EXCLUDED.kd_recv, kd_exp = EXCLUDED.kd_exp, kd_close = EXCLUDED.kd_close,
+        ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
+        ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
+        bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date, fund_details_json = EXCLUDED.fund_details_json,
         rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
         rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
         rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close;
@@ -1237,6 +1278,14 @@ async function handleSaveMonthlyReport(req, res) {
       toFloat(b.cc_up_open), toFloat(b.cc_up_recv), toFloat(b.cc_up_exp), toFloat(b.cc_up_close),
       toFloat(b.cch_open), toFloat(b.cch_recv), toFloat(b.cch_exp), toFloat(b.cch_close),
       toFloat(b.mme_open), toFloat(b.mme_recv), toFloat(b.mme_exp), toFloat(b.mme_close),
+      toFloat(b.bi_open), toFloat(b.bi_recv), toFloat(b.bi_exp), toFloat(b.bi_close),
+      toFloat(b.lpg_open), toFloat(b.lpg_recv), toFloat(b.lpg_exp), toFloat(b.lpg_close),
+      toFloat(b.nutri_open), toFloat(b.nutri_recv), toFloat(b.nutri_exp), toFloat(b.nutri_close),
+      toFloat(b.kd_open), toFloat(b.kd_recv), toFloat(b.kd_exp), toFloat(b.kd_close),
+      toFloat(b.ks_open), toFloat(b.ks_recv), toFloat(b.ks_exp), toFloat(b.ks_close),
+      toFloat(b.ng_open), toFloat(b.ng_recv), toFloat(b.ng_exp), toFloat(b.ng_close),
+      toFloat(b.bc_open), toFloat(b.bc_recv), toFloat(b.bc_exp), toFloat(b.bc_close),
+      String(b.bank_match || 'YES').trim(), toFloat(b.bank_passbook_balance), String(b.bank_balance_date || '').trim(), JSON.stringify(fundDetailsObj),
       toFloat(b.rice_bv_open), toFloat(b.rice_bv_recv), toFloat(b.rice_bv_cons), toFloat(b.rice_bv_close),
       toFloat(b.rice_p_open), toFloat(b.rice_p_recv), toFloat(b.rice_p_cons), toFloat(b.rice_p_close),
       toFloat(b.rice_up_open), toFloat(b.rice_up_recv), toFloat(b.rice_up_cons), toFloat(b.rice_up_close)
