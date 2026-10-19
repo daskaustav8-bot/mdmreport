@@ -21,7 +21,7 @@
             --text-body: #475569;
             --text-muted: #64748b;
 
-            --bg-page: #f1fbf6;
+            --bg-page: #f4fbf7;
             --radius-topbar: 22px;
             --radius-banner: 24px;
             --radius-card: 22px;
@@ -33,16 +33,16 @@
 
         body {
             margin: 0;
-            padding: 24px 20px 48px;
+            padding: 24px 0 48px;
             font-family: 'Inter', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: var(--text-heading);
             min-height: 100vh;
             background-color: var(--bg-page);
             background-image: 
-                radial-gradient(circle at 8% 8%, rgba(52, 211, 153, 0.25) 0%, transparent 45%),
-                radial-gradient(circle at 92% 10%, rgba(45, 212, 191, 0.22) 0%, transparent 42%),
-                radial-gradient(circle at 50% 100%, rgba(167, 243, 208, 0.3) 0%, transparent 50%),
-                linear-gradient(180deg, #ecfdf5 0%, #f4fbf7 35%, #ffffff 100%);
+                radial-gradient(circle at 10% 12%, rgba(52, 211, 153, 0.20) 0%, transparent 40%),
+                radial-gradient(circle at 90% 14%, rgba(45, 212, 191, 0.18) 0%, transparent 38%),
+                radial-gradient(circle at 50% 100%, rgba(167, 243, 208, 0.22) 0%, transparent 50%),
+                linear-gradient(180deg, #f0fbf6 0%, #f6fcf9 30%, #ffffff 100%);
             background-attachment: fixed;
             position: relative;
             overflow-x: hidden;
@@ -64,8 +64,10 @@
             display: block;
         }
 
+        /* Main Dashboard Container: Expanded to 93-94% width on desktop, max 1500px */
         .dashboard {
-            max-width: 900px;
+            width: 93%;
+            max-width: 1500px;
             margin: 0 auto;
             position: relative;
             z-index: 1;
@@ -77,22 +79,24 @@
             justify-content: space-between;
             align-items: center;
             background: #ffffff;
-            padding: 16px 28px;
+            padding: 14px 36px;
             border-radius: var(--radius-topbar);
             border: 1px solid rgba(209, 250, 229, 0.85);
-            box-shadow: 0 4px 20px rgba(6, 78, 59, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
-            margin-bottom: 22px;
+            box-shadow: 0 4px 24px rgba(6, 78, 59, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+            transition: box-shadow 0.25s ease;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
         }
 
         .brand-logo-img {
-            width: 48px;
-            height: 48px;
+            width: auto;
+            height: 64px;
+            max-width: 74px;
             object-fit: contain;
             display: block;
             flex-shrink: 0;
@@ -108,7 +112,7 @@
         }
 
         .brand-text span {
-            font-size: 13px;
+            font-size: 13.5px;
             color: #52796f;
             font-weight: 500;
             display: block;
@@ -119,17 +123,18 @@
         .user {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 15px;
         }
 
         .user-avatar-img {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             display: block;
             flex-shrink: 0;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 2px solid #ffffff;
         }
 
         .user-info {
@@ -138,14 +143,14 @@
 
         .user-info strong {
             display: block;
-            font-size: 14.5px;
+            font-size: 15px;
             font-weight: 700;
             color: #1e293b;
             line-height: 1.3;
         }
 
         .user-info .date {
-            font-size: 12.5px;
+            font-size: 13px;
             color: #64748b;
             font-weight: 500;
             display: block;
@@ -157,15 +162,16 @@
             width: 100%;
             border-radius: var(--radius-banner);
             overflow: hidden;
-            box-shadow: 0 12px 32px rgba(6, 78, 59, 0.12), 0 2px 6px rgba(0, 0, 0, 0.03);
-            margin-bottom: 26px;
-            background: #097244;
-            border: 1px solid rgba(167, 243, 208, 0.5);
+            box-shadow: 0 12px 36px rgba(6, 78, 59, 0.10), 0 2px 6px rgba(0, 0, 0, 0.02);
+            margin-bottom: 28px;
+            background: #047857;
+            border: 1px solid rgba(167, 243, 208, 0.6);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            line-height: 0;
         }
 
         .welcome-banner:hover {
-            box-shadow: 0 16px 38px rgba(6, 78, 59, 0.16);
+            box-shadow: 0 16px 42px rgba(6, 78, 59, 0.14);
         }
 
         .banner-img {
@@ -188,51 +194,25 @@
             border: 0;
         }
 
-        /* SECTION TITLE */
-        .section-title {
-            font-size: 18px;
-            font-weight: 800;
-            margin: 28px 0 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--primary-dark);
-            letter-spacing: -0.2px;
-        }
-
-        .section-title-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 11px;
-            background: #d1fae5;
-            color: #059669;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.15);
-            border: 1px solid rgba(110, 231, 183, 0.6);
-        }
-
-        /* CARDS GRID (2-Column layout inspired by design overview) */
+        /* CARDS GRID (2-Column desktop grid matching Image 2 reference) */
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
         }
 
-        /* 5th card spans full width gracefully */
+        /* 5th card spans full width of the 2-column grid */
         .card.span-full {
             grid-column: span 2;
         }
 
-        /* QUICK ACCESS CARD */
+        /* NAVIGATION CARD */
         .card {
-            padding: 20px 24px;
+            padding: 26px 32px;
             border-radius: var(--radius-card);
             text-decoration: none;
             color: inherit;
-            box-shadow: 0 4px 18px rgba(6, 78, 59, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 4px 20px rgba(6, 78, 59, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
             border: 1.5px solid transparent;
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease;
             display: flex;
@@ -240,61 +220,71 @@
             justify-content: space-between;
             position: relative;
             overflow: hidden;
+            min-width: 0;
         }
 
         .card-left {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 24px;
+            min-width: 0;
+            flex: 1;
         }
 
         .icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 18px;
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             color: #ffffff;
             flex-shrink: 0;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
             transition: transform 0.25s ease;
         }
 
         .card-content {
             text-align: left;
+            min-width: 0;
+            flex: 1;
         }
 
         .card h3 {
-            margin: 0 0 5px;
-            font-size: 16px;
-            font-weight: 800;
+            margin: 0 0 6px;
+            font-size: 19px;
+            font-weight: 700;
             color: var(--text-heading);
             line-height: 1.35;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.3px;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .card p {
             margin: 0;
-            font-size: 13.5px;
+            font-size: 14.5px;
             color: var(--text-body);
             font-weight: 500;
             line-height: 1.45;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .arrow-btn {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 16px;
             color: #ffffff;
             flex-shrink: 0;
             transition: transform 0.22s ease, box-shadow 0.22s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.10);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
+            margin-left: 14px;
         }
 
         .card:hover {
@@ -302,132 +292,196 @@
         }
 
         .card:hover .icon {
-            transform: scale(1.05);
+            transform: scale(1.04);
         }
 
         .card:hover .arrow-btn {
             transform: translateX(4px);
         }
 
-        /* CARD THEMES (sampled directly from design overview) */
+        /* CARD THEMES (sampled directly from design overview in Image 2) */
 
-        /* 1. Mint-Green Card (MDCF View) */
+        /* 1. Mint-Green Card (Monthly Data Capture Format - MDCF) */
         .card.green-card {
-            background: linear-gradient(135deg, #ffffff 0%, #edfbf5 100%);
-            border-color: rgba(0, 176, 96, 0.25);
+            background: linear-gradient(135deg, #ffffff 0%, #ebfaf2 100%);
+            border-color: rgba(0, 180, 95, 0.22);
         }
         .card.green-card .icon, .card.green-card .arrow-btn {
-            background: linear-gradient(135deg, #00b060 0%, #009652 100%);
+            background: linear-gradient(135deg, #00b865 0%, #009954 100%);
         }
         .card.green-card:hover {
-            border-color: rgba(0, 176, 96, 0.55);
-            box-shadow: 0 12px 28px rgba(0, 176, 96, 0.15);
+            border-color: rgba(0, 180, 95, 0.55);
+            box-shadow: 0 14px 32px rgba(0, 184, 101, 0.16);
         }
 
-        /* 2. Sky-Blue Card (Update MDCF) */
+        /* 2. Sky-Blue Card (Update Monthly Report - MDCF) */
         .card.blue-card {
             background: linear-gradient(135deg, #ffffff 0%, #edf6ff 100%);
-            border-color: rgba(0, 132, 255, 0.25);
+            border-color: rgba(0, 132, 255, 0.22);
         }
         .card.blue-card .icon, .card.blue-card .arrow-btn {
-            background: linear-gradient(135deg, #0084ff 0%, #0070dc 100%);
+            background: linear-gradient(135deg, #0084ff 0%, #006de0 100%);
         }
         .card.blue-card:hover {
             border-color: rgba(0, 132, 255, 0.55);
-            box-shadow: 0 12px 28px rgba(0, 132, 255, 0.15);
+            box-shadow: 0 14px 32px rgba(0, 132, 255, 0.16);
         }
 
-        /* 3. Teal-Emerald Card (Rice Requirement Entry) */
+        /* 3. Emerald-Teal Card (Rice Requirement Entry) */
         .card.teal-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
-            border-color: rgba(13, 148, 136, 0.25);
+            background: linear-gradient(135deg, #ffffff 0%, #edfcf7 100%);
+            border-color: rgba(13, 148, 136, 0.22);
         }
         .card.teal-card .icon, .card.teal-card .arrow-btn {
-            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
         }
         .card.teal-card:hover {
             border-color: rgba(13, 148, 136, 0.55);
-            box-shadow: 0 12px 28px rgba(13, 148, 136, 0.15);
+            box-shadow: 0 14px 32px rgba(13, 148, 136, 0.16);
         }
 
         /* 4. Warm-Orange Card (Basic Infrastructure Report) */
         .card.orange-card {
             background: linear-gradient(135deg, #ffffff 0%, #fff5ed 100%);
-            border-color: rgba(255, 111, 44, 0.25);
+            border-color: rgba(255, 111, 44, 0.22);
         }
         .card.orange-card .icon, .card.orange-card .arrow-btn {
             background: linear-gradient(135deg, #ff6f2c 0%, #ea580c 100%);
         }
         .card.orange-card:hover {
             border-color: rgba(255, 111, 44, 0.55);
-            box-shadow: 0 12px 28px rgba(255, 111, 44, 0.15);
+            box-shadow: 0 14px 32px rgba(255, 111, 44, 0.16);
         }
 
         /* 5. Soft-Purple Card (Class wise Student Update) */
         .card.purple-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f5f0ff 100%);
-            border-color: rgba(126, 70, 246, 0.25);
+            background: linear-gradient(135deg, #ffffff 0%, #f6f0ff 100%);
+            border-color: rgba(139, 92, 246, 0.22);
         }
         .card.purple-card .icon, .card.purple-card .arrow-btn {
-            background: linear-gradient(135deg, #7e46f6 0%, #6d28d9 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         }
         .card.purple-card:hover {
-            border-color: rgba(126, 70, 246, 0.55);
-            box-shadow: 0 12px 28px rgba(126, 70, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.55);
+            box-shadow: 0 14px 32px rgba(139, 92, 246, 0.16);
         }
 
         /* FOOTER */
         footer {
-            margin-top: 48px;
+            margin-top: 42px;
             text-align: center;
-            font-size: 13px;
+            font-size: 13.5px;
             color: #52796f;
             font-weight: 600;
             letter-spacing: 0.3px;
         }
 
         /* RESPONSIVE DESIGN */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
+            .dashboard {
+                width: 94%;
+            }
             .cards-grid {
-                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+            .card {
+                padding: 22px 24px;
+            }
+            .icon {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+                border-radius: 16px;
+            }
+            .arrow-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 14px;
+            }
+            .card h3 {
+                font-size: 17px;
+            }
+            .card p {
+                font-size: 13.5px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px 0 40px;
+            }
+            .dashboard {
+                width: 92%;
+            }
+            .cards-grid {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 16px;
             }
             .card.span-full {
                 grid-column: span 1;
             }
+            .topbar {
+                padding: 16px 20px;
+            }
         }
 
         @media (max-width: 640px) {
-            body {
-                padding: 16px 14px 36px;
+            .dashboard {
+                width: 92%;
             }
             .topbar {
                 flex-direction: column;
-                gap: 14px;
+                gap: 12px;
                 align-items: flex-start;
-                padding: 16px 20px;
+                padding: 14px 18px;
+            }
+            .brand-logo-img {
+                width: auto;
+                height: 52px;
+                max-width: 60px;
+            }
+            .brand-text h1 {
+                font-size: 16.5px;
+                line-height: 1.25;
             }
             .user {
                 width: 100%;
-                border-top: 1px solid #d1fae5;
-                padding-top: 12px;
+                border-top: 1px solid rgba(209, 250, 229, 0.85);
+                padding-top: 10px;
                 margin-top: 2px;
             }
+            .user-avatar-img {
+                width: 38px;
+                height: 38px;
+            }
+            .welcome-banner {
+                border-radius: 16px;
+                margin-bottom: 18px;
+            }
             .card {
-                padding: 16px 18px;
+                padding: 14px 16px;
+                border-radius: 18px;
             }
             .card-left {
-                gap: 14px;
+                gap: 12px;
             }
             .icon {
-                width: 50px;
-                height: 50px;
+                width: 48px;
+                height: 48px;
                 font-size: 20px;
                 border-radius: 14px;
             }
             .arrow-btn {
                 width: 36px;
                 height: 36px;
-                font-size: 13px;
+                font-size: 12px;
+                margin-left: 8px;
+            }
+            .card h3 {
+                font-size: 15px;
+            }
+            .card p {
+                font-size: 12px;
             }
         }
     </style>
@@ -439,47 +493,47 @@
     <svg class="bg-waves-svg" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         <defs>
             <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="80%">
-                <stop offset="0%" stop-color="#34d399" stop-opacity="0.30" />
-                <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0.18" />
-                <stop offset="100%" stop-color="#a7f3d0" stop-opacity="0.05" />
+                <stop offset="0%" stop-color="#34d399" stop-opacity="0.22" />
+                <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0.14" />
+                <stop offset="100%" stop-color="#a7f3d0" stop-opacity="0.04" />
             </linearGradient>
             <linearGradient id="waveGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#10b981" stop-opacity="0.25" />
-                <stop offset="50%" stop-color="#059669" stop-opacity="0.12" />
-                <stop offset="100%" stop-color="#6ee7b7" stop-opacity="0.04" />
+                <stop offset="0%" stop-color="#10b981" stop-opacity="0.20" />
+                <stop offset="50%" stop-color="#059669" stop-opacity="0.10" />
+                <stop offset="100%" stop-color="#6ee7b7" stop-opacity="0.03" />
             </linearGradient>
             <linearGradient id="waveGrad3" x1="0%" y1="100%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.18" />
-                <stop offset="60%" stop-color="#34d399" stop-opacity="0.12" />
-                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.03" />
+                <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.15" />
+                <stop offset="60%" stop-color="#34d399" stop-opacity="0.09" />
+                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.02" />
             </linearGradient>
         </defs>
 
         <path d="M-100,-60 C260,110 440,-90 840,70 C1240,230 1380,-30 1600,60 L1600,-200 L-100,-200 Z" fill="url(#waveGrad1)" />
         <path d="M-150,130 C220,240 460,30 840,160 C1220,290 1400,90 1650,180 L1650,-200 L-150,-200 Z" fill="url(#waveGrad2)" />
-        <path d="M-80,300 C160,400 360,220 720,340 C1080,460 1340,260 1600,350 L1600,900 L-80,900 Z" fill="url(#waveGrad3)" opacity="0.4" />
+        <path d="M-80,300 C160,400 360,220 720,340 C1080,460 1340,260 1600,350 L1600,900 L-80,900 Z" fill="url(#waveGrad3)" opacity="0.35" />
     </svg>
 </div>
 
 <div class="dashboard">
 
-    <!-- Topbar (Matching 2nd Reference Image) -->
-    <div class="topbar">
+    <!-- Topbar (Header) -->
+    <header class="topbar">
         <div class="brand">
-            <img src="logo.png" alt="PM POSHAN" class="brand-logo-img">
+            <img src="pm_poshan_logo.jpg" alt="Pradhan Mantri Poshan Shakti Nirman" class="brand-logo-img">
             <div class="brand-text">
-                <h1>PM POSHAN</h1>
+                <h1>Pradhan Mantri Poshan Shakti Nirman</h1>
                 <span>Monthly Report Dashboard</span>
             </div>
         </div>
         <div class="user">
             <img src="admin_avatar.png" alt="Admin Avatar" class="user-avatar-img">
             <div class="user-info">
-                <strong>Welcome, Admin</strong>
+                <strong>PM-POSHAN, PANDUA</strong>
                 <span class="date" id="current-date"></span>
             </div>
         </div>
-    </div>
+    </header>
 
     <!-- Welcome Banner (Matching 2nd Reference Image) -->
     <div class="welcome-banner">
@@ -491,18 +545,13 @@
         </div>
     </div>
 
-    <!-- Section Title -->
-    <div class="section-title">
-        <span class="section-title-icon"><i class="fa-solid fa-bolt"></i></span> Quick Access
-    </div>
-
     <!-- Cards Navigation (2-Column Grid matching Design Overview) -->
-    <div class="cards-grid">
+    <main class="cards-grid">
 
         <!-- Card 1: Closing Balance / MDCF -->
-        <a href="/closingbalance" class="card teal-card">
+        <a href="/closingbalance" class="card green-card">
             <div class="card-left">
-                <div class="icon"><i class="fa-solid fa-file-lines"></i></div>
+                <div class="icon"><i class="fa-solid fa-file-invoice"></i></div>
                 <div class="card-content">
                     <h3>Monthly Data Capture Format (MDCF)</h3>
                     <p>MONTHLY REPORT দেখার জন্য এখানে ক্লিক করুন</p>
@@ -524,7 +573,7 @@
         </a>
 
         <!-- Card 3: Rice Requirement Entry -->
-        <a href="/ricerequirement" class="card green-card">
+        <a href="/ricerequirement" class="card teal-card">
             <div class="card-left">
                 <div class="icon"><i class="fa-solid fa-wheat-awn"></i></div>
                 <div class="card-content">
@@ -559,7 +608,7 @@
             <div class="arrow-btn"><i class="fa-solid fa-arrow-right"></i></div>
         </a>
 
-    </div>
+    </main>
 
     <!-- Footer -->
     <footer>

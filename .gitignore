@@ -19,3 +19,4 @@ node_modules/
 # Common generated files
 npm-debug.log*
 *.log
+scratch/

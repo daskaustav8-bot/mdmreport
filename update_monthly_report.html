@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Update Monthly Report (MDCF) | PM POSHAN</title>
 
     <!-- Google Fonts & FontAwesome -->
@@ -53,6 +53,12 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html {
+            scroll-behavior: smooth;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+
         body {
             margin: 0;
             font-family: 'Inter', sans-serif;
@@ -63,12 +69,22 @@
             background-attachment: fixed;
             color: var(--text-dark);
             min-height: 100vh;
-            padding: 24px 16px 120px;
+            max-width: 100%;
+            overflow-x: clip;
+            padding: 24px 16px max(120px, calc(120px + env(safe-area-inset-bottom, 0px)));
+        }
+
+        @supports not (overflow-x: clip) {
+            html, body {
+                overflow-x: hidden;
+            }
         }
 
         .container {
             max-width: 1040px;
             margin: 0 auto;
+            width: 100%;
+            min-width: 0;
         }
 
         /* =========================================
@@ -317,6 +333,12 @@
         /* =========================================
            SELECT2 ENHANCED STYLING
            ========================================= */
+        .select2-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0;
+        }
+
         .select2-container--default .select2-selection--single {
             height: 48px !important;
             border: 1.5px solid var(--border) !important;
@@ -341,6 +363,16 @@
             font-size: 14px !important;
             font-weight: 600 !important;
             color: var(--text-dark) !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__clear {
+            margin-right: 20px !important;
+            font-size: 18px !important;
+            color: var(--text-muted) !important;
+            line-height: 46px !important;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
@@ -355,6 +387,9 @@
             overflow: hidden !important;
             background: #ffffff !important;
             margin-top: 4px !important;
+            z-index: 99999 !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
         }
 
         .select2-search--dropdown {
@@ -369,6 +404,8 @@
             font-size: 13px !important;
             outline: none !important;
             font-family: inherit !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         .select2-search--dropdown .select2-search__field:focus {
@@ -380,6 +417,8 @@
             padding: 10px 16px !important;
             font-size: 13px !important;
             font-weight: 500 !important;
+            line-height: 1.35 !important;
+            word-break: break-word !important;
         }
 
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
@@ -415,6 +454,7 @@
             align-items: center;
             gap: 14px;
             margin-bottom: 16px;
+            min-width: 0;
         }
 
         .school-avatar {
@@ -431,18 +471,26 @@
             box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
         }
 
+        .school-name-text {
+            min-width: 0;
+            flex: 1;
+        }
+
         .school-name-text h2 {
             margin: 0;
             font-size: 17px;
             font-weight: 800;
             color: #0f172a;
             line-height: 1.3;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .school-name-text span {
             font-size: 12px;
             color: var(--text-muted);
             font-weight: 600;
+            display: block;
         }
 
         .school-meta-grid {
@@ -584,6 +632,30 @@
         /* =========================================
            DATA TABLES (MODERN CLEAN DESIGN)
            ========================================= */
+        .table-scroll-hint {
+            display: none;
+            align-items: center;
+            gap: 7px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: #f1f5f9;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 12px;
+            margin-bottom: 10px;
+        }
+
+        .table-scroll-hint i {
+            color: var(--primary);
+            animation: swipePulse 1.8s infinite ease-in-out;
+        }
+
+        @keyframes swipePulse {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(4px); }
+        }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -694,6 +766,17 @@
             background: #ffffff;
             transition: all 0.2s ease;
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+            box-sizing: border-box;
+        }
+
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .num-input[type=number] {
+            -moz-appearance: textfield;
         }
 
         .num-input:focus {
@@ -773,12 +856,23 @@
         /* VERIFICATION SUB-CARD IN FUND */
         .verification-panel {
             background: #f8fafc;
+            border: 1.5px solid var(--border);
             border-top: 2px dashed var(--border);
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
             padding: 16px 20px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             align-items: center;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-responsive-fund {
+            margin-bottom: 0;
+            border-bottom: none;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
         }
 
         .verif-box {
@@ -932,94 +1026,713 @@
         }
 
         /* =========================================
-           RESPONSIVE BREAKPOINTS
+           RESPONSIVE BREAKPOINTS (MOBILE OPTIMIZED)
            ========================================= */
+
+        /* Tablets & small desktops (<= 860px) */
         @media (max-width: 860px) {
             .select-row {
                 grid-template-columns: 1fr;
             }
-
-            .verification-panel {
-                grid-template-columns: 1fr;
-            }
-
-            .action-bar-glass {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 14px;
-                padding: 16px;
-            }
-
-            .bar-summary {
-                justify-content: space-between;
-                border-bottom: 1px solid var(--border);
-                padding-bottom: 10px;
-            }
-
-            .bar-buttons {
-                display: grid;
-                grid-template-columns: 1fr 2fr;
-            }
-
-            .btn {
-                width: 100%;
-            }
         }
 
-        @media (max-width: 640px) {
+        /* Tablets, iPads & larger mobile (<= 768px) */
+        @media (max-width: 768px) {
             body {
-                padding: 12px 10px 100px;
+                padding: 16px 12px calc(130px + env(safe-area-inset-bottom, 0px));
             }
 
-            .top-navbar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 14px;
-                padding: 16px;
+            /* Show horizontal swipe hint on mobile */
+            .table-scroll-hint {
+                display: flex !important;
             }
 
-            .nav-left {
-                width: 100%;
-                justify-content: space-between;
+            /* Sticky First Column for All Data Tables on swipe */
+            table.entry-table th:first-child {
+                position: sticky;
+                left: 0;
+                z-index: 5;
+                background: #f8fafc;
+                box-shadow: 2px 0 6px rgba(15, 23, 42, 0.08);
+                border-right: 1.5px solid var(--border);
             }
 
-            .header-title h1 {
-                font-size: 16px;
+            table.entry-table td:first-child {
+                position: sticky;
+                left: 0;
+                z-index: 4;
+                background: #ffffff;
+                box-shadow: 2px 0 6px rgba(15, 23, 42, 0.08);
+                border-right: 1.5px solid var(--border);
             }
 
-            .panel,
-            .form-section {
-                padding: 16px 14px;
-                border-radius: 16px;
+            table.entry-table tr:hover td:first-child {
+                background: #fbfcfe;
             }
 
-            .section-header {
-                font-size: 15px;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+            .total-row td:first-child {
+                background: #f1f5f9 !important;
+                z-index: 4;
             }
 
-            table.entry-table th,
+            .input-disabled-row td:first-child {
+                background: #f8fafc !important;
+            }
+
+            table.entry-table th:first-child,
+            table.entry-table td:first-child {
+                width: 140px !important;
+                min-width: 140px !important;
+                max-width: 155px !important;
+                padding-left: 10px;
+                padding-right: 8px;
+                font-size: 11.5px;
+                line-height: 1.35;
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            table.fund-table th:first-child,
+            table.fund-table td:first-child {
+                width: 145px !important;
+                min-width: 145px !important;
+                max-width: 160px !important;
+            }
+
+            .table-responsive {
+                margin-bottom: 12px;
+                border-radius: var(--radius-sm);
+            }
+
+            .table-responsive-fund {
+                margin-bottom: 12px !important;
+                border-bottom: 1.5px solid var(--border) !important;
+                border-radius: var(--radius-sm) !important;
+            }
+
+            table.entry-table {
+                min-width: 540px;
+            }
+
+            #secMeal table.entry-table {
+                min-width: 480px;
+            }
+
+            table.entry-table th {
+                font-size: 10.5px;
+                padding: 10px 6px;
+            }
+
             table.entry-table td {
                 padding: 8px 6px;
                 font-size: 12px;
             }
 
-            table.entry-table th:first-child,
-            table.entry-table td:first-child {
-                min-width: 160px;
-                padding-left: 10px;
+            .num-input {
+                height: 40px;
+                font-size: 13.5px;
+                padding: 0 4px;
+                border-radius: 6px;
             }
 
-            .num-input {
-                height: 36px;
+            .total-row td {
+                padding: 10px 6px !important;
+            }
+
+            .total-cell-val {
                 font-size: 13px;
-                padding: 0 6px;
+            }
+
+            .total-cell-close {
+                padding: 4px 8px;
+                font-size: 13px;
+            }
+
+            /* Form controls touch friendly */
+            .form-control,
+            .select2-container--default .select2-selection--single {
+                height: 46px !important;
+                font-size: 15px !important;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 46px !important;
+                font-size: 14px !important;
+                padding-left: 12px !important;
+                padding-right: 32px !important;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 44px !important;
+                right: 8px !important;
+            }
+
+            .select2-search--dropdown .select2-search__field {
+                height: 44px !important;
+                font-size: 16px !important; /* Prevents iOS auto-zoom on search */
+            }
+
+            .select2-results__option {
+                padding: 12px 14px !important;
+                font-size: 13.5px !important;
+            }
+
+            /* Mobile Sticky Bottom Action Bar */
+            .action-bar-wrapper {
+                position: fixed !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                margin: 0 !important;
+                padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+                background: rgba(255, 255, 255, 0.96) !important;
+                backdrop-filter: blur(16px) !important;
+                -webkit-backdrop-filter: blur(16px) !important;
+                border-top: 1.5px solid var(--border) !important;
+                box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.1) !important;
+                z-index: 1000 !important;
+            }
+
+            .action-bar-glass {
+                background: transparent !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+                max-width: 1040px;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            .bar-summary {
+                border-bottom: 1px dashed var(--border) !important;
+                padding-bottom: 6px !important;
+                width: 100% !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+            }
+
+            .summary-chip {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                width: 100% !important;
+            }
+
+            .summary-chip span {
+                font-size: 11.5px !important;
+                font-weight: 700 !important;
+                color: var(--text-muted) !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+            }
+
+            .summary-chip strong {
+                font-size: 17px !important;
+                font-weight: 800 !important;
+                color: var(--primary-dark) !important;
             }
 
             .bar-buttons {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+
+            .btn {
+                height: 44px !important;
+                min-height: 44px !important;
+                border-radius: 10px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-sizing: border-box !important;
+            }
+
+            .btn-reset {
+                flex: 0 0 auto !important;
+                padding: 0 16px !important;
+                font-size: 13px !important;
+                gap: 6px !important;
+                white-space: nowrap !important;
+            }
+
+            .btn-save {
+                flex: 1 1 auto !important;
+                padding: 0 16px !important;
+                font-size: 13.5px !important;
+                gap: 8px !important;
+                white-space: nowrap !important;
+                letter-spacing: 0.2px !important;
+            }
+
+            /* Verification Panel on tablet */
+            .verification-panel {
+                border-radius: var(--radius-md) !important;
+                border-top: 1.5px solid var(--border) !important;
+                padding: 14px !important;
+                margin-bottom: 12px !important;
+            }
+
+            /* SweetAlert2 Mobile */
+            .swal2-popup {
+                width: 92% !important;
+                max-width: 440px !important;
+                padding: 18px 14px !important;
+                border-radius: var(--radius-lg) !important;
+                box-sizing: border-box !important;
+            }
+
+            .swal2-title {
+                font-size: 17px !important;
+                word-break: break-word !important;
+            }
+
+            .swal2-html-container {
+                font-size: 13px !important;
+                line-height: 1.45 !important;
+                word-break: break-word !important;
+            }
+
+            .swal2-actions {
+                width: 100% !important;
+                gap: 8px !important;
+                margin-top: 16px !important;
+            }
+
+            .swal2-actions button {
+                height: 44px !important;
+                min-height: 44px !important;
+                font-size: 13.5px !important;
+                border-radius: var(--radius-md) !important;
+                flex: 1 !important;
+                margin: 0 !important;
+            }
+        }
+
+        /* Mobile phones (<= 640px) */
+        @media (max-width: 640px) {
+            body {
+                padding: 12px 10px calc(130px + env(safe-area-inset-bottom, 0px));
+            }
+
+            /* TOP NAVBAR MOBILE ADAPTATION */
+            .top-navbar {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                align-items: center;
+                gap: 12px 10px;
+                padding: 14px 16px;
+                border-radius: var(--radius-md);
+                margin-bottom: 16px;
+            }
+
+            .nav-left {
+                display: contents;
+            }
+
+            .btn-back {
+                grid-column: 1;
+                padding: 8px 12px;
+                font-size: 12px;
+                gap: 6px;
+                border-radius: var(--radius-sm);
+                white-space: nowrap;
+                min-height: 38px;
+                box-sizing: border-box;
+            }
+
+            .nav-divider {
+                display: none;
+            }
+
+            .nav-right {
+                grid-column: 2;
+                justify-self: end;
+            }
+
+            .date-badge {
+                padding: 6px 10px;
+                font-size: 11.5px;
+                gap: 6px;
+                white-space: nowrap;
+            }
+
+            .brand-block {
+                grid-column: 1 / -1;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding-top: 10px;
+                border-top: 1px solid var(--border-light);
+                width: 100%;
+            }
+
+            .brand-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 10px;
+                flex-shrink: 0;
+            }
+
+            .header-title {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .header-title h1 {
+                font-size: 15.5px;
+                line-height: 1.25;
+                word-break: break-word;
+                display: block;
+            }
+
+            .header-title .tag-portal {
+                font-size: 11px;
+                margin-top: 2px;
+            }
+
+            /* PANELS & FORM SECTIONS */
+            .panel,
+            .form-section {
+                padding: 16px 14px;
+                border-radius: 16px;
+                margin-bottom: 16px;
+            }
+
+            .panel-header-row,
+            .section-header {
+                margin-bottom: 14px;
+                padding-bottom: 10px;
+                gap: 8px;
+            }
+
+            .panel-title {
+                font-size: 14.5px;
+                gap: 8px;
+            }
+
+            .panel-title-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 13px;
+                flex-shrink: 0;
+            }
+
+            .section-header {
+                font-size: 14.5px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .section-header-left {
+                gap: 10px;
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            .section-header-left div {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .section-header-left strong {
+                word-break: break-word;
+                overflow-wrap: break-word;
+                display: block;
+                line-height: 1.35;
+            }
+
+            .section-icon-badge {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                border-radius: 8px;
+                flex-shrink: 0;
+            }
+
+            .section-tag {
+                font-size: 10px;
+                padding: 3px 8px;
+                flex-shrink: 0;
+            }
+
+            .select-row {
+                gap: 14px;
+            }
+
+            /* SCHOOL PROFILE CARD */
+            .school-profile-card {
+                padding: 14px;
+            }
+
+            .school-header-info {
+                gap: 10px;
+                margin-bottom: 12px;
+                min-width: 0;
+            }
+
+            .school-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 10px;
+                flex-shrink: 0;
+            }
+
+            .school-name-text {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .school-name-text h2 {
+                font-size: 14.5px;
+                line-height: 1.3;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .school-meta-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .meta-pill {
+                padding: 8px 10px;
+                border-radius: 8px;
+                min-width: 0;
+            }
+
+            .meta-pill-label {
+                font-size: 10px;
+            }
+
+            .meta-pill-value {
+                font-size: 12.5px;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .status-alert {
+                padding: 10px 14px;
+                font-size: 12.5px;
+                gap: 10px;
+                align-items: flex-start;
+                word-break: break-word;
+            }
+
+            .status-alert i {
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+
+            /* VERIFICATION PANEL */
+            .verification-panel {
                 grid-template-columns: 1fr;
+                padding: 12px;
+                gap: 10px;
+            }
+
+            .verif-box {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .verif-label {
+                font-size: 12.5px;
+            }
+
+            .verif-controls {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .verif-controls input,
+            .verif-controls select {
+                width: 100% !important;
+                height: 44px !important;
+                min-height: 44px !important;
+                font-size: 14px !important;
+                box-sizing: border-box !important;
+            }
+
+            .hint-text {
+                font-size: 11.5px;
+                line-height: 1.4;
+            }
+        }
+
+        /* Smaller mobile screens (<= 480px) */
+        @media (max-width: 480px) {
+            .panel,
+            .form-section {
+                padding: 14px 12px;
+                border-radius: 14px;
+            }
+
+            .top-navbar {
+                padding: 12px 12px;
+            }
+
+            .btn-back {
+                padding: 7px 10px;
+                font-size: 11.5px;
+            }
+
+            .date-badge {
+                padding: 5px 8px;
+                font-size: 11px;
+            }
+
+            .brand-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .header-title h1 {
+                font-size: 14.5px;
+                line-height: 1.25;
+            }
+
+            table.entry-table th:first-child,
+            table.entry-table td:first-child {
+                width: 130px !important;
+                min-width: 130px !important;
+                max-width: 135px !important;
+                font-size: 11px;
+                padding-left: 8px;
+                padding-right: 6px;
+            }
+
+            table.fund-table th:first-child,
+            table.fund-table td:first-child {
+                width: 135px !important;
+                min-width: 135px !important;
+                max-width: 140px !important;
+            }
+
+            /* Stack verification controls vertically so date picker has full width */
+            .verif-controls {
+                grid-template-columns: 1fr !important;
+            }
+
+            .btn-reset {
+                padding: 0 12px !important;
+                font-size: 12.5px !important;
+            }
+
+            .btn-save {
+                padding: 0 12px !important;
+                font-size: 13px !important;
+            }
+        }
+
+        /* Very narrow screens (<= 360px down to 320px) */
+        @media (max-width: 360px) {
+            body {
+                padding: 10px 8px calc(130px + env(safe-area-inset-bottom, 0px));
+            }
+
+            .top-navbar {
+                padding: 10px 10px;
+                gap: 10px 8px;
+            }
+
+            .btn-back {
+                padding: 6px 8px;
+                font-size: 11px;
+                gap: 5px;
+            }
+
+            .date-badge {
+                padding: 5px 6px;
+                font-size: 10.5px;
+                gap: 4px;
+            }
+
+            .brand-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 15px;
+            }
+
+            .header-title h1 {
+                font-size: 13.5px;
+            }
+
+            .school-meta-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            table.entry-table {
+                min-width: 500px;
+            }
+
+            #secMeal table.entry-table {
+                min-width: 420px;
+            }
+
+            table.entry-table th:first-child,
+            table.entry-table td:first-child {
+                width: 120px !important;
+                min-width: 120px !important;
+                max-width: 125px !important;
+                font-size: 10.5px;
+                padding-left: 6px;
+                padding-right: 4px;
+            }
+
+            table.fund-table th:first-child,
+            table.fund-table td:first-child {
+                width: 125px !important;
+                min-width: 125px !important;
+                max-width: 130px !important;
+            }
+
+            .num-input {
+                height: 38px;
+                font-size: 13px;
+            }
+
+            .action-bar-wrapper {
+                padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+
+            .bar-buttons {
+                gap: 6px !important;
+            }
+
+            .btn-reset {
+                padding: 0 10px !important;
+                font-size: 11.5px !important;
+                gap: 4px !important;
+            }
+
+            .btn-save {
+                padding: 0 10px !important;
+                font-size: 11.5px !important;
+                gap: 6px !important;
+            }
+
+            .summary-chip strong {
+                font-size: 15px !important;
             }
         }
     </style>
@@ -1176,6 +1889,11 @@
                     <span class="section-tag">Attendance &amp; Meals</span>
                 </div>
 
+                <div class="table-scroll-hint">
+                    <i class="fa-solid fa-arrows-left-right"></i>
+                    <span>Swipe sideways to view and fill all columns</span>
+                </div>
+
                 <div class="table-responsive">
                     <table class="entry-table">
                         <thead>
@@ -1196,37 +1914,37 @@
                             <tr>
                                 <td>Number of School Days during Month</td>
                                 <td class="col-bv">
-                                    <input type="number" min="0" class="num-input" id="bv_days" name="bv_days" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="bv_days" name="bv_days" value="0">
                                 </td>
                                 <td class="col-pri">
-                                    <input type="number" min="0" class="num-input" id="p_days" name="p_days" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="p_days" name="p_days" value="0">
                                 </td>
                                 <td class="col-upp">
-                                    <input type="number" min="0" class="num-input" id="up_days" name="up_days" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="up_days" name="up_days" value="0">
                                 </td>
                             </tr>
                             <tr>
                                 <td>Actual Number of Days MDM Served</td>
                                 <td class="col-bv">
-                                    <input type="number" min="0" class="num-input" id="bv_actual" name="bv_actual" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="bv_actual" name="bv_actual" value="0">
                                 </td>
                                 <td class="col-pri">
-                                    <input type="number" min="0" class="num-input" id="p_actual" name="p_actual" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="p_actual" name="p_actual" value="0">
                                 </td>
                                 <td class="col-upp">
-                                    <input type="number" min="0" class="num-input" id="up_actual" name="up_actual" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="up_actual" name="up_actual" value="0">
                                 </td>
                             </tr>
                             <tr>
                                 <td>Total Meals Served during Month</td>
                                 <td class="col-bv">
-                                    <input type="number" min="0" class="num-input" id="bv_meals" name="bv_meals" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="bv_meals" name="bv_meals" value="0">
                                 </td>
                                 <td class="col-pri">
-                                    <input type="number" min="0" class="num-input" id="p_meals" name="p_meals" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="p_meals" name="p_meals" value="0">
                                 </td>
                                 <td class="col-upp">
-                                    <input type="number" min="0" class="num-input" id="up_meals" name="up_meals" value="0">
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="up_meals" name="up_meals" value="0">
                                 </td>
                             </tr>
                         </tbody>
@@ -1254,7 +1972,12 @@
                     <span class="section-tag">Finance</span>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-scroll-hint">
+                    <i class="fa-solid fa-arrows-left-right"></i>
+                    <span>Swipe sideways to view and fill all columns</span>
+                </div>
+
+                <div class="table-responsive table-responsive-fund">
                     <table class="entry-table fund-table">
                         <thead>
                             <tr>
@@ -1272,19 +1995,19 @@
                                     MATERIAL COST BAL VATIKA
                                     <span class="row-na-badge" id="badge_fund_bv" style="display:none;">Not Applicable</span>
                                 </td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_open" name="cc_bv_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_recv" name="cc_bv_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_exp" name="cc_bv_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.00"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="cc_bv_close" name="cc_bv_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_open" name="cc_bv_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_recv" name="cc_bv_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_bv" id="cc_bv_exp" name="cc_bv_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.00"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="cc_bv_close" name="cc_bv_close" value="0"></td>
                             </tr>
 
                             <!-- 2. MATERIAL COST PRIMARY -->
                             <tr id="fund_row_p">
                                 <td>MATERIAL COST PRIMARY</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_p" id="cc_p_open" name="cc_p_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_p" id="cc_p_recv" name="cc_p_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_p" id="cc_p_exp" name="cc_p_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.00"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="cc_p_close" name="cc_p_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_p" id="cc_p_open" name="cc_p_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_p" id="cc_p_recv" name="cc_p_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_p" id="cc_p_exp" name="cc_p_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.00"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="cc_p_close" name="cc_p_close" value="0"></td>
                             </tr>
 
                             <!-- 3. MATERIAL COST UPPER PRIMARY -->
@@ -1293,82 +2016,82 @@
                                     MATERIAL COST UPPER PRIMARY
                                     <span class="row-na-badge" id="badge_fund_up" style="display:none;">Not Applicable</span>
                                 </td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_up" id="cc_up_open" name="cc_up_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_up" id="cc_up_recv" name="cc_up_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="cc_up" id="cc_up_exp" name="cc_up_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.17"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="cc_up_close" name="cc_up_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_up" id="cc_up_open" name="cc_up_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_up" id="cc_up_recv" name="cc_up_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_up" id="cc_up_exp" name="cc_up_exp" value="0" title="সর্বোচ্চ খরচ: Meals Served × ₹10.17"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="cc_up_close" name="cc_up_close" value="0"></td>
                             </tr>
 
                             <!-- 4. BANK INTEREST -->
                             <tr>
                                 <td>BANK INTEREST</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bi" id="bi_open" name="bi_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bi" id="bi_recv" name="bi_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bi" id="bi_exp" name="bi_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="bi_close" name="bi_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bi" id="bi_open" name="bi_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bi" id="bi_recv" name="bi_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bi" id="bi_exp" name="bi_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="bi_close" name="bi_close" value="0"></td>
                             </tr>
 
                             <!-- 5. LPG SUBSIDY -->
                             <tr>
                                 <td>LPG SUBSIDY</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="lpg" id="lpg_open" name="lpg_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="lpg" id="lpg_recv" name="lpg_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="lpg" id="lpg_exp" name="lpg_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="lpg_close" name="lpg_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="lpg" id="lpg_open" name="lpg_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="lpg" id="lpg_recv" name="lpg_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="lpg" id="lpg_exp" name="lpg_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="lpg_close" name="lpg_close" value="0"></td>
                             </tr>
 
                             <!-- 6. SUPPLEMENTARY / EXTRA NUTRITION -->
                             <tr>
                                 <td>SUPPLEMENTARY / EXTRA NUTRITION</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="nutri" id="nutri_open" name="nutri_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="nutri" id="nutri_recv" name="nutri_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="nutri" id="nutri_exp" name="nutri_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="nutri_close" name="nutri_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="nutri" id="nutri_open" name="nutri_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="nutri" id="nutri_recv" name="nutri_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="nutri" id="nutri_exp" name="nutri_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="nutri_close" name="nutri_close" value="0"></td>
                             </tr>
 
                             <!-- 7. SCHOOL EXPENSES (MME) -->
                             <tr>
                                 <td>SCHOOL EXPENSES (MME)</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="mme" id="mme_open" name="mme_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="mme" id="mme_recv" name="mme_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="mme" id="mme_exp" name="mme_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="mme_close" name="mme_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_open" name="mme_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_recv" name="mme_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_exp" name="mme_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="mme_close" name="mme_close" value="0"></td>
                             </tr>
 
                             <!-- 8. KITCHEN DEVICES -->
                             <tr>
                                 <td>KITCHEN DEVICES</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="kd" id="kd_open" name="kd_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="kd" id="kd_recv" name="kd_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="kd" id="kd_exp" name="kd_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="kd_close" name="kd_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="kd" id="kd_open" name="kd_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="kd" id="kd_recv" name="kd_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="kd" id="kd_exp" name="kd_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="kd_close" name="kd_close" value="0"></td>
                             </tr>
 
                             <!-- 9. KITCHEN SHED REPAIR -->
                             <tr>
                                 <td>KITCHEN SHED REPAIR</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ks" id="ks_open" name="ks_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ks" id="ks_recv" name="ks_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ks" id="ks_exp" name="ks_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="ks_close" name="ks_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="ks" id="ks_open" name="ks_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="ks" id="ks_recv" name="ks_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="ks" id="ks_exp" name="ks_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="ks_close" name="ks_close" value="0"></td>
                             </tr>
 
                             <!-- 10. NUTRITION GARDEN -->
                             <tr>
                                 <td>NUTRITION GARDEN</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ng" id="ng_open" name="ng_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ng" id="ng_recv" name="ng_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="ng" id="ng_exp" name="ng_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="ng_close" name="ng_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="ng" id="ng_open" name="ng_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="ng" id="ng_recv" name="ng_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="ng" id="ng_exp" name="ng_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="ng_close" name="ng_close" value="0"></td>
                             </tr>
 
                             <!-- 11. BANK CHARGES (SMS/CHEQUE BOOK) -->
                             <tr>
                                 <td>BANK CHARGES (SMS/CHEQUE BOOK)</td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bc" id="bc_open" name="bc_open" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bc" id="bc_recv" name="bc_recv" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input calc-fund" data-group="bc" id="bc_exp" name="bc_exp" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field fund-close" id="bc_close" name="bc_close" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bc" id="bc_open" name="bc_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bc" id="bc_recv" name="bc_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bc" id="bc_exp" name="bc_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="bc_close" name="bc_close" value="0"></td>
                             </tr>
 
                             <!-- TOTAL ROW -->
@@ -1381,36 +2104,36 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
 
-                    <!-- BANK VERIFICATION SECTION -->
-                    <div class="verification-panel">
-                        <div class="verif-box">
-                            <div class="verif-label">
-                                Bank Pass Book Balance
-                                <span>Recorded balance as on selected date</span>
-                            </div>
-                            <div class="verif-controls">
-                                <input type="date" id="bank_balance_date" name="bank_balance_date"
-                                    class="form-control"
-                                    style="width: 140px; height: 38px; font-size: 13px; font-weight: 600; padding: 2px 8px;">
-                                <input type="number" step="0.01" class="num-input" id="bank_passbook_balance"
-                                    name="bank_passbook_balance" value="0" placeholder="0.00"
-                                    style="width: 120px; height: 38px; font-weight: 800; border-color: var(--primary);">
-                            </div>
+                <!-- BANK VERIFICATION SECTION -->
+                <div class="verification-panel">
+                    <div class="verif-box">
+                        <div class="verif-label">
+                            Bank Pass Book Balance
+                            <span>Recorded balance as on selected date</span>
                         </div>
+                        <div class="verif-controls">
+                            <input type="date" id="bank_balance_date" name="bank_balance_date"
+                                class="form-control"
+                                style="width: 140px; height: 38px; font-size: 13px; font-weight: 600; padding: 2px 8px;">
+                            <input type="number" step="0.01" inputmode="decimal" class="num-input" id="bank_passbook_balance"
+                                name="bank_passbook_balance" value="0" placeholder="0.00"
+                                style="width: 120px; height: 38px; font-weight: 800; border-color: var(--primary);">
+                        </div>
+                    </div>
 
-                        <div class="verif-box">
-                            <div class="verif-label">
-                                Bank Match Status
-                                <span>Does sum of Closing Balance match Passbook?</span>
-                            </div>
-                            <div class="verif-controls">
-                                <select id="bank_match" name="bank_match" class="form-control"
-                                    style="height: 38px; width: 110px; font-weight: 800; text-align: center;">
-                                    <option value="YES" selected>YES</option>
-                                    <option value="NO">NO</option>
-                                </select>
-                            </div>
+                    <div class="verif-box">
+                        <div class="verif-label">
+                            Bank Match Status
+                            <span>Does sum of Closing Balance match Passbook?</span>
+                        </div>
+                        <div class="verif-controls">
+                            <select id="bank_match" name="bank_match" class="form-control"
+                                style="height: 38px; width: 110px; font-weight: 800; text-align: center;">
+                                <option value="YES" selected>YES</option>
+                                <option value="NO">NO</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1436,6 +2159,11 @@
                     <span class="section-tag">Food Grains</span>
                 </div>
 
+                <div class="table-scroll-hint">
+                    <i class="fa-solid fa-arrows-left-right"></i>
+                    <span>Swipe sideways to view and fill all columns</span>
+                </div>
+
                 <div class="table-responsive">
                     <table class="entry-table">
                         <thead>
@@ -1456,10 +2184,10 @@
                                     <span class="col-badge col-badge-bv">PP</span>
                                 </td>
                                 <td>Rice</td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_open" name="rice_bv_open" value="0"></td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_recv" name="rice_bv_recv" value="0"></td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_cons" name="rice_bv_cons" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field" id="rice_bv_close" name="rice_bv_close" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_open" name="rice_bv_open" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_recv" name="rice_bv_recv" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_bv" id="rice_bv_cons" name="rice_bv_cons" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field" id="rice_bv_close" name="rice_bv_close" value="0"></td>
                             </tr>
 
                             <!-- Primary -->
@@ -1469,10 +2197,10 @@
                                     <span class="col-badge col-badge-pri">I-V</span>
                                 </td>
                                 <td>Rice</td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_p" id="rice_p_open" name="rice_p_open" value="0"></td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_p" id="rice_p_recv" name="rice_p_recv" value="0"></td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_p" id="rice_p_cons" name="rice_p_cons" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field" id="rice_p_close" name="rice_p_close" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_p" id="rice_p_open" name="rice_p_open" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_p" id="rice_p_recv" name="rice_p_recv" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_p" id="rice_p_cons" name="rice_p_cons" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field" id="rice_p_close" name="rice_p_close" value="0"></td>
                             </tr>
 
                             <!-- Upper Primary -->
@@ -1482,10 +2210,10 @@
                                     <span class="col-badge col-badge-upp">VI-VIII</span>
                                 </td>
                                 <td>Rice</td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_up" id="rice_up_open" name="rice_up_open" value="0"></td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_up" id="rice_up_recv" name="rice_up_recv" value="0"></td>
-                                <td><input type="number" step="0.01" min="0" class="num-input calc-rice" data-group="rice_up" id="rice_up_cons" name="rice_up_cons" value="0"></td>
-                                <td><input type="number" step="0.01" class="num-input closing-field" id="rice_up_close" name="rice_up_close" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_up" id="rice_up_open" name="rice_up_open" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_up" id="rice_up_recv" name="rice_up_recv" value="0"></td>
+                                <td><input type="number" step="0.01" min="0" inputmode="decimal" class="num-input calc-rice" data-group="rice_up" id="rice_up_cons" name="rice_up_cons" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field" id="rice_up_close" name="rice_up_close" value="0"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -1584,7 +2312,8 @@
             $('#selectSchool').select2({
                 data: schools,
                 placeholder: "🔍 Type to search school name or U-DISE code...",
-                allowClear: true
+                allowClear: true,
+                width: '100%'
             });
             if (currentVal) {
                 $('#selectSchool').val(currentVal).trigger('change.select2');
@@ -1604,7 +2333,8 @@
             // Initialize Select2 with placeholder
             $('#selectSchool').select2({
                 placeholder: "🔍 Loading schools from Supabase...",
-                allowClear: true
+                allowClear: true,
+                width: '100%'
             });
 
             // Fetch schools from Supabase
