@@ -596,8 +596,8 @@ async function handleRiceStats(req, res) {
       submitted_schools: submittedCount,
       pending: pendingCount,
       pending_schools: pendingCount,
-      export_submitted_url: `export_excel.php?q=${quarter}`,
-      export_pending_url: `export_pending_excel.php?q=${quarter}`
+      export_submitted_url: `/api/rice/export?q=${quarter}`,
+      export_pending_url: `/api/rice/export-pending?q=${quarter}`
     });
   } catch (err) {
     console.error('Error fetching rice report data:', err.message);
