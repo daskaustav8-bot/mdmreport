@@ -495,19 +495,32 @@
 
         .school-meta-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
+            align-items: stretch;
         }
 
         .meta-pill {
             background: #ffffff;
-            border: 1px solid var(--border);
+            border: 1.5px solid var(--border);
             border-radius: 10px;
             padding: 10px 14px;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            justify-content: flex-start;
+            gap: 4px;
             box-shadow: var(--shadow-sm);
+            height: auto;
+            min-height: 62px;
+            min-width: 0;
+            box-sizing: border-box;
+            overflow: visible;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .meta-pill:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
         }
 
         .meta-pill-label {
@@ -516,23 +529,37 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-muted);
+            line-height: 1.25;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .meta-pill-value {
             font-size: 13.5px;
             font-weight: 800;
             color: #1e293b;
+            line-height: 1.35;
+            white-space: normal;
             word-break: break-word;
+            overflow-wrap: break-word;
+            overflow: visible;
         }
 
         .category-chip {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 2.5px 8px;
             border-radius: 6px;
             font-size: 12px;
             font-weight: 800;
+            line-height: 1.35;
             background: var(--primary-light);
             color: var(--primary-dark);
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         /* =========================================
@@ -894,6 +921,341 @@
             text-align: center;
         }
 
+        /* =========================================
+           BANK PASSBOOK PHOTO UPLOAD STYLING
+           ========================================= */
+        .verif-photo-box {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 18px;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.25s ease;
+        }
+
+        .verif-photo-box.drag-over {
+            border-color: var(--primary) !important;
+            background: var(--primary-light) !important;
+            border-style: dashed !important;
+        }
+
+        .verif-photo-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .verif-photo-icon-badge {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.12) 0%, rgba(37, 99, 235, 0.12) 100%);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            border: 1px solid var(--primary-border);
+        }
+
+        .verif-photo-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-choose-photo {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-choose-photo:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(13, 148, 136, 0.3);
+            background: var(--primary-dark);
+        }
+
+        .photo-preview-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 6px 12px 6px 6px;
+        }
+
+        .photo-thumb-container {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #e2e8f0;
+            border: 1px solid var(--border);
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-thumb-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-thumb-container .pdf-badge {
+            font-size: 20px;
+            color: var(--rose);
+        }
+
+        .photo-thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 148, 136, 0.7);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .photo-thumb-container:hover .photo-thumb-overlay {
+            opacity: 1;
+        }
+
+        .photo-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: left;
+        }
+
+        .photo-filename {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-dark);
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .photo-meta .badge-ready {
+            color: var(--emerald);
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .photo-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 6px;
+        }
+
+        .btn-photo-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 6px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-photo-action:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-photo-view:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary-border);
+        }
+
+        .btn-photo-remove {
+            color: var(--rose);
+        }
+
+        .btn-photo-remove:hover {
+            background: var(--rose-light);
+            border-color: #fecdd3;
+        }
+
+        /* Full Screen Photo Modal */
+        .photo-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeInModal 0.2s ease-out;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .photo-modal-box {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: zoomInModal 0.25s ease-out;
+        }
+
+        @keyframes zoomInModal {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .photo-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .photo-modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .photo-modal-header h3 i {
+            color: var(--primary);
+        }
+
+        .photo-modal-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-download-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            background: var(--primary);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .modal-download-link:hover {
+            background: var(--primary-dark);
+        }
+
+        .modal-close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-sub);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--rose-light);
+            color: var(--rose);
+            border-color: #fecdd3;
+        }
+
+        .photo-modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            text-align: center;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+        }
+
+        .photo-modal-content img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 6px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            object-fit: contain;
+        }
+
+        .photo-modal-content iframe {
+            width: 100%;
+            height: 65vh;
+            border: none;
+            border-radius: 6px;
+            background: white;
+        }
+
         .hint-text {
             font-size: 12.5px;
             color: var(--text-muted);
@@ -1066,11 +1428,32 @@
                 gap: 14px;
             }
 
-            /* School Profile: 4 pills side-by-side */
+            /* School Profile: 4 pills side-by-side with auto-expanding height */
             .school-meta-grid {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
                 gap: 8px;
+                align-items: stretch;
+            }
+
+            .meta-pill {
+                padding: 8px 10px;
+                border-radius: 8px;
+                min-height: 56px;
+                height: auto;
+            }
+
+            .meta-pill-label {
+                font-size: 9.5px;
+            }
+
+            .meta-pill-value {
+                font-size: 11.5px;
+            }
+
+            .category-chip {
+                font-size: 10.5px;
+                padding: 2px 6px;
             }
 
             /* All tables: zero horizontal scroll */
@@ -1312,29 +1695,56 @@
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
                 gap: 5px;
+                align-items: stretch;
             }
 
             .meta-pill {
-                padding: 5px 6px;
-                border-radius: 6px;
+                padding: 6px 6px;
+                border-radius: 8px;
                 gap: 2px;
                 min-width: 0;
+                height: auto;
+                min-height: 48px;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                box-sizing: border-box;
+                overflow: visible;
             }
 
             .meta-pill-label {
                 font-size: 8px;
-                letter-spacing: 0;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                letter-spacing: 0.2px;
+                line-height: 1.2;
+                white-space: normal;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                overflow: visible;
+                text-overflow: clip;
             }
 
             .meta-pill-value {
                 font-size: 10px;
                 font-weight: 700;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                line-height: 1.3;
+                white-space: normal !important;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                overflow: visible;
+                text-overflow: clip;
+            }
+
+            .category-chip {
+                font-size: 9px;
+                font-weight: 800;
+                line-height: 1.25;
+                padding: 2px 5px;
+                border-radius: 5px;
+                white-space: normal;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
+                box-sizing: border-box;
             }
 
             /* =======================================================
@@ -1522,6 +1932,31 @@
                 box-sizing: border-box !important;
             }
 
+            .verif-photo-box {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 10px 10px !important;
+                gap: 10px !important;
+            }
+
+            .verif-photo-left {
+                gap: 10px !important;
+            }
+
+            .verif-photo-right {
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+
+            .photo-preview-card {
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+
+            .photo-filename {
+                max-width: 110px !important;
+            }
+
             /* Step 4: Rice Stock Table */
             #secRice table.entry-table th {
                 font-size: 8px;
@@ -1692,18 +2127,35 @@
 
             .school-meta-grid {
                 gap: 3px;
+                align-items: stretch;
             }
 
             .meta-pill {
-                padding: 4px 3px;
+                padding: 5px 4px;
+                min-height: 44px;
+                height: auto;
             }
 
             .meta-pill-label {
                 font-size: 7px;
+                line-height: 1.15;
+                white-space: normal;
+                word-break: break-word;
             }
 
             .meta-pill-value {
                 font-size: 8.5px;
+                line-height: 1.25;
+                white-space: normal !important;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .category-chip {
+                font-size: 7.5px;
+                line-height: 1.2;
+                padding: 1.5px 3px;
+                border-radius: 3px;
             }
 
             table.fund-table th {
@@ -2151,6 +2603,65 @@
                             </select>
                         </div>
                     </div>
+
+                    <!-- BANK PASSBOOK PHOTO UPLOAD SECTION (DOWN IN VERIFICATION PANEL) -->
+                    <div class="verif-photo-box" id="passbookPhotoContainer">
+                        <div class="verif-photo-left">
+                            <div class="verif-photo-icon-badge">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <div class="verif-label">
+                                Bank Passbook Photo
+                                <span>Upload photo of passbook entry (JPG, JPEG, PNG, WebP up to 10MB)</span>
+                            </div>
+                        </div>
+
+                        <div class="verif-photo-right">
+                            <input type="file" id="bank_passbook_photo" name="bank_passbook_photo" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display: none;">
+
+                            <!-- Empty Upload State -->
+                            <div id="photoEmptyState" style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn-choose-photo" id="btnChoosePhoto">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Upload Passbook Photo</span>
+                                </button>
+                            </div>
+
+                            <!-- Uploading / Progress State -->
+                            <div id="photoUploadingState" style="display: none; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--primary);">
+                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 18px;"></i>
+                                <span id="photoUploadProgressText">Saving photo to Google Drive...</span>
+                            </div>
+
+                            <!-- Preview / Selected State -->
+                            <div id="photoPreviewCard" class="photo-preview-card" style="display: none;">
+                                <div class="photo-thumb-container" id="thumbTrigger" title="Click to view full photo">
+                                    <img id="photoThumbImg" src="" alt="Thumbnail" />
+                                    <div class="photo-thumb-overlay">
+                                        <i class="fa-solid fa-magnifying-glass-plus"></i>
+                                    </div>
+                                </div>
+                                <div class="photo-details">
+                                    <div class="photo-filename" id="photoFileName" title="">passbook.jpg</div>
+                                    <div class="photo-meta">
+                                        <span id="photoFileSize">0 KB</span>
+                                        <span class="badge-ready" id="photoDriveBadge"><i class="fa-brands fa-google-drive"></i> Google Drive</span>
+                                    </div>
+                                </div>
+                                <div class="photo-actions">
+                                    <button type="button" class="btn-photo-action btn-photo-view" id="btnViewPhoto" title="View Full Preview">
+                                        <i class="fa-solid fa-eye"></i> View
+                                    </button>
+                                    <button type="button" class="btn-photo-action" id="btnChangePhoto" title="Change Photo">
+                                        <i class="fa-solid fa-arrow-rotate-right"></i> Change
+                                    </button>
+                                    <button type="button" class="btn-photo-action btn-photo-remove" id="btnRemovePhoto" title="Remove Photo">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="hint-text">
                     <i class="fa-solid fa-calculator"></i>
@@ -2266,6 +2777,30 @@
 
         </form>
 
+    </div>
+
+    <!-- Passbook Photo Preview Lightbox Modal -->
+    <div id="photoModal" class="photo-modal-backdrop" style="display: none;">
+        <div class="photo-modal-box">
+            <div class="photo-modal-header">
+                <h3>
+                    <i class="fa-solid fa-book"></i>
+                    <span id="modalTitle">Bank Passbook Photo Preview</span>
+                </h3>
+                <div class="photo-modal-controls">
+                    <a id="modalDownloadBtn" href="#" download="passbook_photo" class="modal-download-link">
+                        <i class="fa-solid fa-download"></i> Download
+                    </a>
+                    <button type="button" class="modal-close-btn" id="btnCloseModal" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="photo-modal-content">
+                <img id="modalImg" src="" alt="Passbook Full View" style="display: none;" />
+                <iframe id="modalPdfFrame" src="" style="display: none;"></iframe>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts: Supabase, jQuery, Select2, SweetAlert2 -->
@@ -2615,6 +3150,393 @@
                 }
             });
 
+            // =========================================
+            // PASSBOOK PHOTO STORAGE & PREVIEW HANDLER
+            // =========================================
+            const PassbookStore = {
+                dbName: 'MDM_Passbook_DB',
+                storeName: 'passbook_photos',
+                db: null,
+                init: function () {
+                    return new Promise((resolve) => {
+                        if (this.db) return resolve(this.db);
+                        if (!window.indexedDB) return resolve(null);
+                        try {
+                            const req = indexedDB.open(this.dbName, 1);
+                            req.onupgradeneeded = (e) => {
+                                const db = e.target.result;
+                                if (!db.objectStoreNames.contains(this.storeName)) {
+                                    db.createObjectStore(this.storeName, { keyPath: 'key' });
+                                }
+                            };
+                            req.onsuccess = (e) => {
+                                this.db = e.target.result;
+                                resolve(this.db);
+                            };
+                            req.onerror = () => resolve(null);
+                        } catch (err) {
+                            resolve(null);
+                        }
+                    });
+                },
+                getKey: function (udise, month, year) {
+                    return `${udise}_${month}_${year}`.trim().toLowerCase();
+                },
+                save: async function (udise, month, year, data) {
+                    const key = this.getKey(udise, month, year);
+                    try {
+                        const db = await this.init();
+                        if (db) {
+                            return new Promise((resolve) => {
+                                const tx = db.transaction(this.storeName, 'readwrite');
+                                tx.objectStore(this.storeName).put({ key, ...data, updated_at: new Date().toISOString() });
+                                tx.oncomplete = () => resolve(true);
+                                tx.onerror = () => resolve(false);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('IndexedDB save failed:', e);
+                    }
+                    try {
+                        localStorage.setItem('mdm_pb_' + key, JSON.stringify(data));
+                    } catch (err) {
+                        console.warn('localStorage save failed:', err);
+                    }
+                    return true;
+                },
+                get: async function (udise, month, year) {
+                    const key = this.getKey(udise, month, year);
+                    try {
+                        const db = await this.init();
+                        if (db) {
+                            return new Promise((resolve) => {
+                                const tx = db.transaction(this.storeName, 'readonly');
+                                const req = tx.objectStore(this.storeName).get(key);
+                                req.onsuccess = () => resolve(req.result || null);
+                                req.onerror = () => resolve(null);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('IndexedDB get failed:', e);
+                    }
+                    try {
+                        const item = localStorage.getItem('mdm_pb_' + key);
+                        if (item) return JSON.parse(item);
+                    } catch (err) {}
+                    return null;
+                },
+                delete: async function (udise, month, year) {
+                    const key = this.getKey(udise, month, year);
+                    try {
+                        const db = await this.init();
+                        if (db) {
+                            const tx = db.transaction(this.storeName, 'readwrite');
+                            tx.objectStore(this.storeName).delete(key);
+                        }
+                    } catch (e) {}
+                    try {
+                        localStorage.removeItem('mdm_pb_' + key);
+                    } catch (err) {}
+                }
+            };
+
+            let currentPassbookFile = null;
+
+            function formatBytes(bytes, decimals = 1) {
+                if (!bytes || bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const dm = decimals < 0 ? 0 : decimals;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+            }
+
+            function setPhotoUI(fileData) {
+                if (!fileData || (!fileData.dataUrl && !fileData.fileId)) {
+                    currentPassbookFile = null;
+                    $('#bank_passbook_photo').val('');
+                    $('#photoThumbImg').attr('src', '').hide();
+                    $('#photoPreviewCard').hide();
+                    $('#photoUploadingState').hide();
+                    $('#photoEmptyState').show();
+                    return;
+                }
+
+                currentPassbookFile = fileData;
+                $('#photoFileName').text(fileData.name || 'passbook_photo.jpg').attr('title', fileData.name || '');
+                $('#photoFileSize').text(formatBytes(fileData.size || 0));
+
+                if (fileData.dataUrl) {
+                    $('#photoThumbImg').attr('src', fileData.dataUrl).show();
+                } else if (fileData.fileId) {
+                    $('#photoThumbImg').attr('src', 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(fileData.fileId) + '&sz=w120').show();
+                }
+
+                if (fileData.fileId) {
+                    $('#photoDriveBadge').html('<i class="fa-brands fa-google-drive"></i> Google Drive').show();
+                }
+
+                $('#photoUploadingState').hide();
+                $('#photoEmptyState').hide();
+                $('#photoPreviewCard').css('display', 'inline-flex');
+            }
+
+            function handleFileSelect(file) {
+                if (!file) return;
+
+                const udise = $('#selectSchool').val();
+                const month = $('#selectMonth').val();
+                const year = $('#selectYear').val();
+
+                if (!udise) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Select School First',
+                        text: 'Please select a School before uploading the bank passbook photo.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    $('#bank_passbook_photo').val('');
+                    return;
+                }
+
+                if (!month || !year) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Select Period',
+                        text: 'Please select the reporting Month and Year before uploading.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    $('#bank_passbook_photo').val('');
+                    return;
+                }
+
+                // Strict file format validation: JPG, JPEG, PNG, WEBP
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                const extMatch = (file.name || '').match(/\.([a-zA-Z0-9]+)$/);
+                const ext = extMatch ? extMatch[1].toLowerCase() : '';
+                const validExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+                if (!validTypes.includes(file.type.toLowerCase()) && !validExts.includes(ext)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Image Format',
+                        text: 'Only JPG, JPEG, PNG, and WebP images are allowed for the bank passbook photo.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    $('#bank_passbook_photo').val('');
+                    return;
+                }
+
+                // File size check: Max 10MB
+                if (file.size > 10 * 1024 * 1024) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'The selected passbook photo exceeds the 10MB file size limit.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    $('#bank_passbook_photo').val('');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const localDataUrl = e.target.result;
+                    uploadPassbookPhotoToDrive(file, localDataUrl, udise, month, year);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function uploadPassbookPhotoToDrive(file, localDataUrl, udise, month, year) {
+                const school = schools.find(s => s.id === udise);
+                const schoolName = school ? (school.schoolNameOnly || school.text) : ('School (' + udise + ')');
+
+                // Prevent duplicate submissions while upload is processing
+                $('#photoEmptyState').hide();
+                $('#photoPreviewCard').hide();
+                $('#photoUploadingState').css('display', 'inline-flex');
+                $('#photoUploadProgressText').text('Saving ' + file.name + ' to Google Drive...');
+                $('#btnSave').prop('disabled', true);
+                $('#btnChoosePhoto').prop('disabled', true);
+
+                const formData = new FormData();
+                formData.append('photo', file);
+                formData.append('u_dise', udise);
+                formData.append('month', month);
+                formData.append('year', year);
+                formData.append('school_name', schoolName);
+
+                $.ajax({
+                    url: '/api/monthly-report/upload-passbook',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function (resp) {
+                        $('#photoUploadingState').hide();
+                        $('#btnSave').prop('disabled', false);
+                        $('#btnChoosePhoto').prop('disabled', false);
+
+                        if (resp && resp.status === 'success') {
+                            currentPassbookFile = {
+                                fileId: resp.fileId,
+                                fileUrl: resp.fileUrl || ('https://drive.google.com/file/d/' + resp.fileId + '/view'),
+                                name: resp.fileName || file.name,
+                                size: file.size,
+                                dataUrl: localDataUrl,
+                                uploadedToDrive: true
+                            };
+
+                            setPhotoUI(currentPassbookFile);
+                            PassbookStore.save(udise, month, year, currentPassbookFile);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Uploaded to Google Drive!',
+                                html: 'Photo saved directly to your Google Drive.<br><small class="text-muted">Drive File ID: <code>' + resp.fileId + '</code></small>',
+                                timer: 4000,
+                                timerProgressBar: true,
+                                confirmButtonColor: '#0d9488'
+                            });
+                        } else {
+                            currentPassbookFile = null;
+                            setPhotoUI(null);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Google Drive Upload Failed',
+                                text: (resp && resp.message) ? resp.message : 'Could not save passbook photo to Google Drive.',
+                                confirmButtonColor: '#0d9488'
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        $('#photoUploadingState').hide();
+                        $('#btnSave').prop('disabled', false);
+                        $('#btnChoosePhoto').prop('disabled', false);
+                        currentPassbookFile = null;
+                        setPhotoUI(null);
+
+                        let errMsg = 'Failed to communicate with the upload server.';
+                        try {
+                            const errObj = JSON.parse(xhr.responseText);
+                            if (errObj && errObj.message) errMsg = errObj.message;
+                        } catch (e) {}
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Upload Failed',
+                            text: errMsg,
+                            confirmButtonColor: '#0d9488'
+                        });
+                    }
+                });
+            }
+
+            $('#btnChoosePhoto, #btnChangePhoto').on('click', function (e) {
+                e.preventDefault();
+                $('#bank_passbook_photo').trigger('click');
+            });
+
+            $('#bank_passbook_photo').on('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (file) {
+                    handleFileSelect(file);
+                }
+            });
+
+            const $dropArea = $('#passbookPhotoContainer');
+            $dropArea.on('dragover dragenter', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $dropArea.addClass('drag-over');
+            });
+            $dropArea.on('dragleave dragend drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $dropArea.removeClass('drag-over');
+            });
+            $dropArea.on('drop', function (e) {
+                const files = e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files;
+                if (files && files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+
+            function openPhotoModal() {
+                if (!currentPassbookFile) return;
+
+                $('#modalTitle').text(currentPassbookFile.name || 'Bank Passbook Photo');
+
+                const targetUrl = currentPassbookFile.fileUrl || currentPassbookFile.dataUrl;
+                if (currentPassbookFile.fileUrl) {
+                    $('#modalDownloadBtn').attr('href', currentPassbookFile.fileUrl).attr('target', '_blank').removeAttr('download').html('<i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Drive');
+                } else {
+                    $('#modalDownloadBtn').attr('href', currentPassbookFile.dataUrl || '#').attr('download', currentPassbookFile.name || 'passbook_photo').removeAttr('target').html('<i class="fa-solid fa-download"></i> Download');
+                }
+
+                if (currentPassbookFile.dataUrl) {
+                    $('#modalPdfFrame').hide();
+                    $('#modalImg').attr('src', currentPassbookFile.dataUrl).show();
+                } else if (currentPassbookFile.fileId) {
+                    $('#modalPdfFrame').hide();
+                    $('#modalImg').attr('src', 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(currentPassbookFile.fileId) + '&sz=w1000').show();
+                }
+
+                $('#photoModal').fadeIn(150);
+            }
+
+            function closePhotoModal() {
+                $('#photoModal').fadeOut(150, function () {
+                    $('#modalImg').attr('src', '');
+                    $('#modalPdfFrame').attr('src', '');
+                });
+            }
+
+            $('#thumbTrigger, #btnViewPhoto').on('click', function (e) {
+                e.preventDefault();
+                openPhotoModal();
+            });
+
+            $('#btnCloseModal').on('click', function () {
+                closePhotoModal();
+            });
+
+            $('#photoModal').on('click', function (e) {
+                if ($(e.target).is('#photoModal')) {
+                    closePhotoModal();
+                }
+            });
+
+            $(document).on('keydown', function (e) {
+                if (e.key === 'Escape' && $('#photoModal').is(':visible')) {
+                    closePhotoModal();
+                }
+            });
+
+            $('#btnRemovePhoto').on('click', function (e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Remove Passbook Photo?',
+                    text: 'Are you sure you want to remove the uploaded passbook photo?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, remove'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        const udise = $('#selectSchool').val();
+                        const month = $('#selectMonth').val();
+                        const year = $('#selectYear').val();
+                        if (udise && month && year) {
+                            PassbookStore.delete(udise, month, year);
+                        }
+                        setPhotoUI(null);
+                    }
+                });
+            });
+
             // School change or Month/Year change triggers fetch
             $('#selectSchool, #selectMonth, #selectYear').on('change', function () {
                 setDefaultBankDate();
@@ -2711,6 +3633,33 @@
                         dataType: 'json',
                         success: function (res) {
                             if (res.status === 'success' && res.data) {
+                                const d = res.data;
+                                const fj = (typeof d.fund_details_json === 'string' ? JSON.parse(d.fund_details_json) : d.fund_details_json) || {};
+
+                                // Load photo reference from Supabase record
+                                const driveFileId = d.passbook_photo_file_id || (fj.passbook_photo && fj.passbook_photo.file_id) || null;
+                                const driveFileUrl = d.passbook_photo_url || (fj.passbook_photo && fj.passbook_photo.file_url) || null;
+                                const photoName = (fj.passbook_photo && fj.passbook_photo.file_name) || (driveFileId ? ('Passbook_' + udise + '_' + month + '_' + year + '.jpg') : null);
+
+                                if (driveFileId) {
+                                    currentPassbookFile = {
+                                        fileId: driveFileId,
+                                        fileUrl: driveFileUrl || ('https://drive.google.com/file/d/' + driveFileId + '/view'),
+                                        name: photoName,
+                                        size: (fj.passbook_photo && fj.passbook_photo.file_size) || 0,
+                                        dataUrl: null,
+                                        uploadedToDrive: true
+                                    };
+                                    setPhotoUI(currentPassbookFile);
+                                } else {
+                                    PassbookStore.get(udise, month, year).then(savedPhoto => {
+                                        if (savedPhoto && (savedPhoto.fileId || savedPhoto.dataUrl)) {
+                                            setPhotoUI(savedPhoto);
+                                        } else {
+                                            setPhotoUI(null);
+                                        }
+                                    });
+                                }
                                 const d = res.data;
                                 const fj = (typeof d.fund_details_json === 'string' ? JSON.parse(d.fund_details_json) : d.fund_details_json) || {};
                                 const getVal = (col, grp, sub) => {
@@ -2845,6 +3794,7 @@
                 $('#bank_match').val('YES');
                 $('#bank_passbook_balance').val(0);
                 setDefaultBankDate();
+                setPhotoUI(null);
 
                 const udise = $('#selectSchool').val();
                 if (udise) {
@@ -2992,6 +3942,9 @@
                             bank_match: $('#bank_match').val() || 'YES',
                             bank_passbook_balance: $('#bank_passbook_balance').val() || 0,
                             bank_balance_date: $('#bank_balance_date').val() || '',
+                            passbook_photo_file_id: (currentPassbookFile ? currentPassbookFile.fileId : null),
+                            passbook_photo_url: (currentPassbookFile ? currentPassbookFile.fileUrl : null),
+                            bank_passbook_photo_name: (currentPassbookFile ? currentPassbookFile.name : ''),
 
                             // Rice
                             rice_bv_open: $('#rice_bv_open').val() || 0,

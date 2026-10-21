@@ -1194,7 +1194,9 @@ async function handleSaveMonthlyReport(req, res) {
       bank_charges: { open: toFloat(b.bc_open), recv: toFloat(b.bc_recv), exp: toFloat(b.bc_exp), close: toFloat(b.bc_close) },
       bank_match: String(b.bank_match || 'YES').trim(),
       bank_passbook_balance: toFloat(b.bank_passbook_balance),
-      bank_balance_date: String(b.bank_balance_date || '').trim()
+      bank_balance_date: String(b.bank_balance_date || '').trim(),
+      passbook_photo_file_id: b.passbook_photo_file_id || null,
+      passbook_photo_url: b.passbook_photo_url || null
     };
 
     const query = `
@@ -1216,7 +1218,8 @@ async function handleSaveMonthlyReport(req, res) {
         bank_match, bank_passbook_balance, bank_balance_date, fund_details_json,
         rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
         rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
-        rice_up_open, rice_up_recv, rice_up_cons, rice_up_close
+        rice_up_open, rice_up_recv, rice_up_cons, rice_up_close,
+        passbook_photo_file_id, passbook_photo_url
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, $9, $10, $11, $12, $13, $14, $15,
@@ -1235,7 +1238,8 @@ async function handleSaveMonthlyReport(req, res) {
         $64, $65, $66, $67,
         $68, $69, $70, $71,
         $72, $73, $74, $75,
-        $76, $77, $78, $79
+        $76, $77, $78, $79,
+        $80, $81
       )
       ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
         school_name = EXCLUDED.school_name,
@@ -1265,7 +1269,9 @@ async function handleSaveMonthlyReport(req, res) {
         bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date, fund_details_json = EXCLUDED.fund_details_json,
         rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
         rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
-        rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close;
+        rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close,
+        passbook_photo_file_id = COALESCE(EXCLUDED.passbook_photo_file_id, public.mdm_monthly_report.passbook_photo_file_id),
+        passbook_photo_url = COALESCE(EXCLUDED.passbook_photo_url, public.mdm_monthly_report.passbook_photo_url);
     `;
 
     const values = [
@@ -1288,7 +1294,9 @@ async function handleSaveMonthlyReport(req, res) {
       String(b.bank_match || 'YES').trim(), toFloat(b.bank_passbook_balance), String(b.bank_balance_date || '').trim(), JSON.stringify(fundDetailsObj),
       toFloat(b.rice_bv_open), toFloat(b.rice_bv_recv), toFloat(b.rice_bv_cons), toFloat(b.rice_bv_close),
       toFloat(b.rice_p_open), toFloat(b.rice_p_recv), toFloat(b.rice_p_cons), toFloat(b.rice_p_close),
-      toFloat(b.rice_up_open), toFloat(b.rice_up_recv), toFloat(b.rice_up_cons), toFloat(b.rice_up_close)
+      toFloat(b.rice_up_open), toFloat(b.rice_up_recv), toFloat(b.rice_up_cons), toFloat(b.rice_up_close),
+      b.passbook_photo_file_id ? String(b.passbook_photo_file_id).trim() : null,
+      b.passbook_photo_url ? String(b.passbook_photo_url).trim() : null
     ];
 
     try {
@@ -1316,6 +1324,211 @@ async function handleSaveMonthlyReport(req, res) {
 
 router.post('/save_monthly_report.php', handleSaveMonthlyReport);
 router.post('/monthly-report/save', handleSaveMonthlyReport);
+
+/**
+ * Direct Google Drive Passbook Photo Uploader Endpoint
+ * Securely validates file type, size, magic bytes, school UDISE, and transmits
+ * to private Google Drive folder via Google Apps Script Web App without exposing credentials.
+ */
+async function handleUploadPassbookPhoto(req, res) {
+  try {
+    const file = req.file;
+    const body = req.body || {};
+
+    let buffer = null;
+    let mimeType = '';
+    let fileName = '';
+
+    if (file && file.buffer) {
+      buffer = file.buffer;
+      mimeType = (file.mimetype || '').toLowerCase();
+      fileName = file.originalname || 'passbook.jpg';
+    } else if (body.fileBase64) {
+      const cleanBase64 = String(body.fileBase64).replace(/^data:[a-zA-Z0-9\/+-]+;base64,/, '');
+      buffer = Buffer.from(cleanBase64, 'base64');
+      mimeType = (body.mimeType || 'image/jpeg').toLowerCase();
+      fileName = body.fileName || 'passbook.jpg';
+    } else {
+      return res.status(400).json({ status: 'error', message: 'No photo file received.' });
+    }
+
+    const udise = extractUdise(body.u_dise || body.udise || '');
+    const month = (body.month_name || body.month || '').trim();
+    const year = String(body.year || new Date().getFullYear()).trim();
+
+    // 1. Strict Input Validation
+    if (!udise) {
+      return res.status(400).json({ status: 'error', message: 'School UDISE code is required.' });
+    }
+    if (!month || !year) {
+      return res.status(400).json({ status: 'error', message: 'Reporting Month and Year are required.' });
+    }
+
+    const schoolMap = await getSchoolsMap();
+    const master = schoolMap[udise];
+    if (!master) {
+      return res.status(400).json({ status: 'error', message: `Unauthorized or invalid school: UDISE ${udise} was not found in master records.` });
+    }
+    const schoolName = master.school_name || `School (${udise})`;
+
+    // 2. Strict MIME Type Validation (JPG, JPEG, PNG, WEBP)
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedMimes.includes(mimeType)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid file format. Only JPG, JPEG, PNG, and WebP images are allowed.'
+      });
+    }
+
+    // 3. File Size Limit (Max 10MB)
+    if (buffer.length > 10 * 1024 * 1024) {
+      return res.status(400).json({ status: 'error', message: 'File size exceeds maximum allowed limit of 10MB.' });
+    }
+
+    // 4. Magic Bytes Inspection (Anti-disguise security validation)
+    const isJpeg = buffer.length > 3 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+    const isPng = buffer.length > 4 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+    const isWebp = buffer.length > 12 &&
+      buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+      buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
+
+    if (!isJpeg && !isPng && !isWebp) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Corrupted image file: File content does not match genuine JPG, PNG, or WebP image headers.'
+      });
+    }
+
+    // 5. Google Drive Integration (Google Apps Script Web App Gateway)
+    const gasUrl = process.env.GOOGLE_DRIVE_WEBAPP_URL;
+    const gasToken = process.env.GOOGLE_DRIVE_UPLOAD_TOKEN || '';
+
+    if (!gasUrl) {
+      return res.status(503).json({
+        status: 'error',
+        code: 'DRIVE_CONFIG_REQUIRED',
+        message: 'Google Drive Web App URL is not configured. Please add GOOGLE_DRIVE_WEBAPP_URL to your .env or Vercel Environment Variables.'
+      });
+    }
+
+    const drivePayload = {
+      token: gasToken,
+      fileBase64: buffer.toString('base64'),
+      mimeType: isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg'),
+      fileName: fileName,
+      udise: udise,
+      month: month,
+      year: year,
+      schoolName: schoolName
+    };
+
+    let driveRes;
+    try {
+      driveRes = await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(drivePayload)
+      });
+    } catch (netErr) {
+      console.error('Failed to connect to Google Apps Script Web App:', netErr.message);
+      return res.status(502).json({
+        status: 'error',
+        message: 'Failed to connect to Google Drive service: ' + netErr.message
+      });
+    }
+
+    const driveText = await driveRes.text();
+    let driveJson;
+    try {
+      driveJson = JSON.parse(driveText);
+    } catch (parseErr) {
+      console.error('Google Apps Script returned non-JSON response:', driveText.slice(0, 200));
+      return res.status(502).json({
+        status: 'error',
+        message: 'Google Drive upload returned an invalid response. Please verify Google Apps Script deployment permissions.'
+      });
+    }
+
+    if (!driveRes.ok || driveJson.status !== 'success') {
+      return res.status(driveRes.status >= 400 ? driveRes.status : 500).json({
+        status: 'error',
+        message: driveJson.message || 'Google Drive rejected the photo upload.'
+      });
+    }
+
+    const fileId = driveJson.fileId;
+    const fileUrl = driveJson.viewUrl || driveJson.fileUrl || `https://drive.google.com/file/d/${fileId}/view`;
+
+    // 6. Save Google Drive Photo Reference in Supabase PostgreSQL
+    try {
+      const photoMetaObj = {
+        file_id: fileId,
+        file_url: fileUrl,
+        file_name: fileName,
+        uploaded_at: new Date().toISOString()
+      };
+
+      const updateQuery = `
+        UPDATE public.mdm_monthly_report 
+        SET passbook_photo_file_id = $1,
+            passbook_photo_url = $2,
+            fund_details_json = jsonb_set(
+              COALESCE(fund_details_json, '{}'::jsonb),
+              '{passbook_photo}',
+              $3::jsonb
+            )
+        WHERE u_dise = $4 AND LOWER(month_name) = LOWER($5) AND year = $6
+      `;
+      const updateRes = await pool.query(updateQuery, [fileId, fileUrl, JSON.stringify(photoMetaObj), udise, month, year]);
+
+      if (updateRes.rowCount === 0) {
+        const circleName = master.circle_name || 'N/A';
+        const gpName = master.gp_name || 'N/A';
+        const insertQuery = `
+          INSERT INTO public.mdm_monthly_report (
+            month_name, year, u_dise, school_name, circle_name, gp_name,
+            passbook_photo_file_id, passbook_photo_url, fund_details_json
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9
+          )
+          ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
+            passbook_photo_file_id = EXCLUDED.passbook_photo_file_id,
+            passbook_photo_url = EXCLUDED.passbook_photo_url,
+            fund_details_json = jsonb_set(
+              COALESCE(public.mdm_monthly_report.fund_details_json, '{}'::jsonb),
+              '{passbook_photo}',
+              $10::jsonb
+            )
+        `;
+        await pool.query(insertQuery, [
+          month, year, udise, schoolName, circleName, gpName,
+          fileId, fileUrl, JSON.stringify({ passbook_photo: photoMetaObj }),
+          JSON.stringify(photoMetaObj)
+        ]);
+      }
+    } catch (dbErr) {
+      console.error('Warning: could not update Supabase photo columns:', dbErr.message);
+    }
+
+    return res.json({
+      status: 'success',
+      message: 'Bank passbook photo saved directly to Google Drive successfully.',
+      fileId: fileId,
+      fileUrl: fileUrl,
+      fileName: fileName
+    });
+
+  } catch (err) {
+    console.error('Error handling passbook photo upload:', err.message);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Server error processing Google Drive upload: ' + err.message
+    });
+  }
+}
+
+router.post('/monthly-report/upload-passbook', upload.single('photo'), handleUploadPassbookPhoto);
+router.post('/monthly-report/upload-passbook.php', upload.single('photo'), handleUploadPassbookPhoto);
 
 // Download Monthly Template CSV (All 246 schools from Supabase)
 async function handleDownloadTemplate(req, res) {
