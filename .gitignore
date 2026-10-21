@@ -20,3 +20,8 @@ node_modules/
 npm-debug.log*
 *.log
 scratch/
+
+# Google Service Account Credentials
+*service-account*.json
+*credentials*.json
+google-key.json

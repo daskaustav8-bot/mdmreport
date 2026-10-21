@@ -1,12 +1,7 @@
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Route direct HTTP requests for admin_dashboard.html to admin_dashboard.php for authentication check
-RewriteRule ^admin_dashboard\.html$ admin_dashboard.php [L]
-
-# Route direct HTTP requests for basicinfrastructure.html to basicinfrastructure_auth.php for authentication check
-RewriteRule ^basicinfrastructure\.html$ basicinfrastructure_auth.php [L]
-
-# Route direct HTTP requests for admin_rice_view.html to admin_rice_view_auth.php for authentication check
-RewriteRule ^admin_rice_view\.html$ admin_rice_view_auth.php [QSA,L]
+# Allow direct access to existing files (prevent infinite loops)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
 </IfModule>

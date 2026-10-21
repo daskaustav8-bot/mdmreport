@@ -189,30 +189,6 @@
             </form>
         </div>
     </div>
-
-    <!-- Recent Uploads Table -->
-    <div class="card">
-        <h3><i class="fas fa-history" style="color:var(--primary);"></i> Recent Reports in Database</h3>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>UDISE</th>
-                        <th>School Name</th>
-                        <th>Circle</th>
-                        <th>Month</th>
-                        <th>Year</th>
-                        <th>Served Days</th>
-                        <th>Meals</th>
-                        <th>Rice Close (KG)</th>
-                    </tr>
-                </thead>
-                <tbody id="recentTbody">
-                    <tr><td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">Loading records...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -234,35 +210,6 @@
         }
     }
 
-    async function loadRecent() {
-        const tbody = document.getElementById('recentTbody');
-        try {
-            const res = await fetch('/api/monthly-report/recent');
-            const json = await res.json();
-            if (json.status === 'success' && json.data && json.data.length > 0) {
-                tbody.innerHTML = '';
-                json.data.forEach(r => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${r.u_dise}</strong></td>
-                            <td>${r.school_name}</td>
-                            <td>${r.circle_name || '-'}</td>
-                            <td>${r.month_name}</td>
-                            <td>${r.year}</td>
-                            <td>${r.p_actual || r.bv_actual || 0}</td>
-                            <td>${r.p_meals || r.bv_meals || 0}</td>
-                            <td style="color:#16a34a; font-weight:bold;">${r.rice_p_close || 0}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">No reports recorded yet.</td></tr>';
-            }
-        } catch (err) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#ef4444;">Failed to load records.</td></tr>';
-        }
-    }
-
     (function initStatus() {
         const params = new URLSearchParams(window.location.search);
         const msg = params.get('msg');
@@ -280,8 +227,6 @@
         const curMonth = new Date().toLocaleString('en-US', { month: 'long' });
         document.getElementById('tmplMonth').value = curMonth;
         document.getElementById('uploadMonth').value = curMonth;
-
-        loadRecent();
     })();
 </script>
 </body>

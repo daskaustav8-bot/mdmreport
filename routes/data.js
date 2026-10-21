@@ -1408,7 +1408,15 @@ async function handleUploadPassbookPhoto(req, res) {
     const timestampStr = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
     const driveFileName = `Passbook_${udise}_${month}_${year}_${timestampStr}.${normalizedExt}`;
 
-    const hasServiceAccount = !!(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+    const hasServiceAccount = !!(
+      process.env.GOOGLE_SERVICE_ACCOUNT_KEY || 
+      process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || 
+      process.env.GOOGLE_SERVICE_ACCOUNT_JSON ||
+      (process.env.GOOGLE_APPLICATION_CREDENTIALS && fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) ||
+      fs.existsSync(path.join(process.cwd(), 'google-service-account.json')) ||
+      fs.existsSync(path.join(process.cwd(), 'service-account.json')) ||
+      fs.existsSync(path.join(process.cwd(), 'credentials.json'))
+    );
     const hasOAuth = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN);
     const gasUrl = process.env.GOOGLE_DRIVE_WEBAPP_URL;
 
@@ -1419,7 +1427,7 @@ async function handleUploadPassbookPhoto(req, res) {
           buffer,
           mimeType: isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg'),
           fileName: driveFileName,
-          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
+          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID || '1-RN90axSxvIkYQMIrCp9BESAbw_ty2m6',
           description: `Bank Passbook Photo\nUDISE: ${udise}\nSchool: ${schoolName}\nPeriod: ${month} ${year}`
         });
         fileId = driveResult.fileId;

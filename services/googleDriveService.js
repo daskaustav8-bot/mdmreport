@@ -1,4 +1,9 @@
+const fs = require('fs');
+const path = require('path');
 const jwt = require('jsonwebtoken');
+
+// Target designated Google Drive folder for Bank Passbook Imgs
+const DEFAULT_DRIVE_FOLDER_ID = '1-RN90axSxvIkYQMIrCp9BESAbw_ty2m6';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -14,7 +19,7 @@ function resetGoogleTokenCache() {
 /**
  * Obtain Google OAuth2 Access Token
  * Supports:
- * 1. Google Service Account (GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_SERVICE_ACCOUNT_KEY or GOOGLE_SERVICE_ACCOUNT_JSON)
+ * 1. Google Service Account (GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_SERVICE_ACCOUNT_KEY, or GOOGLE_SERVICE_ACCOUNT_JSON, or google-service-account.json file)
  * 2. Google OAuth2 Refresh Token (GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN)
  */
 async function getGoogleAccessToken() {
@@ -34,6 +39,31 @@ async function getGoogleAccessToken() {
       privateKey = sa.private_key || privateKey;
     } catch (e) {
       console.warn('Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON:', e.message);
+    }
+  }
+
+  // Auto-detect service account credentials file if environment variables are not directly set
+  if (!serviceEmail || !privateKey) {
+    const candidateFiles = [
+      process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      path.join(process.cwd(), 'google-service-account.json'),
+      path.join(process.cwd(), 'service-account.json'),
+      path.join(process.cwd(), 'credentials.json')
+    ].filter(Boolean);
+
+    for (const filePath of candidateFiles) {
+      try {
+        if (fs.existsSync(filePath)) {
+          const sa = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+          if (sa.client_email && sa.private_key) {
+            serviceEmail = sa.client_email;
+            privateKey = sa.private_key;
+            break;
+          }
+        }
+      } catch (e) {
+        // continue search
+      }
     }
   }
 
@@ -98,7 +128,7 @@ async function getGoogleAccessToken() {
     return cachedToken;
   }
 
-  throw new Error('Google Drive credentials not configured. Please set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_KEY (and GOOGLE_DRIVE_FOLDER_ID) in your environment variables.');
+  throw new Error('Google Drive credentials not configured. Please set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_KEY (or place google-service-account.json in the project root).');
 }
 
 /**
@@ -115,7 +145,7 @@ async function getGoogleAccessToken() {
  */
 async function uploadToGoogleDriveDirect({ buffer, mimeType, fileName, folderId, description }) {
   const accessToken = await getGoogleAccessToken();
-  const targetFolderId = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
+  const targetFolderId = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID || DEFAULT_DRIVE_FOLDER_ID;
 
   if (!targetFolderId) {
     throw new Error('GOOGLE_DRIVE_FOLDER_ID is not configured. Please specify the target Google Drive folder ID in your environment variables.');

@@ -177,11 +177,16 @@
     <script>
         // Check session immediately
         (function checkAuth() {
-            fetch('/api/auth/session?admin_type=infrastructure', { 
+            if (window.location.protocol === 'file:') return;
+            const endpoint = (window.location.origin && window.location.origin !== 'null') ? '/api/auth/session?admin_type=infrastructure' : 'http://localhost:3000/api/auth/session?admin_type=infrastructure';
+            fetch(endpoint, { 
                 cache: 'no-store',
                 credentials: 'same-origin'
             })
                 .then(function (response) {
+                    if (response.status === 404) {
+                        return fetch('infra_session_check.php').then(r => r.json());
+                    }
                     if (response.ok) {
                         return response.json();
                     }
@@ -270,7 +275,8 @@
                 admin_type: 'infrastructure'
             };
 
-            fetch('/api/auth/login', {
+            const authUrl = (window.location.protocol === 'file:') ? 'http://localhost:3000/api/auth/login' : '/api/auth/login';
+            fetch(authUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -281,6 +287,20 @@
                 credentials: 'same-origin'
             })
             .then(function (response) {
+                if (response.status === 404 && window.location.protocol !== 'file:') {
+                    return fetch('infra_login_handler.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    }).then(function (phpRes) {
+                        return phpRes.json().then(function (d) {
+                            return { status: phpRes.status, ok: phpRes.ok, data: d };
+                        });
+                    });
+                }
                 return response.json().then(function (data) {
                     return { status: response.status, ok: response.ok, data: data };
                 }).catch(function () {

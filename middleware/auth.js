@@ -16,7 +16,7 @@ function isLocalhost(ip) {
 
 function getLimits(ip) {
   if (isLocalhost(ip)) {
-    return { maxAttempts: 25, lockoutMs: 30 * 1000 }; // 30 seconds for local admin/testing
+    return { maxAttempts: 200, lockoutMs: 1000 }; // Generous limit for local development & admin access
   }
   return { maxAttempts: MAX_FAILED_ATTEMPTS, lockoutMs: LOCKOUT_WINDOW_MS };
 }

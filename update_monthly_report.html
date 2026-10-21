@@ -924,18 +924,24 @@
         /* =========================================
            BANK PASSBOOK PHOTO UPLOAD STYLING
            ========================================= */
+        .verif-match-box {
+            grid-column: 1;
+            min-height: 64px;
+        }
+
         .verif-photo-box {
-            grid-column: 1 / -1;
             display: flex;
             align-items: center;
-            justify-content: space-between;
             background: #ffffff;
             border: 1.5px solid var(--border);
             border-radius: var(--radius-md);
-            padding: 12px 18px;
-            gap: 16px;
+            padding: 10px 14px;
             box-shadow: var(--shadow-sm);
             transition: all 0.25s ease;
+            min-height: 64px;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .verif-photo-box.drag-over {
@@ -944,22 +950,46 @@
             border-style: dashed !important;
         }
 
+        .photo-state-row {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
         .verif-photo-left {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .verif-photo-left .verif-label {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .photo-heading {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.3;
+            white-space: nowrap;
         }
 
         .verif-photo-icon-badge {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
             background: linear-gradient(135deg, rgba(13, 148, 136, 0.12) 0%, rgba(37, 99, 235, 0.12) 100%);
             color: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
             flex-shrink: 0;
             border: 1px solid var(--primary-border);
         }
@@ -967,24 +997,25 @@
         .verif-photo-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-shrink: 0;
         }
 
         .btn-choose-photo {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 9px 18px;
+            gap: 6px;
+            padding: 8px 14px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: #ffffff;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             border-radius: var(--radius-md);
             border: none;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .btn-choose-photo:hover {
@@ -993,19 +1024,9 @@
             background: var(--primary-dark);
         }
 
-        .photo-preview-card {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 6px 12px 6px 6px;
-        }
-
         .photo-thumb-container {
-            width: 44px;
-            height: 44px;
+            width: 38px;
+            height: 38px;
             border-radius: 8px;
             overflow: hidden;
             background: #e2e8f0;
@@ -1026,7 +1047,7 @@
         }
 
         .photo-thumb-container .pdf-badge {
-            font-size: 20px;
+            font-size: 18px;
             color: var(--rose);
         }
 
@@ -1038,7 +1059,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 13px;
             opacity: 0;
             transition: opacity 0.2s ease;
         }
@@ -1052,25 +1073,28 @@
             flex-direction: column;
             gap: 2px;
             text-align: left;
-        }
-
-        .photo-filename {
-            font-size: 12.5px;
-            font-weight: 700;
-            color: var(--text-dark);
-            max-width: 160px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            min-width: 0;
         }
 
         .photo-meta {
-            font-size: 11px;
+            font-size: 10.5px;
             color: var(--text-muted);
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
+            min-width: 0;
+        }
+
+        .photo-filename {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-dark);
+            max-width: 110px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .photo-meta .badge-ready {
@@ -1079,22 +1103,23 @@
             display: inline-flex;
             align-items: center;
             gap: 3px;
+            font-size: 10.5px;
         }
 
         .photo-actions {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-left: 6px;
+            gap: 5px;
+            flex-shrink: 0;
         }
 
         .btn-photo-action {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
-            padding: 6px 10px;
-            font-size: 11.5px;
+            gap: 4px;
+            padding: 5px 8px;
+            font-size: 11px;
             font-weight: 700;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
@@ -1102,6 +1127,7 @@
             color: var(--text-sub);
             cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .btn-photo-action:hover {
@@ -1483,6 +1509,24 @@
                 grid-template-columns: 1fr 1fr;
                 gap: 12px;
                 padding: 12px 16px;
+            }
+
+            .verif-box {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+
+            .verif-photo-box {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+
+            .photo-filename {
+                max-width: 75px;
+            }
+
+            .btn-photo-action .photo-btn-text {
+                display: none;
             }
 
             .action-bar-glass {
@@ -1887,70 +1931,85 @@
                 margin-left: 2px;
             }
 
-            /* Step 4: Verification Sub-Panel (2 Columns Desktop Layout) */
+            /* Step 4: Verification Sub-Panel (Mobile Stacked Layout) */
             .verification-panel {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-                padding: 8px 6px;
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 10px 8px;
                 border-radius: 0 0 8px 8px;
                 margin-bottom: 10px;
             }
 
             .verif-box {
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
+                align-items: center;
                 justify-content: space-between;
-                padding: 6px 6px;
-                gap: 5px;
+                padding: 8px 10px;
+                gap: 8px;
                 border-radius: 6px;
             }
 
+            .verif-box.verif-match-box {
+                grid-column: 1;
+            }
+
             .verif-label {
-                font-size: 9.5px;
+                font-size: 10.5px;
                 line-height: 1.25;
             }
 
             .verif-label span {
-                font-size: 8px;
+                font-size: 8.5px;
             }
 
             .verif-controls {
                 display: flex;
-                gap: 4px;
-                width: 100%;
+                gap: 5px;
+                flex-shrink: 0;
             }
 
             .verif-controls select,
             .verif-controls input {
-                width: 100% !important;
-                height: 28px !important;
-                min-height: 28px !important;
-                font-size: 10px !important;
-                padding: 0 4px !important;
+                height: 30px !important;
+                min-height: 30px !important;
+                font-size: 11px !important;
+                padding: 0 5px !important;
                 border-radius: 4px !important;
                 box-sizing: border-box !important;
             }
 
             .verif-photo-box {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                padding: 10px 10px !important;
-                gap: 10px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 8px 10px !important;
+                gap: 8px !important;
             }
 
             .verif-photo-left {
-                gap: 10px !important;
+                gap: 8px !important;
+            }
+
+            .verif-photo-icon-badge {
+                width: 34px !important;
+                height: 34px !important;
+                font-size: 14px !important;
+                border-radius: 8px !important;
             }
 
             .verif-photo-right {
-                width: 100% !important;
-                justify-content: space-between !important;
+                flex-shrink: 0;
             }
 
             .photo-preview-card {
-                width: 100% !important;
-                justify-content: space-between !important;
+                gap: 6px !important;
+                padding: 4px 6px !important;
+            }
+
+            .photo-filename {
+                max-width: 80px;
             }
 
             .photo-filename {
@@ -2589,6 +2648,7 @@
 
                 <!-- BANK VERIFICATION SECTION -->
                 <div class="verification-panel">
+                    <!-- 1. BANK PASS BOOK BALANCE -->
                     <div class="verif-box">
                         <div class="verif-label">
                             Bank Pass Book Balance
@@ -2602,7 +2662,78 @@
                         </div>
                     </div>
 
-                    <div class="verif-box">
+                    <!-- 2. BANK PASSBOOK PHOTO (BESIDE BANK PASS BOOK BALANCE) -->
+                    <div class="verif-photo-box" id="passbookPhotoContainer">
+                        <input type="file" id="bank_passbook_photo" name="bank_passbook_photo" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display: none;">
+
+                        <!-- Empty Upload State -->
+                        <div id="photoEmptyState" class="photo-state-row" style="display: flex;">
+                            <div class="verif-photo-left">
+                                <div class="verif-photo-icon-badge">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                                <div class="verif-label">
+                                    <div class="photo-heading">Bank Passbook Photo</div>
+                                    <span>Upload passbook photo (JPG, PNG)</span>
+                                </div>
+                            </div>
+                            <div class="verif-photo-right">
+                                <button type="button" class="btn-choose-photo" id="btnChoosePhoto">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Upload Photo</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Uploading / Progress State -->
+                        <div id="photoUploadingState" class="photo-state-row" style="display: none;">
+                            <div class="verif-photo-left">
+                                <div class="verif-photo-icon-badge">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="verif-label">
+                                    <div class="photo-heading">Bank Passbook Photo</div>
+                                    <span id="photoUploadProgressText">Saving photo to Google Drive...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview / Selected State -->
+                        <div id="photoPreviewCard" class="photo-state-row photo-preview-card" style="display: none;">
+                            <div class="verif-photo-left">
+                                <div class="photo-thumb-container" id="thumbTrigger" title="Click to view full photo">
+                                    <img id="photoThumbImg" src="" alt="Thumbnail" />
+                                    <div class="photo-thumb-overlay">
+                                        <i class="fa-solid fa-magnifying-glass-plus"></i>
+                                    </div>
+                                </div>
+                                <div class="verif-label photo-details">
+                                    <div class="photo-heading">Bank Passbook Photo</div>
+                                    <div class="photo-meta">
+                                        <span class="photo-filename" id="photoFileName" title="">passbook.jpg</span>
+                                        <span id="photoFileSize" style="display:none;">0 KB</span>
+                                        <span class="badge-ready" id="photoDriveBadge"><i class="fa-brands fa-google-drive"></i> Google Drive</span>
+                                        <span id="photoStatusBadge" style="background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; display:none;"><i class="fa-solid fa-circle-check"></i> Submitted</span>
+                                        <span id="photoSubmittedTime" style="font-size:11px; color:#64748b; display:none;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="photo-actions">
+                                <button type="button" class="btn-photo-action btn-photo-view" id="btnViewPhoto" title="View Full Preview">
+                                    <i class="fa-solid fa-eye"></i> <span class="photo-btn-text">View</span>
+                                </button>
+                                <button type="button" class="btn-photo-action" id="btnChangePhoto" title="Change Photo">
+                                    <i class="fa-solid fa-arrow-rotate-right"></i> <span class="photo-btn-text">Change</span>
+                                </button>
+                                <button type="button" class="btn-photo-action btn-photo-remove" id="btnRemovePhoto" title="Remove Photo">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. BANK MATCH STATUS (SHIFTED DOWN FULL ROW) -->
+                    <div class="verif-box verif-match-box">
                         <div class="verif-label">
                             Bank Match Status
                             <span>Does sum of Closing Balance match Passbook?</span>
@@ -2612,65 +2743,6 @@
                                 <option value="YES" selected>YES</option>
                                 <option value="NO">NO</option>
                             </select>
-                        </div>
-                    </div>
-
-                    <!-- BANK PASSBOOK PHOTO UPLOAD SECTION (DOWN IN VERIFICATION PANEL) -->
-                    <div class="verif-photo-box" id="passbookPhotoContainer">
-                        <div class="verif-photo-left">
-                            <div class="verif-photo-icon-badge">
-                                <i class="fa-solid fa-camera"></i>
-                            </div>
-                            <div class="verif-label">
-                                Bank Passbook Photo
-                                <span>Upload photo of passbook entry (JPG, JPEG, PNG, WebP up to 10MB)</span>
-                            </div>
-                        </div>
-
-                        <div class="verif-photo-right">
-                            <input type="file" id="bank_passbook_photo" name="bank_passbook_photo" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display: none;">
-
-                            <!-- Empty Upload State -->
-                            <div id="photoEmptyState" style="display: flex; align-items: center; gap: 8px;">
-                                <button type="button" class="btn-choose-photo" id="btnChoosePhoto">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Upload Passbook Photo</span>
-                                </button>
-                            </div>
-
-                            <!-- Uploading / Progress State -->
-                            <div id="photoUploadingState" style="display: none; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--primary);">
-                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 18px;"></i>
-                                <span id="photoUploadProgressText">Saving photo to Google Drive...</span>
-                            </div>
-
-                            <!-- Preview / Selected State -->
-                            <div id="photoPreviewCard" class="photo-preview-card" style="display: none;">
-                                <div class="photo-thumb-container" id="thumbTrigger" title="Click to view full photo">
-                                    <img id="photoThumbImg" src="" alt="Thumbnail" />
-                                    <div class="photo-thumb-overlay">
-                                        <i class="fa-solid fa-magnifying-glass-plus"></i>
-                                    </div>
-                                </div>
-                                <div class="photo-details">
-                                    <div class="photo-filename" id="photoFileName" title="">passbook.jpg</div>
-                                    <div class="photo-meta">
-                                        <span id="photoFileSize">0 KB</span>
-                                        <span class="badge-ready" id="photoDriveBadge"><i class="fa-brands fa-google-drive"></i> Google Drive</span>
-                                    </div>
-                                </div>
-                                <div class="photo-actions">
-                                    <button type="button" class="btn-photo-action btn-photo-view" id="btnViewPhoto" title="View Full Preview">
-                                        <i class="fa-solid fa-eye"></i> View
-                                    </button>
-                                    <button type="button" class="btn-photo-action" id="btnChangePhoto" title="Change Photo">
-                                        <i class="fa-solid fa-arrow-rotate-right"></i> Change
-                                    </button>
-                                    <button type="button" class="btn-photo-action btn-photo-remove" id="btnRemovePhoto" title="Remove Photo">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -3271,6 +3343,8 @@
                     $('#photoPreviewCard').hide();
                     $('#photoUploadingState').hide();
                     $('#photoEmptyState').show();
+                    $('#photoStatusBadge').hide();
+                    $('#photoSubmittedTime').hide();
                     return;
                 }
 
@@ -3288,9 +3362,26 @@
                     $('#photoDriveBadge').html('<i class="fa-brands fa-google-drive"></i> Google Drive').show();
                 }
 
+                if (fileData.status === 'Submitted' || fileData.fileId) {
+                    $('#photoStatusBadge').css('display', 'inline-flex');
+                } else {
+                    $('#photoStatusBadge').hide();
+                }
+
+                if (fileData.submittedAt) {
+                    try {
+                        const d = new Date(fileData.submittedAt);
+                        $('#photoSubmittedTime').text('Submitted: ' + d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })).css('display', 'inline');
+                    } catch (e) {
+                        $('#photoSubmittedTime').hide();
+                    }
+                } else {
+                    $('#photoSubmittedTime').hide();
+                }
+
                 $('#photoUploadingState').hide();
                 $('#photoEmptyState').hide();
-                $('#photoPreviewCard').css('display', 'inline-flex');
+                $('#photoPreviewCard').css('display', 'flex');
             }
 
             function handleFileSelect(file) {
@@ -3366,7 +3457,7 @@
                 // Prevent duplicate submissions while upload is processing
                 $('#photoEmptyState').hide();
                 $('#photoPreviewCard').hide();
-                $('#photoUploadingState').css('display', 'inline-flex');
+                $('#photoUploadingState').css('display', 'flex');
                 $('#photoUploadProgressText').text('Saving ' + file.name + ' to Google Drive...');
                 $('#btnSave').prop('disabled', true);
                 $('#btnChoosePhoto').prop('disabled', true);
@@ -3385,7 +3476,7 @@
                     processData: false,
                     contentType: false,
                     dataType: 'json',
-                    success: function (resp) {
+                                        success: function (resp) {
                         $('#photoUploadingState').hide();
                         $('#btnSave').prop('disabled', false);
                         $('#btnChoosePhoto').prop('disabled', false);
@@ -3397,6 +3488,8 @@
                                 name: resp.fileName || file.name,
                                 size: file.size,
                                 dataUrl: localDataUrl,
+                                status: 'Submitted',
+                                submittedAt: resp.submittedAt || new Date().toISOString(),
                                 uploadedToDrive: true
                             };
 
@@ -3405,10 +3498,8 @@
 
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Uploaded to Google Drive!',
-                                html: 'Photo saved directly to your Google Drive.<br><small class="text-muted">Drive File ID: <code>' + resp.fileId + '</code></small>',
-                                timer: 4000,
-                                timerProgressBar: true,
+                                title: 'Bank Passbook Photo Submitted!',
+                                html: 'The passbook photo has been uploaded to Google Drive and saved to database successfully.<br><div style="margin-top:8px; font-size:12px; color:#475569;">Status: <b style="color:#16a34a;">Submitted</b><br>Drive File ID: <code>' + resp.fileId + '</code></div>',
                                 confirmButtonColor: '#0d9488'
                             });
                         } else {
@@ -3660,14 +3751,43 @@
                                         name: photoName,
                                         size: (fj.passbook_photo && fj.passbook_photo.file_size) || 0,
                                         dataUrl: null,
+                                        status: 'Submitted',
+                                        submittedAt: (fj.passbook_photo && fj.passbook_photo.uploaded_at) || d.created_at || null,
                                         uploadedToDrive: true
                                     };
                                     setPhotoUI(currentPassbookFile);
                                 } else {
-                                    PassbookStore.get(udise, month, year).then(savedPhoto => {
-                                        if (savedPhoto && (savedPhoto.fileId || savedPhoto.dataUrl)) {
-                                            setPhotoUI(savedPhoto);
-                                        } else {
+                                    // Check authoritative bank_passbook_submissions table
+                                    $.ajax({
+                                        url: '/api/monthly-report/passbook-status',
+                                        type: 'GET',
+                                        data: { school_id: udise },
+                                        dataType: 'json',
+                                        success: function (pbRes) {
+                                            if (pbRes && pbRes.status === 'success' && pbRes.submission && pbRes.submission.drive_file_id) {
+                                                const sub = pbRes.submission;
+                                                currentPassbookFile = {
+                                                    fileId: sub.drive_file_id,
+                                                    fileUrl: sub.file_url || ('https://drive.google.com/file/d/' + sub.drive_file_id + '/view'),
+                                                    name: sub.file_name || ('passbook_' + udise + '.jpg'),
+                                                    size: 0,
+                                                    dataUrl: null,
+                                                    status: sub.submission_status || 'Submitted',
+                                                    submittedAt: sub.submitted_at,
+                                                    uploadedToDrive: true
+                                                };
+                                                setPhotoUI(currentPassbookFile);
+                                            } else {
+                                                PassbookStore.get(udise, month, year).then(savedPhoto => {
+                                                    if (savedPhoto && (savedPhoto.fileId || savedPhoto.dataUrl)) {
+                                                        setPhotoUI(savedPhoto);
+                                                    } else {
+                                                        setPhotoUI(null);
+                                                    }
+                                                });
+                                            }
+                                        },
+                                        error: function () {
                                             setPhotoUI(null);
                                         }
                                     });
