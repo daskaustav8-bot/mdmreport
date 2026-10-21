@@ -11,6 +11,7 @@
           "manage_infrastructure_fields.js",
           "style.css",
           "school_master.csv",
+          "services/**",
           "*.html",
           "*.png",
           "*.jpg",
