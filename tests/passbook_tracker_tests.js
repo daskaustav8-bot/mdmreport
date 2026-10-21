@@ -357,9 +357,18 @@ async function runTrackerTests() {
       assert(res.body.includes(testSchoolUdise));
     });
 
-    // Clean up test school submission row
+    // Clean up test school submission row (DO NOT DELETE from mdm_monthly_report table)
     await pool.query('DELETE FROM public.bank_passbook_submissions WHERE school_id = $1', [testSchoolUdise]);
-    await pool.query('DELETE FROM public.mdm_monthly_report WHERE u_dise = $1 AND year = $2', [testSchoolUdise, '2026']);
+    await pool.query(`
+      UPDATE public.mdm_monthly_report 
+      SET passbook_photo_file_id = NULL,
+          passbook_photo_url = NULL,
+          fund_details_json = CASE 
+            WHEN fund_details_json IS NOT NULL THEN (fund_details_json::jsonb - 'passbook_photo')::jsonb 
+            ELSE NULL 
+          END
+      WHERE u_dise = $1 AND year = $2
+    `, [testSchoolUdise, '2026']);
 
   } finally {
     if (serverInstance) {
