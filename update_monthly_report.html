@@ -3003,6 +3003,24 @@
                 }
             });
 
+            // Disable mouse wheel / scroll amount changes on all numeric inputs (only manual input allowed)
+            $(document).on('wheel', 'input[type="number"], .num-input', function (e) {
+                $(this).blur();
+            });
+
+            window.addEventListener('wheel', function () {
+                if (document.activeElement && (document.activeElement.type === 'number' || (document.activeElement.classList && document.activeElement.classList.contains('num-input')))) {
+                    document.activeElement.blur();
+                }
+            }, { passive: true });
+
+            // Prevent ArrowUp and ArrowDown keys from changing numeric values so data only changes via manual typing
+            $(document).on('keydown', 'input[type="number"], .num-input', function (e) {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                }
+            });
+
             // Auto calculate Fund Details (All 11 components & Table Totals)
             function recalculateFundTotals() {
                 let sumOpen = 0, sumRecv = 0, sumExp = 0, sumClose = 0;
@@ -3139,34 +3157,70 @@
                 return true;
             }
 
+            // Helper to check if currently selected school has Primary category
+            function isPrimaryCategorySelected() {
+                const udise = $('#selectSchool').val();
+                if (udise && Array.isArray(schools)) {
+                    const school = schools.find(s => s.id === udise);
+                    if (school && school.category) {
+                        const cat = school.category.toUpperCase();
+                        return (cat.includes('PRIMARY') && !cat.includes('UPPER')) || cat === 'PRIMARY';
+                    }
+                }
+                const badgeText = ($('#badgeCategory').text() || '').trim().toUpperCase();
+                if (badgeText && badgeText !== '-') {
+                    return (badgeText.includes('PRIMARY') && !badgeText.includes('UPPER')) || badgeText === 'PRIMARY';
+                }
+                return $('.row-bv').is(':visible') && !$('.row-upp').is(':visible');
+            }
+
             // Auto calculate Material Cost Bal Vatika Expenditure from Total Meals Served (bv_meals * 10.00)
+            // and Food Grains Details - Rice Bal Vatika CONSUMPTION (KG) (bv_meals * 0.10 for primary category)
             $(document).on('input', '#bv_meals', function () {
+                const meals = parseFloat($(this).val()) || 0;
                 if ($('#fund_row_bv').is(':visible') && !$('#fund_row_bv').hasClass('input-disabled-row')) {
-                    const meals = parseFloat($(this).val()) || 0;
                     const exp = (meals * 10).toFixed(2);
                     $('#cc_bv_exp').val(exp);
                     recalculateFundTotals();
                     validateExpenditure('bv', false);
                 }
+
+                // If primary category: in Food Grains Details - Rice Bal Vatika CONSUMPTION (KG), value = bv_meals * 0.10
+                if (isPrimaryCategorySelected()) {
+                    const riceCons = (meals * 0.10).toFixed(2);
+                    $('#rice_bv_cons').val(riceCons).trigger('input');
+                }
             });
 
             // Auto calculate Material Cost Primary Expenditure from Total Meals Served (p_meals * 10.00)
+            // and Food Grains Details - Rice Primary CONSUMPTION (KG) (p_meals * 0.10)
             $(document).on('input', '#p_meals', function () {
                 const meals = parseFloat($(this).val()) || 0;
                 const exp = (meals * 10).toFixed(2);
                 $('#cc_p_exp').val(exp);
                 recalculateFundTotals();
                 validateExpenditure('p', false);
+
+                // In Food Grains Details - Rice Primary CONSUMPTION (KG), value = p_meals * 0.10
+                const riceCons = (meals * 0.10).toFixed(2);
+                $('#rice_p_cons').val(riceCons).trigger('input');
             });
 
             // Auto calculate Material Cost Upper Primary Expenditure from Total Meals Served (up_meals * 10.17)
+            // and Food Grains Details - Rice Upper Primary CONSUMPTION (KG) (up_meals * 0.15 for other/upper primary category)
             $(document).on('input', '#up_meals', function () {
+                const meals = parseFloat($(this).val()) || 0;
                 if ($('#fund_row_up').is(':visible') && !$('#fund_row_up').hasClass('input-disabled-row')) {
-                    const meals = parseFloat($(this).val()) || 0;
                     const exp = (meals * 10.17).toFixed(2);
                     $('#cc_up_exp').val(exp);
                     recalculateFundTotals();
                     validateExpenditure('up', false);
+                }
+
+                // If other than primary category: in Food Grains Details - Rice Upper Primary CONSUMPTION (KG), value = up_meals * 0.15
+                if (!isPrimaryCategorySelected()) {
+                    const riceCons = (meals * 0.15).toFixed(2);
+                    $('#rice_up_cons').val(riceCons).trigger('input');
                 }
             });
 
@@ -3889,6 +3943,11 @@
                                     $('#rice_bv_cons').val(d.rice_bv_cons != null ? d.rice_bv_cons : 0);
                                     $('#rice_bv_close').val(d.rice_bv_close != null ? d.rice_bv_close : 0);
 
+                                    if (isPrimary && (d.rice_bv_cons == null || d.rice_bv_cons === '' || parseFloat(d.rice_bv_cons) === 0) && parseFloat(d.bv_meals || 0) > 0) {
+                                        const autoRiceBvCons = (parseFloat(d.bv_meals) * 0.10).toFixed(2);
+                                        $('#rice_bv_cons').val(autoRiceBvCons).trigger('input');
+                                    }
+
                                     $('#rice_up_open, #rice_up_recv, #rice_up_cons, #rice_up_close').val(0);
                                 } else {
                                     $('#rice_bv_open, #rice_bv_recv, #rice_bv_cons, #rice_bv_close').val(0);
@@ -3897,12 +3956,24 @@
                                     $('#rice_up_recv').val(d.rice_up_recv != null ? d.rice_up_recv : 0);
                                     $('#rice_up_cons').val(d.rice_up_cons != null ? d.rice_up_cons : 0);
                                     $('#rice_up_close').val(d.rice_up_close != null ? d.rice_up_close : 0);
+
+                                    if (!isPrimary && (d.rice_up_cons == null || d.rice_up_cons === '' || parseFloat(d.rice_up_cons) === 0) && parseFloat(d.up_meals || 0) > 0) {
+                                        const autoRiceUpCons = (parseFloat(d.up_meals) * 0.15).toFixed(2);
+                                        $('#rice_up_cons').val(autoRiceUpCons).trigger('input');
+                                    }
                                 }
 
                                 $('#rice_p_open').val(d.rice_p_open != null ? d.rice_p_open : 0);
                                 $('#rice_p_recv').val(d.rice_p_recv != null ? d.rice_p_recv : 0);
                                 $('#rice_p_cons').val(d.rice_p_cons != null ? d.rice_p_cons : 0);
                                 $('#rice_p_close').val(d.rice_p_close != null ? d.rice_p_close : 0);
+
+                                if (d.rice_p_cons == null || d.rice_p_cons === '' || parseFloat(d.rice_p_cons) === 0) {
+                                    if (parseFloat(d.p_meals || 0) > 0) {
+                                        const autoRiceCons = (parseFloat(d.p_meals) * 0.10).toFixed(2);
+                                        $('#rice_p_cons').val(autoRiceCons).trigger('input');
+                                    }
+                                }
                             } else {
                                 setDefaultBankDate();
                             }

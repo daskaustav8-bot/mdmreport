@@ -7,7 +7,7 @@
     "start": "node server.js",
     "migrate": "node scripts/migrate_and_provision.js",
     "provision": "node scripts/migrate_and_provision.js",
-    "test": "node tests/auth_tests.js && node tests/master_school_data_tests.js && node tests/upload_csv_tests.js && node tests/manage_infrastructure_fields_tests.js && node tests/clean_urls_tests.js"
+    "test": "node tests/master_school_data_tests.js && node tests/upload_csv_tests.js && node tests/manage_infrastructure_fields_tests.js && node tests/clean_urls_tests.js && node tests/passbook_drive_upload_tests.js && node tests/passbook_tracker_tests.js"
   },
   "keywords": [],
   "author": "",

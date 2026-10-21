@@ -1316,6 +1316,32 @@ async function handleSaveMonthlyReport(req, res) {
       }
     }
 
+    if (b.passbook_photo_file_id) {
+      try {
+        await pool.query(`
+          INSERT INTO public.bank_passbook_submissions (
+            school_id, school_name, drive_file_id, file_name, file_url, submission_status, submitted_at, updated_at
+          ) VALUES (
+            $1, $2, $3, $4, $5, 'Submitted', NOW(), NOW()
+          )
+          ON CONFLICT (school_id) DO UPDATE SET
+            school_name = EXCLUDED.school_name,
+            drive_file_id = EXCLUDED.drive_file_id,
+            file_url = EXCLUDED.file_url,
+            submission_status = 'Submitted',
+            updated_at = NOW();
+        `, [
+          udise,
+          schoolName,
+          String(b.passbook_photo_file_id).trim(),
+          b.bank_passbook_photo_name || `Passbook_${udise}.jpg`,
+          b.passbook_photo_url || `https://drive.google.com/file/d/${String(b.passbook_photo_file_id).trim()}/view`
+        ]);
+      } catch (subErr) {
+        console.warn('Warning: could not update bank_passbook_submissions from save report:', subErr.message);
+      }
+    }
+
     return res.json({ status: 'success', message: 'Report saved successfully' });
   } catch (err) {
     console.error('Error saving monthly report:', err.message);
@@ -1530,6 +1556,22 @@ async function handleUploadPassbookPhoto(req, res) {
           JSON.stringify(photoMetaObj)
         ]);
       }
+
+      // Upsert authoritative bank_passbook_submissions table
+      await pool.query(`
+        INSERT INTO public.bank_passbook_submissions (
+          school_id, school_name, drive_file_id, file_name, file_url, submission_status, submitted_at, updated_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, 'Submitted', NOW(), NOW()
+        )
+        ON CONFLICT (school_id) DO UPDATE SET
+          school_name = EXCLUDED.school_name,
+          drive_file_id = EXCLUDED.drive_file_id,
+          file_name = EXCLUDED.file_name,
+          file_url = EXCLUDED.file_url,
+          submission_status = 'Submitted',
+          updated_at = NOW();
+      `, [udise, schoolName, fileId, fileName, fileUrl]);
     } catch (dbErr) {
       console.error('Warning: could not update Supabase photo columns:', dbErr.message);
     }
@@ -1539,7 +1581,9 @@ async function handleUploadPassbookPhoto(req, res) {
       message: 'Bank passbook photo saved directly to Google Drive successfully.',
       fileId: fileId,
       fileUrl: fileUrl,
-      fileName: fileName
+      fileName: fileName,
+      submissionStatus: 'Submitted',
+      submittedAt: new Date().toISOString()
     });
 
   } catch (err) {
@@ -1553,6 +1597,214 @@ async function handleUploadPassbookPhoto(req, res) {
 
 router.post('/monthly-report/upload-passbook', upload.single('photo'), handleUploadPassbookPhoto);
 router.post('/monthly-report/upload-passbook.php', upload.single('photo'), handleUploadPassbookPhoto);
+
+// Get Passbook Photo Status for a School (Used by update_monthly_report.html)
+router.get(['/monthly-report/passbook-status', '/api/monthly-report/passbook-status'], async (req, res) => {
+  try {
+    const schoolId = String(req.query.school_id || req.query.udise || req.query.u_dise || '').trim();
+    if (!schoolId) {
+      return res.status(400).json({ status: 'error', message: 'school_id parameter is required' });
+    }
+
+    const { rows } = await pool.query(`
+      SELECT school_id, school_name, drive_file_id, file_name, file_url, submission_status, submitted_at, updated_at
+      FROM public.bank_passbook_submissions
+      WHERE school_id = $1
+      LIMIT 1
+    `, [schoolId]);
+
+    if (rows.length > 0 && rows[0].submission_status === 'Submitted') {
+      return res.json({
+        status: 'success',
+        submission: rows[0]
+      });
+    }
+
+    // Fallback check in mdm_monthly_report
+    const mdmRes = await pool.query(`
+      SELECT u_dise as school_id, school_name, passbook_photo_file_id as drive_file_id, passbook_photo_url as file_url,
+             fund_details_json
+      FROM public.mdm_monthly_report
+      WHERE u_dise = $1 AND passbook_photo_file_id IS NOT NULL AND passbook_photo_file_id != ''
+      ORDER BY id DESC LIMIT 1
+    `, [schoolId]);
+
+    if (mdmRes.rows.length > 0) {
+      const r = mdmRes.rows[0];
+      const fj = (typeof r.fund_details_json === 'string' ? JSON.parse(r.fund_details_json) : r.fund_details_json) || {};
+      const sub = {
+        school_id: r.school_id,
+        school_name: r.school_name,
+        drive_file_id: r.drive_file_id,
+        file_name: (fj.passbook_photo && fj.passbook_photo.file_name) || `Passbook_${r.school_id}.jpg`,
+        file_url: r.file_url || `https://drive.google.com/file/d/${r.drive_file_id}/view`,
+        submission_status: 'Submitted',
+        submitted_at: (fj.passbook_photo && fj.passbook_photo.uploaded_at) || new Date().toISOString()
+      };
+      return res.json({
+        status: 'success',
+        submission: sub
+      });
+    }
+
+    return res.json({
+      status: 'success',
+      submission: {
+        school_id: schoolId,
+        submission_status: 'Not Submitted',
+        drive_file_id: null,
+        file_url: null
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching passbook status:', err.message);
+    return res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// Admin Passbook Tracker API (Used by upload_monthly_report.html)
+router.get(['/monthly-report/passbook-tracker', '/api/monthly-report/passbook-tracker'], requireAuth('main'), async (req, res) => {
+  try {
+    const masterSchools = await getSchools();
+
+    const subRes = await pool.query(`
+      SELECT school_id, school_name, drive_file_id, file_name, file_url, submission_status, submitted_at, updated_at
+      FROM public.bank_passbook_submissions
+    `);
+    const subMap = new Map();
+    for (const r of subRes.rows) {
+      if (r.school_id) {
+        subMap.set(String(r.school_id).trim(), r);
+      }
+    }
+
+    // Sync any from mdm_monthly_report if not in bank_passbook_submissions
+    const mdmPhotoRes = await pool.query(`
+      SELECT u_dise, school_name, passbook_photo_file_id, passbook_photo_url, fund_details_json
+      FROM public.mdm_monthly_report
+      WHERE passbook_photo_file_id IS NOT NULL AND passbook_photo_file_id != ''
+    `);
+    for (const r of mdmPhotoRes.rows) {
+      const udise = String(r.u_dise || '').trim();
+      if (udise && !subMap.has(udise)) {
+        const fj = (typeof r.fund_details_json === 'string' ? JSON.parse(r.fund_details_json) : r.fund_details_json) || {};
+        const syntheticSub = {
+          school_id: udise,
+          school_name: r.school_name,
+          drive_file_id: r.passbook_photo_file_id,
+          file_name: (fj.passbook_photo && fj.passbook_photo.file_name) || `Passbook_${udise}.jpg`,
+          file_url: r.passbook_photo_url || `https://drive.google.com/file/d/${r.passbook_photo_file_id}/view`,
+          submission_status: 'Submitted',
+          submitted_at: (fj.passbook_photo && fj.passbook_photo.uploaded_at) || new Date().toISOString()
+        };
+        subMap.set(udise, syntheticSub);
+        try {
+          await pool.query(`
+            INSERT INTO public.bank_passbook_submissions (
+              school_id, school_name, drive_file_id, file_name, file_url, submission_status, submitted_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, 'Submitted', $6, NOW())
+            ON CONFLICT (school_id) DO NOTHING
+          `, [udise, syntheticSub.school_name, syntheticSub.drive_file_id, syntheticSub.file_name, syntheticSub.file_url, syntheticSub.submitted_at]);
+        } catch (syncErr) {
+          // ignore
+        }
+      }
+    }
+
+    let submittedCount = 0;
+    const schoolsList = masterSchools.map((s, idx) => {
+      const udise = String(s.udise || s.code || s.id || '').trim();
+      const sub = subMap.get(udise);
+      const isSubmitted = !!(sub && (sub.submission_status === 'Submitted' || sub.drive_file_id));
+      if (isSubmitted) {
+        submittedCount++;
+      }
+
+      return {
+        sl_no: idx + 1,
+        school_id: udise,
+        udise_code: udise,
+        school_name: s.name || s.school_name,
+        category: s.category || 'N/A',
+        circle_name: s.circle_name || s.circle || 'N/A',
+        gp_name: s.gp_name || s.gp || 'N/A',
+        status: isSubmitted ? 'Submitted' : 'Not Submitted',
+        submitted_at: (isSubmitted && sub && sub.submitted_at) ? sub.submitted_at : null,
+        drive_file_id: (isSubmitted && sub && sub.drive_file_id) ? sub.drive_file_id : null,
+        file_url: (isSubmitted && sub && (sub.file_url || (sub.drive_file_id ? `https://drive.google.com/file/d/${sub.drive_file_id}/view` : null))) || null,
+        file_name: (isSubmitted && sub && sub.file_name) ? sub.file_name : null
+      };
+    });
+
+    const totalSchools = masterSchools.length;
+    const notSubmittedCount = totalSchools - submittedCount;
+
+    return res.json({
+      status: 'success',
+      summary: {
+        total_schools: totalSchools,
+        submitted: submittedCount,
+        not_submitted: notSubmittedCount
+      },
+      generated_at: new Date().toISOString(),
+      schools: schoolsList
+    });
+  } catch (err) {
+    console.error('Error fetching passbook tracker data:', err.message);
+    return res.status(500).json({ status: 'error', message: 'Failed to retrieve passbook tracker data: ' + err.message });
+  }
+});
+
+// Admin Passbook Tracker Excel Export Endpoint
+router.get(['/monthly-report/passbook-tracker/excel', '/api/monthly-report/passbook-tracker/excel'], requireAuth('main'), async (req, res) => {
+  try {
+    const masterSchools = await getSchools();
+    const subRes = await pool.query(`SELECT school_id, drive_file_id, file_url, submission_status, submitted_at FROM public.bank_passbook_submissions`);
+    const subMap = new Map();
+    for (const r of subRes.rows) {
+      if (r.school_id) subMap.set(String(r.school_id).trim(), r);
+    }
+
+    const filename = `Bank_Passbook_Submission_Report_${new Date().toISOString().slice(0, 10)}.xls`;
+    res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    let html = '\uFEFF<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+    html += '<style>table{border-collapse:collapse;width:100%;font-family:Arial,sans-serif;}th,td{border:1px solid #000;padding:8px;}th{background-color:#0d9488;color:#fff;font-weight:bold;text-align:center;}td{text-align:left;}.center{text-align:center;}.sub{color:#166534;font-weight:bold;}.notsub{color:#991b1b;}</style></head><body>';
+    html += `<h3 style="text-align:center;">Bank Passbook Submission Report</h3>`;
+    html += `<p style="text-align:center;font-size:12px;color:#555;">Report Generated: ${new Date().toLocaleString('en-US')} | Total Schools: ${masterSchools.length}</p>`;
+    html += '<table><thead><tr>';
+    html += '<th>id</th><th>School Name</th><th>Category</th><th>udise_code</th><th>Circle Name</th><th>GP Name</th><th>Passbook Submission Status</th><th>Submission Date and Time</th><th>Passbook Photo Link</th>';
+    html += '</tr></thead><tbody>';
+
+    let sl = 1;
+    for (const s of masterSchools) {
+      const udise = String(s.udise || s.code || s.id || '').trim();
+      const sub = subMap.get(udise);
+      const isSub = !!(sub && (sub.submission_status === 'Submitted' || sub.drive_file_id));
+      const dateStr = (isSub && sub.submitted_at) ? new Date(sub.submitted_at).toLocaleString('en-US') : 'Not Submitted';
+      const photoLink = (isSub && (sub.file_url || (sub.drive_file_id ? `https://drive.google.com/file/d/${sub.drive_file_id}/view` : ''))) || 'N/A';
+
+      html += `<tr>
+        <td class="center">${sl++}</td>
+        <td>${s.name || s.school_name || ''}</td>
+        <td>${s.category || ''}</td>
+        <td class="center">${udise}</td>
+        <td>${s.circle_name || s.circle || ''}</td>
+        <td>${s.gp_name || s.gp || ''}</td>
+        <td class="center ${isSub ? 'sub' : 'notsub'}">${isSub ? 'Submitted' : 'Not Submitted'}</td>
+        <td class="center">${dateStr}</td>
+        <td>${photoLink !== 'N/A' ? `<a href="${photoLink}">${photoLink}</a>` : 'N/A'}</td>
+      </tr>`;
+    }
+
+    html += '</tbody></table></body></html>';
+    res.send(html);
+  } catch (err) {
+    console.error('Error generating passbook tracker excel:', err.message);
+    res.status(500).send('Error generating report: ' + err.message);
+  }
+});
 
 // Download Monthly Template CSV (All 246 schools from Supabase)
 async function handleDownloadTemplate(req, res) {

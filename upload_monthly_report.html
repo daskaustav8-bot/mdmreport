@@ -105,7 +105,446 @@
         th { background: #f1f5f9; padding: 12px 14px; text-align: left; font-weight: 700; color: #334155; border-bottom: 2px solid var(--border); }
         td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
         tr:hover td { background: #f8fafc; }
+    
+        /* Bank Passbook Submission Tracker Styling */
+        .btn-sm {
+            display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px;
+            border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer;
+            border: 1px solid transparent; transition: all 0.2s; text-decoration: none;
+        }
+        .btn-sm-excel {
+            background: #ecfdf5; color: #065f46; border-color: #a7f3d0;
+        }
+        .btn-sm-excel:hover {
+            background: #10b981; color: #ffffff; border-color: #10b981;
+        }
+        .btn-sm-details {
+            background: #f1f5f9; color: #334155; border-color: #cbd5e1;
+        }
+        .btn-sm-details:hover {
+            background: #334155; color: #ffffff;
+        }
+
+        .tracker-metrics {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+        }
+        @media (max-width: 768px) {
+            .tracker-metrics { grid-template-columns: 1fr; }
+        }
+
+        .metric-box {
+            padding: 16px 20px; border-radius: 14px; border: 1px solid var(--border);
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .metric-box:hover {
+            transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .metric-box-total { background: #f8fafc; border-color: #cbd5e1; }
+        .metric-box-submitted { background: #f0fdf4; border-color: #bbf7d0; }
+        .metric-box-pending { background: #fef2f2; border-color: #fecaca; }
+
+        .metric-title {
+            font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+        }
+        .metric-box-total .metric-title { color: #475569; }
+        .metric-box-submitted .metric-title { color: #166534; }
+        .metric-box-pending .metric-title { color: #991b1b; }
+
+        .metric-number {
+            font-size: 28px; font-weight: 800; line-height: 1.1; margin-bottom: 4px;
+        }
+        .metric-box-total .metric-number { color: #0f172a; }
+        .metric-box-submitted .metric-number { color: #15803d; }
+        .metric-box-pending .metric-number { color: #b91c1c; }
+
+        .metric-subtext {
+            font-size: 11px; color: var(--text-muted);
+        }
+
+        .filter-pill {
+            padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+            background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+        }
+        .pill-count { opacity: 0.85; font-size: 11px; margin-left: 2px; }
+
+        .search-wrapper {
+            position: relative; min-width: 220px; flex: 1; max-width: 320px;
+        }
+        .search-wrapper i {
+            position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;
+        }
+        .search-input {
+            width: 100%; padding: 7px 12px 7px 32px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 12px; outline: none; transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: var(--primary); }
+
+        .badge-status {
+            display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+            border-radius: 20px; font-size: 11px; font-weight: 700;
+        }
+        .badge-status-submitted {
+            background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;
+        }
+        .badge-status-pending {
+            background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+        }
+
+        .btn-view-photo {
+            display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+            border-radius: 6px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;
+            text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.2s;
+        }
+        .btn-view-photo:hover {
+            background: #2563eb; color: #ffffff;
+        }
+        .photo-na {
+            font-size: 12px; color: #94a3b8; font-style: italic;
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+    let trackerMasterData = [];
+    let schoolMetaMap = {};
+    let currentFilter = 'all';
+    let currentSearchTerm = '';
+    let detailsExpanded = false;
+    let trackerLoaded = false;
+    let trackerLoadingPromise = null;
+
+    async function loadPassbookTracker() {
+        trackerLoadingPromise = (async () => {
+            try {
+                // Ensure school metadata (including GP name) is loaded
+                try {
+                    const metaRes = await fetch('/schools');
+                    if (metaRes.ok) {
+                        const metaList = await metaRes.json();
+                        if (Array.isArray(metaList)) {
+                            metaList.forEach(m => {
+                                const u = String(m.udise || m.code || m.id || '').trim();
+                                if (u) schoolMetaMap[u] = m;
+                            });
+                        }
+                    }
+                } catch (metaErr) {
+                    console.warn('Could not load schools metadata fallback:', metaErr);
+                }
+
+                const res = await fetch('/api/monthly-report/passbook-tracker');
+                if (res.status === 401) {
+                    console.warn('Admin authentication required for tracker.');
+                    trackerLoaded = true;
+                    return;
+                }
+                const data = await res.json();
+                if (data.status === 'success' && Array.isArray(data.schools)) {
+                    trackerMasterData = data.schools;
+
+                    // Update Metric counts
+                    const totalSchools = (data.summary && typeof data.summary.total_schools === 'number') ? data.summary.total_schools : trackerMasterData.length;
+                    const submitted = (data.summary && typeof data.summary.submitted === 'number') ? data.summary.submitted : trackerMasterData.filter(s => s.status === 'Submitted').length;
+                    const notSubmitted = (data.summary && typeof data.summary.not_submitted === 'number') ? data.summary.not_submitted : (totalSchools - submitted);
+
+                    document.getElementById('countTotal').textContent = totalSchools;
+                    document.getElementById('countSubmitted').textContent = submitted;
+                    document.getElementById('countNotSubmitted').textContent = notSubmitted;
+
+                    // Update filter pill counts
+                    document.getElementById('pillCountAll').textContent = '(' + totalSchools + ')';
+                    document.getElementById('pillCountSubmitted').textContent = '(' + submitted + ')';
+                    document.getElementById('pillCountNotSubmitted').textContent = '(' + notSubmitted + ')';
+
+                    renderTrackerTable();
+                } else {
+                    trackerMasterData = [];
+                    renderTrackerTable();
+                }
+                trackerLoaded = true;
+            } catch (err) {
+                console.error('Failed to load passbook tracker:', err);
+                trackerLoaded = true;
+                const tbody = document.getElementById('trackerTbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 25px; color:#ef4444;">Failed to load live tracker records. Please refresh.</td></tr>';
+                }
+            }
+        })();
+        return trackerLoadingPromise;
+    }
+
+    function toggleDetails() {
+        detailsExpanded = !detailsExpanded;
+        const sec = document.getElementById('trackerDetailsSection');
+        const label = document.getElementById('toggleLabel');
+        const icon = document.getElementById('toggleIcon');
+        if (detailsExpanded) {
+            sec.style.display = 'block';
+            label.textContent = 'Hide Details';
+            icon.className = 'fas fa-chevron-up';
+        } else {
+            sec.style.display = 'none';
+            label.textContent = 'View Details';
+            icon.className = 'fas fa-table';
+        }
+    }
+
+    function filterByMetric(status) {
+        if (!detailsExpanded) {
+            toggleDetails();
+        }
+        setFilter(status);
+    }
+
+    function setFilter(status) {
+        currentFilter = status;
+        document.getElementById('pillAll').classList.toggle('active', status === 'all');
+        document.getElementById('pillSubmitted').classList.toggle('active', status === 'submitted');
+        document.getElementById('pillNotSubmitted').classList.toggle('active', status === 'not_submitted');
+        renderTrackerTable();
+    }
+
+    function onSearchInput() {
+        currentSearchTerm = (document.getElementById('schoolSearch').value || '').trim().toLowerCase();
+        renderTrackerTable();
+    }
+
+    function getFilteredSchools() {
+        return trackerMasterData.filter(s => {
+            if (currentFilter === 'submitted' && s.status !== 'Submitted') return false;
+            if (currentFilter === 'not_submitted' && s.status !== 'Not Submitted') return false;
+
+            if (currentSearchTerm) {
+                const name = (s.school_name || '').toLowerCase();
+                const id = (s.school_id || '').toLowerCase();
+                const circle = (s.circle_name || '').toLowerCase();
+                return name.includes(currentSearchTerm) || id.includes(currentSearchTerm) || circle.includes(currentSearchTerm);
+            }
+            return true;
+        });
+    }
+
+    function formatSubmissionDate(isoStr) {
+        if (!isoStr) return '—';
+        try {
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr;
+            return d.toLocaleString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+        } catch (e) {
+            return isoStr;
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[m]);
+    }
+
+    function renderTrackerTable() {
+        const tbody = document.getElementById('trackerTbody');
+        const counter = document.getElementById('recordCounter');
+        const totalCount = Array.isArray(trackerMasterData) ? trackerMasterData.length : 0;
+        const list = getFilteredSchools();
+
+        if (counter) {
+            counter.textContent = 'Showing ' + list.length + ' of ' + totalCount + ' schools';
+        }
+
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 25px; color:#94a3b8;">No matching schools found.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        list.forEach((s, idx) => {
+            const isSub = s.status === 'Submitted';
+            const badge = isSub
+                ? '<span class="badge-status badge-status-submitted"><i class="fas fa-check-circle"></i> Submitted</span>'
+                : '<span class="badge-status badge-status-pending"><i class="fas fa-clock"></i> Not Submitted</span>';
+
+            const photoBtn = (isSub && s.file_url)
+                ? '<a href="' + escapeHtml(s.file_url) + '" target="_blank" rel="noopener noreferrer" class="btn-view-photo"><i class="fas fa-external-link-alt"></i> View Photo</a>'
+                : '<span class="photo-na">Not Available</span>';
+
+            html += '<tr>' +
+                '<td style="color:#64748b; font-weight:600;">' + (idx + 1) + '</td>' +
+                '<td>' +
+                    '<div style="font-weight:600; color:#0f172a;">' + escapeHtml(s.school_name) + '</div>' +
+                    (s.circle_name ? '<span style="font-size:11px; color:#64748b;"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(s.circle_name) + '</span>' : '') +
+                '</td>' +
+                '<td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#0f766e; font-weight:600;">' + escapeHtml(s.school_id) + '</code></td>' +
+                '<td>' + badge + '</td>' +
+                '<td style="color:#475569; font-size:12px;">' + formatSubmissionDate(s.submitted_at) + '</td>' +
+                '<td style="text-align:center;">' + photoBtn + '</td>' +
+            '</tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    // Fallback Excel generator when SheetJS library is not available or blocked
+    function fallbackExcelDownload(listToExport, reportDate, formattedGenTime) {
+        const list = Array.isArray(listToExport) ? listToExport : [];
+        let html = '\uFEFF<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+        html += '<style>table{border-collapse:collapse;width:100%;font-family:Arial,sans-serif;}th,td{border:1px solid #000;padding:8px;}th{background-color:#0d9488;color:#fff;font-weight:bold;text-align:center;}td{text-align:left;}.center{text-align:center;}.sub{color:#166534;font-weight:bold;}.notsub{color:#991b1b;}</style></head><body>';
+        html += '<h3 style="text-align:center;">Bank Passbook Submission Report</h3>';
+        html += '<p style="text-align:center;font-size:12px;color:#555;">Report Generated: ' + formattedGenTime + ' | Total Schools: ' + list.length + (list.length === 0 ? ' (No Data Present)' : '') + '</p>';
+        html += '<table><thead><tr>';
+        html += '<th>id</th><th>School Name</th><th>Category</th><th>udise_code</th><th>Circle Name</th><th>GP Name</th><th>Passbook Submission Status</th><th>Submission Date and Time</th><th>Passbook Photo Link</th>';
+        html += '</tr></thead><tbody>';
+
+        if (list.length > 0) {
+            list.forEach((s, idx) => {
+                const udise = String(s.udise_code || s.school_id || s.udise || '').trim();
+                const meta = schoolMetaMap[udise] || {};
+                const isSub = s.status === 'Submitted';
+                const dateStr = s.submitted_at ? formatSubmissionDate(s.submitted_at) : 'Not Submitted';
+                const photoLink = (isSub && s.file_url) ? s.file_url : 'Not Available';
+                const sName = s.school_name || s.name || meta.school_name || meta.name || '';
+                const cat = s.category || s.catergory || meta.category || meta.catergory || '';
+                const circle = s.circle_name || s.circle || meta.circle_name || meta.circle || '';
+                const gp = s.gp_name || s.gp || meta.gp_name || meta.gp || '';
+                html += '<tr>' +
+                    '<td class="center">' + (idx + 1) + '</td>' +
+                    '<td>' + escapeHtml(sName) + '</td>' +
+                    '<td>' + escapeHtml(cat) + '</td>' +
+                    '<td class="center">' + escapeHtml(udise) + '</td>' +
+                    '<td>' + escapeHtml(circle) + '</td>' +
+                    '<td>' + escapeHtml(gp) + '</td>' +
+                    '<td class="center ' + (isSub ? 'sub' : 'notsub') + '">' + escapeHtml(s.status || 'Not Submitted') + '</td>' +
+                    '<td class="center">' + dateStr + '</td>' +
+                    '<td>' + (photoLink !== 'Not Available' ? '<a href="' + escapeHtml(photoLink) + '">' + escapeHtml(photoLink) + '</a>' : 'Not Available') + '</td>' +
+                '</tr>';
+            });
+        }
+
+        html += '</tbody></table></body></html>';
+
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Bank_Passbook_Submission_Report_' + reportDate.toISOString().slice(0, 10) + '.xls';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
+
+    async function downloadPassbookExcel(exportFilteredOnly) {
+        // If tracker is loading and no data yet, wait for completion
+        if ((!trackerMasterData || trackerMasterData.length === 0) && !trackerLoaded) {
+            try {
+                if (trackerLoadingPromise) {
+                    await trackerLoadingPromise;
+                } else {
+                    await loadPassbookTracker();
+                }
+            } catch (e) {
+                console.warn('Proceeding with export without waiting for tracker:', e);
+            }
+        }
+
+        const listToExport = exportFilteredOnly ? getFilteredSchools() : (trackerMasterData || []);
+        const reportDate = new Date();
+        const formattedGenTime = reportDate.toLocaleString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+        });
+
+        // Fallback if XLSX library is not available
+        if (typeof XLSX === 'undefined') {
+            fallbackExcelDownload(listToExport, reportDate, formattedGenTime);
+            return;
+        }
+
+        const headers = [
+            'id',
+            'School Name',
+            'Category',
+            'udise_code',
+            'Circle Name',
+            'GP Name',
+            'Passbook Submission Status',
+            'Submission Date and Time',
+            'Passbook Photo Link'
+        ];
+
+        let ws;
+        if (listToExport && listToExport.length > 0) {
+            const excelRows = listToExport.map((s, idx) => {
+                const udise = String(s.udise_code || s.school_id || s.udise || '').trim();
+                const meta = schoolMetaMap[udise] || {};
+                return {
+                    'id': idx + 1,
+                    'School Name': s.school_name || s.name || meta.school_name || meta.name || '',
+                    'Category': s.category || s.catergory || meta.category || meta.catergory || '',
+                    'udise_code': udise,
+                    'Circle Name': s.circle_name || s.circle || meta.circle_name || meta.circle || '',
+                    'GP Name': s.gp_name || s.gp || meta.gp_name || meta.gp || '',
+                    'Passbook Submission Status': s.status || 'Not Submitted',
+                    'Submission Date and Time': s.submitted_at ? formatSubmissionDate(s.submitted_at) : 'Not Submitted',
+                    'Passbook Photo Link': s.file_url || 'Not Available'
+                };
+            });
+            ws = XLSX.utils.json_to_sheet(excelRows, { header: headers });
+        } else {
+            // When no data is present, download empty excel file with all header details
+            ws = XLSX.utils.aoa_to_sheet([headers]);
+        }
+
+        ws['!cols'] = [
+            { wch: 15 },
+            { wch: 45 },
+            { wch: 20 },
+            { wch: 18 },
+            { wch: 22 },
+            { wch: 22 },
+            { wch: 28 },
+            { wch: 28 },
+            { wch: 60 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        wb.Props = {
+            Title: "Bank Passbook Submission Report",
+            Subject: "PM POSHAN School Bank Passbook Photo Submissions",
+            Author: "PM POSHAN Admin",
+            CreatedDate: reportDate
+        };
+        XLSX.utils.book_append_sheet(wb, ws, "Passbook Submissions");
+
+        // Summary sheet with all report details
+        const masterList = Array.isArray(trackerMasterData) ? trackerMasterData : [];
+        const submittedCount = masterList.filter(s => s.status === 'Submitted').length;
+        const notSubmittedCount = masterList.length - submittedCount;
+        const summaryRows = [
+            { 'Report Metric': 'Report Title', 'Value': 'Bank Passbook Submission Report' },
+            { 'Report Metric': 'Report Generation Date & Time', 'Value': formattedGenTime },
+            { 'Report Metric': 'Total Schools in Master List', 'Value': masterList.length },
+            { 'Report Metric': 'Passbook Photos Submitted', 'Value': submittedCount },
+            { 'Report Metric': 'Passbook Photos Not Submitted', 'Value': notSubmittedCount },
+            { 'Report Metric': 'Data Status', 'Value': masterList.length > 0 ? 'Live Database Records' : 'No Data Present (Empty Report)' },
+            { 'Report Metric': 'Data Source', 'Value': 'Supabase PostgreSQL & Google Drive' }
+        ];
+        const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+        wsSummary['!cols'] = [{ wch: 32 }, { wch: 45 }];
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Report Summary");
+
+        const dateStr = reportDate.toISOString().slice(0, 10);
+        const filename = 'Bank_Passbook_Submission_Report_' + dateStr + '.xlsx';
+        XLSX.writeFile(wb, filename);
+    }
+
+</script>
 </head>
 <body>
 
@@ -129,6 +568,96 @@
     </div>
 
     <div id="statusMessage"></div>
+
+    
+    <!-- Bank Passbook Submission Status Card -->
+    <div class="card" id="passbookTrackerCard" style="margin-bottom: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-book-open" style="color: var(--primary);"></i> Bank Passbook Submission Status
+            </h3>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn-sm btn-sm-excel" onclick="downloadPassbookExcel(false)" title="Download Complete School-wise Excel Report">
+                    <i class="fas fa-file-excel"></i> Download Excel
+                </button>
+                <button type="button" class="btn-sm btn-sm-details" id="btnToggleDetails" onclick="toggleDetails()" title="Toggle School-wise Submission Table">
+                    <i class="fas fa-table" id="toggleIcon"></i> <span id="toggleLabel">View Details</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div class="tracker-metrics">
+            <div class="metric-box metric-box-total" onclick="filterByMetric('all')" title="Click to view all schools">
+                <div class="metric-title"><i class="fas fa-school"></i> Total Schools</div>
+                <div class="metric-number" id="countTotal">246</div>
+                <div class="metric-subtext">School Master List</div>
+            </div>
+            <div class="metric-box metric-box-submitted" onclick="filterByMetric('submitted')" title="Click to view submitted schools">
+                <div class="metric-title"><i class="fas fa-check-circle"></i> Submitted</div>
+                <div class="metric-number" id="countSubmitted">--</div>
+                <div class="metric-subtext">Passbook Photo Uploaded</div>
+            </div>
+            <div class="metric-box metric-box-pending" onclick="filterByMetric('not_submitted')" title="Click to view not-submitted schools">
+                <div class="metric-title"><i class="fas fa-clock"></i> Not Submitted</div>
+                <div class="metric-number" id="countNotSubmitted">--</div>
+                <div class="metric-subtext">Photo Pending</div>
+            </div>
+        </div>
+
+        <!-- Detailed School-Wise Submission Data Section -->
+        <div id="trackerDetailsSection" style="display: none; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                <!-- Filter Pills -->
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="filter-pill active" id="pillAll" onclick="setFilter('all')">
+                        All Schools <span class="pill-count" id="pillCountAll">(246)</span>
+                    </button>
+                    <button type="button" class="filter-pill" id="pillSubmitted" onclick="setFilter('submitted')">
+                        Submitted <span class="pill-count" id="pillCountSubmitted">(0)</span>
+                    </button>
+                    <button type="button" class="filter-pill" id="pillNotSubmitted" onclick="setFilter('not_submitted')">
+                        Not Submitted <span class="pill-count" id="pillCountNotSubmitted">(0)</span>
+                    </button>
+                </div>
+
+                <!-- Search and Export Toolbar -->
+                <div style="display: flex; gap: 8px; align-items: center; flex: 1; max-width: 480px; justify-content: flex-end;">
+                    <div class="search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="schoolSearch" class="search-input" placeholder="Search by school name or ID..." oninput="onSearchInput()">
+                    </div>
+                    <button type="button" class="btn-sm btn-sm-excel" onclick="downloadPassbookExcel(false)" title="Download Complete Excel Report">
+                        <i class="fas fa-download"></i> Export All
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 12px; color: var(--text-muted);" id="recordCounter">Showing 246 of 246 schools</span>
+                <span style="font-size: 11px; color: #0d9488; font-weight: 600;"><i class="fas fa-sync-alt"></i> Live Database Records</span>
+            </div>
+
+            <!-- Table Container with Sticky Header -->
+            <div style="max-height: 480px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: #fff;">
+                <table style="margin-top: 0; width: 100%;">
+                    <thead style="position: sticky; top: 0; z-index: 2; background: #f8fafc;">
+                        <tr>
+                            <th style="width: 70px;">Sl. No.</th>
+                            <th>School Name</th>
+                            <th style="width: 140px;">School ID</th>
+                            <th style="width: 150px;">Passbook Status</th>
+                            <th style="width: 190px;">Submission Date</th>
+                            <th style="width: 130px; text-align: center;">Passbook Photo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trackerTbody">
+                        <tr><td colspan="6" style="text-align:center; padding: 30px; color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading passbook submission records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <div class="grid-2">
         <!-- Card 1: Download Templates -->
@@ -227,6 +756,7 @@
         const curMonth = new Date().toLocaleString('en-US', { month: 'long' });
         document.getElementById('tmplMonth').value = curMonth;
         document.getElementById('uploadMonth').value = curMonth;
+        loadPassbookTracker();
     })();
 </script>
 </body>
