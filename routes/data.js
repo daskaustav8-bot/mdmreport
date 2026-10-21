@@ -5,6 +5,7 @@ const path = require('path');
 const multer = require('multer');
 const { pool, getSchools, getSchoolsMap, clearSchoolsCache } = require('../db/supabase');
 const { requireAuth } = require('../middleware/auth');
+const { uploadToGoogleDriveDirect } = require('../services/googleDriveService');
 
 // Multer memory storage for parsing CSV uploads in-memory
 const upload = multer({
@@ -1399,65 +1400,80 @@ async function handleUploadPassbookPhoto(req, res) {
       });
     }
 
-    // 5. Google Drive Integration (Google Apps Script Web App Gateway)
-    const gasUrl = process.env.GOOGLE_DRIVE_WEBAPP_URL;
-    const gasToken = process.env.GOOGLE_DRIVE_UPLOAD_TOKEN || '';
+    // 5. Direct Google Drive API Upload (No Google Script Required)
+    let fileId = null;
+    let fileUrl = null;
 
-    if (!gasUrl) {
+    const normalizedExt = isPng ? 'png' : (isWebp ? 'webp' : 'jpg');
+    const timestampStr = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+    const driveFileName = `Passbook_${udise}_${month}_${year}_${timestampStr}.${normalizedExt}`;
+
+    const hasServiceAccount = !!(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+    const hasOAuth = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN);
+    const gasUrl = process.env.GOOGLE_DRIVE_WEBAPP_URL;
+
+    if (hasServiceAccount || hasOAuth) {
+      // Direct Google Drive API v3 (Official REST API with Service Account or OAuth2)
+      try {
+        const driveResult = await uploadToGoogleDriveDirect({
+          buffer,
+          mimeType: isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg'),
+          fileName: driveFileName,
+          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
+          description: `Bank Passbook Photo\nUDISE: ${udise}\nSchool: ${schoolName}\nPeriod: ${month} ${year}`
+        });
+        fileId = driveResult.fileId;
+        fileUrl = driveResult.viewUrl || driveResult.fileUrl;
+      } catch (driveErr) {
+        console.error('Google Drive direct upload error:', driveErr.message);
+        return res.status(502).json({
+          status: 'error',
+          message: 'Google Drive API upload failed: ' + driveErr.message
+        });
+      }
+    } else if (gasUrl) {
+      // Fallback: Google Apps Script Web App Gateway if configured
+      const gasToken = process.env.GOOGLE_DRIVE_UPLOAD_TOKEN || '';
+      const drivePayload = {
+        token: gasToken,
+        fileBase64: buffer.toString('base64'),
+        mimeType: isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg'),
+        fileName: fileName,
+        udise: udise,
+        month: month,
+        year: year,
+        schoolName: schoolName
+      };
+
+      try {
+        const driveRes = await fetch(gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(drivePayload)
+        });
+        const driveText = await driveRes.text();
+        const driveJson = JSON.parse(driveText);
+        if (!driveRes.ok || driveJson.status !== 'success') {
+          return res.status(driveRes.status >= 400 ? driveRes.status : 500).json({
+            status: 'error',
+            message: driveJson.message || 'Google Drive rejected photo upload.'
+          });
+        }
+        fileId = driveJson.fileId;
+        fileUrl = driveJson.viewUrl || driveJson.fileUrl || `https://drive.google.com/file/d/${fileId}/view`;
+      } catch (gasErr) {
+        return res.status(502).json({
+          status: 'error',
+          message: 'Google Drive upload error: ' + gasErr.message
+        });
+      }
+    } else {
       return res.status(503).json({
         status: 'error',
         code: 'DRIVE_CONFIG_REQUIRED',
-        message: 'Google Drive Web App URL is not configured. Please add GOOGLE_DRIVE_WEBAPP_URL to your .env or Vercel Environment Variables.'
+        message: 'Google Drive credentials not configured. Please set GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_SERVICE_ACCOUNT_KEY, and GOOGLE_DRIVE_FOLDER_ID in your .env or Vercel Environment Variables.'
       });
     }
-
-    const drivePayload = {
-      token: gasToken,
-      fileBase64: buffer.toString('base64'),
-      mimeType: isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg'),
-      fileName: fileName,
-      udise: udise,
-      month: month,
-      year: year,
-      schoolName: schoolName
-    };
-
-    let driveRes;
-    try {
-      driveRes = await fetch(gasUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(drivePayload)
-      });
-    } catch (netErr) {
-      console.error('Failed to connect to Google Apps Script Web App:', netErr.message);
-      return res.status(502).json({
-        status: 'error',
-        message: 'Failed to connect to Google Drive service: ' + netErr.message
-      });
-    }
-
-    const driveText = await driveRes.text();
-    let driveJson;
-    try {
-      driveJson = JSON.parse(driveText);
-    } catch (parseErr) {
-      console.error('Google Apps Script returned non-JSON response:', driveText.slice(0, 200));
-      return res.status(502).json({
-        status: 'error',
-        message: 'Google Drive upload returned an invalid response. Please verify Google Apps Script deployment permissions.'
-      });
-    }
-
-    if (!driveRes.ok || driveJson.status !== 'success') {
-      return res.status(driveRes.status >= 400 ? driveRes.status : 500).json({
-        status: 'error',
-        message: driveJson.message || 'Google Drive rejected the photo upload.'
-      });
-    }
-
-    const fileId = driveJson.fileId;
-    const fileUrl = driveJson.viewUrl || driveJson.fileUrl || `https://drive.google.com/file/d/${fileId}/view`;
 
     // 6. Save Google Drive Photo Reference in Supabase PostgreSQL
     try {

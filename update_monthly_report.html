@@ -2242,8 +2242,19 @@
             <div class="nav-right">
                 <div class="date-badge">
                     <i class="fa-regular fa-calendar-days"></i>
-                    <span id="navDateBadge">18 Oct, 2026</span>
+                    <span id="navDateBadge">21 Oct, 2026</span>
                 </div>
+                <script>
+                    (function() {
+                        try {
+                            var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            var t = new Date();
+                            var str = t.getDate() + ' ' + m[t.getMonth()] + ', ' + t.getFullYear();
+                            var el = document.getElementById('navDateBadge');
+                            if (el) el.textContent = str;
+                        } catch(e) {}
+                    })();
+                </script>
             </div>
         </header>
 
@@ -2890,8 +2901,9 @@
         $(document).ready(function () {
             // Dynamically set today's date badge
             try {
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 const today = new Date();
-                const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const dateStr = today.getDate() + ' ' + months[today.getMonth()] + ', ' + today.getFullYear();
                 if ($('#navDateBadge').length) {
                     $('#navDateBadge').text(dateStr);
                 }
@@ -3660,8 +3672,6 @@
                                         }
                                     });
                                 }
-                                const d = res.data;
-                                const fj = (typeof d.fund_details_json === 'string' ? JSON.parse(d.fund_details_json) : d.fund_details_json) || {};
                                 const getVal = (col, grp, sub) => {
                                     if (d[col] !== undefined && d[col] !== null && d[col] !== '') return d[col];
                                     if (fj[grp] && fj[grp][sub] !== undefined && fj[grp][sub] !== null) return fj[grp][sub];
