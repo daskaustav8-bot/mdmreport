@@ -276,7 +276,20 @@ async function migrateAndProvision() {
         ('upr_ng_exp', 'upper_primary', 'ng_exp', 'Nutrition Garden - Expenditure', false),
         ('upr_bc_open', 'upper_primary', 'bc_open', 'Bank Charges (SMS/Cheque Book) - Opening Balance', false),
         ('upr_bc_recv', 'upper_primary', 'bc_recv', 'Bank Charges (SMS/Cheque Book) - Received', false),
-        ('upr_bc_exp', 'upper_primary', 'bc_exp', 'Bank Charges (SMS/Cheque Book) - Expenditure', false)
+        ('upr_bc_exp', 'upper_primary', 'bc_exp', 'Bank Charges (SMS/Cheque Book) - Expenditure', false),
+        -- Food Grains (Rice)
+        ('pri_rice_bv_open', 'primary', 'rice_bv_open', 'Rice Bal Vatika - Opening Balance (KG)', false),
+        ('pri_rice_bv_recv', 'primary', 'rice_bv_recv', 'Rice Bal Vatika - Received (KG)', false),
+        ('pri_rice_bv_cons', 'primary', 'rice_bv_cons', 'Rice Bal Vatika - Consumption (KG)', false),
+        ('pri_rice_p_open', 'primary', 'rice_p_open', 'Rice Primary - Opening Balance (KG)', false),
+        ('pri_rice_p_recv', 'primary', 'rice_p_recv', 'Rice Primary - Received (KG)', false),
+        ('pri_rice_p_cons', 'primary', 'rice_p_cons', 'Rice Primary - Consumption (KG)', false),
+        ('upr_rice_p_open', 'upper_primary', 'rice_p_open', 'Rice Primary V - Opening Balance (KG)', false),
+        ('upr_rice_p_recv', 'upper_primary', 'rice_p_recv', 'Rice Primary V - Received (KG)', false),
+        ('upr_rice_p_cons', 'upper_primary', 'rice_p_cons', 'Rice Primary V - Consumption (KG)', false),
+        ('upr_rice_up_open', 'upper_primary', 'rice_up_open', 'Rice Upper Primary - Opening Balance (KG)', false),
+        ('upr_rice_up_recv', 'upper_primary', 'rice_up_recv', 'Rice Upper Primary - Received (KG)', false),
+        ('upr_rice_up_cons', 'upper_primary', 'rice_up_cons', 'Rice Upper Primary - Consumption (KG)', false)
       ON CONFLICT (key) DO UPDATE SET
         category = EXCLUDED.category,
         field_name = EXCLUDED.field_name,
