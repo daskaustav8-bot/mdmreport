@@ -6040,11 +6040,11 @@
                     return;
                 }
 
-                if (isUploadingPassbook || $('#photoUploadingState').is(':visible')) {
+                if (isPassbookProcessingOrUploading || $('#photoUploadingState').is(':visible')) {
                     Swal.fire({
                         icon: 'info',
-                        title: 'Photo Uploading...',
-                        text: 'Please wait for the bank passbook photo to finish uploading to Google Drive before saving.',
+                        title: 'Photo Processing & Uploading...',
+                        text: 'Please wait for the bank passbook photo to finish enhancing and uploading to Google Drive before saving.',
                         confirmButtonColor: '#0d9488'
                     });
                     return;
