@@ -610,6 +610,8 @@
         .badge-teal { background: var(--primary-light); color: var(--primary); }
         .badge-indigo { background: var(--indigo-light); color: var(--indigo); }
         .badge-amber { background: var(--amber-light); color: var(--amber); }
+        .badge-rose { background: var(--rose-light); color: var(--rose); }
+        .badge-sky { background: #e0f2fe; color: #0284c7; }
 
         .section-tag {
             font-size: 11px;
@@ -2346,7 +2348,206 @@
                 margin-top: 6px;
             }
 
-            /* Sticky Bottom Action Bar: Desktop Single-Row Layout */
+            
+        /* =========================================
+           STEP 5 & 6: HEALTH, INSPECTION & SIGNATURES
+           ========================================= */
+        table.health-table,
+        table.inspection-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.health-table th,
+        table.inspection-table th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            padding: 12px 14px;
+            border-bottom: 2px solid var(--border);
+            border-right: 1px solid var(--border-light);
+        }
+
+        table.health-table th:last-child,
+        table.inspection-table th:last-child {
+            border-right: none;
+        }
+
+        table.health-table td,
+        table.inspection-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-light);
+            vertical-align: middle;
+            background: #ffffff;
+            transition: background 0.15s ease;
+        }
+
+        table.health-table td:last-child,
+        table.inspection-table td:last-child {
+            border-right: none;
+            width: 180px;
+            text-align: center;
+        }
+
+        table.health-table td:first-child,
+        table.inspection-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 13.5px;
+            line-height: 1.45;
+            padding-left: 18px;
+        }
+
+        table.health-table tr:hover td,
+        table.inspection-table tr:hover td {
+            background: #fbfcfe;
+        }
+
+        .insp-toggle-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .insp-radio-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            padding: 6px 14px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .insp-radio-label:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .insp-radio-label.active {
+            border-color: var(--primary);
+            background: #f0fdfa;
+            color: var(--primary-dark);
+        }
+
+        .insp-radio-label input[type="radio"] {
+            width: 17px;
+            height: 17px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .insp-sub-input:disabled {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+        }
+
+        .untoward-row td {
+            background: #fffbeb !important;
+        }
+
+        .untoward-row td:first-child {
+            color: #92400e !important;
+            font-weight: 700 !important;
+        }
+
+        /* Signatures Card */
+        .report-signatures-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 30px 24px 20px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 24px;
+        }
+
+        .signature-column {
+            flex: 1;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .sig-dots {
+            color: #94a3b8;
+            font-size: 14px;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            margin-bottom: 8px;
+            user-select: none;
+        }
+
+        .sig-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            table.health-table td:first-child,
+            table.inspection-table td:first-child {
+                font-size: 11px !important;
+                padding: 6px 8px !important;
+                line-height: 1.3 !important;
+            }
+
+            table.health-table td:last-child,
+            table.inspection-table td:last-child {
+                width: 100px !important;
+                padding: 4px 4px !important;
+            }
+
+            .insp-toggle-wrap {
+                gap: 8px;
+            }
+
+            .insp-radio-label {
+                font-size: 11.5px;
+                padding: 4px 8px;
+                gap: 5px;
+            }
+
+            .insp-radio-label input[type="radio"] {
+                width: 14px;
+                height: 14px;
+            }
+
+            .report-signatures-card {
+                flex-direction: column;
+                gap: 22px;
+                padding: 20px 14px;
+            }
+
+            .signature-column {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .sig-title {
+                font-size: 11.5px;
+            }
+        }
+
+        /* Sticky Bottom Action Bar: Desktop Single-Row Layout */
             .action-bar-wrapper {
                 position: sticky;
                 bottom: 8px;
@@ -2605,7 +2806,7 @@
             border-color: #fecaca !important;
             background: linear-gradient(to bottom, #ffffff, #fafafa) !important;
         }
-        .form-section.section-is-locked .input-locked {
+        .input-locked, .form-section.section-is-locked .input-locked {
             background-color: #f1f5f9 !important;
             color: #475569 !important;
             cursor: not-allowed !important;
@@ -2675,7 +2876,7 @@
                     </div>
                     Select Month &amp; School
                 </h2>
-                <span class="step-pill">Step 1 of 4</span>
+                <span class="step-pill">Step 1 of 6</span>
             </div>
 
             <div class="select-row">
@@ -3182,6 +3383,146 @@
             </section>
 
             <!-- =========================================
+                 STEP 5: CHILDREN HEALTH STATUS
+                 ========================================= -->
+            <section class="form-section" id="secHealth">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon-badge badge-rose">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <div>
+                            <strong>6. Children Health Status</strong>
+                        </div>
+                    </div>
+                    <span class="section-tag">Health Status</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="entry-table health-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding-left: 18px;">HEALTH PARAMETER / DESCRIPTION</th>
+                                <th style="width: 180px; text-align: center;">COUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>No. of children from class 1 to 8 who had received 4 IFA tablets (Boys) -</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="ifa_boys" name="ifa_boys" value="0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>No. of children from class 1 to 8 who had received 4 IFA tablets (Girls)</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="ifa_girls" name="ifa_girls" value="0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>No. of children screened by mobile health (RBSK) team</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="rbsk_screened" name="rbsk_screened" value="0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>No. of children referred by mobile health (RBSK) team</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="rbsk_referred" name="rbsk_referred" value="0">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =========================================
+                 STEP 6: SCHOOL INSPECTION
+                 ========================================= -->
+            <section class="form-section" id="secInspection">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon-badge badge-sky">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <div>
+                            <strong>7. School Inspection</strong>
+                        </div>
+                    </div>
+                    <span class="section-tag">Inspection</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="entry-table inspection-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding-left: 18px;">INSPECTION &amp; MONITORING DETAILS</th>
+                                <th style="width: 180px; text-align: center;">STATUS / VISITS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="inspection-status-row">
+                                <td style="font-weight: 700;">School Inspection done during the month</td>
+                                <td>
+                                    <div class="insp-toggle-wrap">
+                                        <label class="insp-radio-label" id="lbl_insp_yes">
+                                            <span>Yes</span>
+                                            <input type="radio" name="inspection_done" value="Yes" id="insp_done_yes">
+                                        </label>
+                                        <label class="insp-radio-label active" id="lbl_insp_no">
+                                            <span>No</span>
+                                            <input type="radio" name="inspection_done" value="No" id="insp_done_no" checked>
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>By Members of Task Force</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input insp-sub-input" id="insp_task_force" name="insp_task_force" value="0" disabled>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>By District Officials</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input insp-sub-input" id="insp_district_officials" name="insp_district_officials" value="0" disabled>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>By Block/Taluka Level Officials</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input insp-sub-input" id="insp_block_officials" name="insp_block_officials" value="0" disabled>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>By SMC Members</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input insp-sub-input" id="insp_smc_members" name="insp_smc_members" value="0" disabled>
+                                </td>
+                            </tr>
+                            <tr class="untoward-row">
+                                <td style="font-weight: 700;">Number of Untoward Incidents Occurred</td>
+                                <td>
+                                    <input type="number" min="0" inputmode="numeric" class="num-input" id="untoward_incidents" name="untoward_incidents" value="0">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Signatures Footer -->
+                <div class="report-signatures-card">
+                    <div class="signature-column">
+                        
+                    <div class="signature-column">
+                        <div class="sig-dots">.........................................................................</div>
+                        <div class="sig-title">Signature of Head Teacher</div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- =========================================
                  STICKY FLOATING ACTION BAR
                  ========================================= -->
             <div class="action-bar-wrapper" id="actionBar">
@@ -3424,6 +3765,19 @@
             }).on('blur', '.num-input', function () {
                 if ($(this).val().trim() === '') {
                     $(this).val('0');
+                }
+            });
+
+            // School Inspection toggle (Yes / No)
+            $(document).on('change', 'input[name="inspection_done"]', function () {
+                const isYes = $(this).val() === 'Yes';
+                $('.insp-radio-label').removeClass('active');
+                $(this).closest('.insp-radio-label').addClass('active');
+
+                if (isYes) {
+                    $('.insp-sub-input').prop('disabled', false).removeClass('input-disabled');
+                } else {
+                    $('.insp-sub-input').prop('disabled', true).addClass('input-disabled').val(0);
                 }
             });
 
@@ -4370,98 +4724,89 @@
             let currentSectionAccess = { meal_availed: false, fund_details: false, food_grains: false };
 
             function applySectionAccessLocks(udise, isPrimary, sectionAccessPreloaded) {
-                // Non-Primary schools retain existing behaviour completely unchanged
-                if (!isPrimary) {
-                    currentSectionAccess = { meal_availed: false, fund_details: false, food_grains: false };
-                    $('.badge-sec-locked, .locked-section-banner').remove();
-                    $('#secMeal, #secFund, #secRice').removeClass('section-is-locked');
-                    $('#secMeal input, #secMeal select, #secFund input, #secFund select, #secRice input').removeClass('input-locked').prop('disabled', false);
-                    $('#fund_row_bv').find('input').prop('disabled', true); // Bal Vatika disabled for Upper Primary
-                    $('#btnSave').removeClass('btn-all-locked').removeAttr('title');
-                    return;
-                }
-
-                const renderLocks = (sections) => {
-                    currentSectionAccess = {
-                        meal_availed: Boolean(sections?.meal_availed?.is_locked),
-                        fund_details: Boolean(sections?.fund_details?.is_locked),
-                        food_grains: Boolean(sections?.food_grains?.is_locked)
-                    };
-
-                    const sectionsConfig = [
-                        {
-                            key: 'meal_availed',
-                            secId: '#secMeal',
-                            bannerId: 'lockBannerMeal',
-                            badgeId: 'lockBadgeMeal',
-                            inputs: '#bv_days, #p_days, #bv_actual, #p_actual, #bv_meals, #p_meals'
-                        },
-                        {
-                            key: 'fund_details',
-                            secId: '#secFund',
-                            bannerId: 'lockBannerFund',
-                            badgeId: 'lockBadgeFund',
-                            inputs: '#cc_bv_open, #cc_bv_recv, #cc_bv_exp, #cc_p_open, #cc_p_recv, #cc_p_exp, #bi_open, #bi_recv, #bi_exp, #lpg_open, #lpg_recv, #lpg_exp, #nutri_open, #nutri_recv, #nutri_exp, #mme_open, #mme_recv, #mme_exp, #kd_open, #kd_recv, #kd_exp, #ks_open, #ks_recv, #ks_exp, #ng_open, #ng_recv, #ng_exp, #bc_open, #bc_recv, #bc_exp, #bank_match, #bank_passbook_balance, #bank_balance_date'
-                        },
-                        {
-                            key: 'food_grains',
-                            secId: '#secRice',
-                            bannerId: 'lockBannerRice',
-                            badgeId: 'lockBadgeRice',
-                            inputs: '#rice_bv_open, #rice_bv_recv, #rice_bv_cons, #rice_p_open, #rice_p_recv, #rice_p_cons'
-                        }
-                    ];
-
-                    sectionsConfig.forEach(cfg => {
-                        const isLocked = currentSectionAccess[cfg.key];
-                        const $sec = $(cfg.secId);
-                        const $header = $sec.find('.section-header');
-                        const $headerLeft = $sec.find('.section-header-left');
-
+                // Fetch field-level locks from /api/monthly-report/lock-config
+                $.ajax({
+                    url: '/api/monthly-report/lock-config',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (res) {
+                        const cfg = (res && res.status === 'success' && res.config) ? res.config : {};
+                        
                         // Clean previous lock artifacts
-                        $header.find('#' + cfg.badgeId).remove();
-                        $sec.find('#' + cfg.bannerId).remove();
+                        $('#secMeal input').removeClass('input-locked').prop('disabled', false).removeAttr('title');
+                        $('#lockBadgeMeal, #lockBannerMeal').remove();
 
-                        if (isLocked) {
-                            $sec.addClass('section-is-locked');
-                            $headerLeft.append('<span class="badge-sec-locked" id="' + cfg.badgeId + '"><i class="fa-solid fa-lock"></i> LOCKED</span>');
-                            $header.after('<div class="locked-section-banner" id="' + cfg.bannerId + '"><i class="fa-solid fa-lock"></i> <span>This section has been locked by the administrator. Please contact the administrator for assistance.</span></div>');
-                            $sec.find(cfg.inputs).prop('disabled', true).addClass('input-locked');
-                        } else {
-                            $sec.removeClass('section-is-locked');
-                            $sec.find(cfg.inputs).prop('disabled', false).removeClass('input-locked');
-                        }
-                    });
+                        // Clean previous lock artifacts on Fund Details
+                        $('#secFund input').removeClass('input-locked').prop('disabled', false).removeAttr('title');
+                        $('#lockBadgeFund, #lockBannerFund').remove();
 
-                    // Check if all 3 sections are locked
-                    const allLocked = currentSectionAccess.meal_availed && currentSectionAccess.fund_details && currentSectionAccess.food_grains;
-                    if (allLocked) {
-                        $('#btnSave').addClass('btn-all-locked').attr('title', 'All sections are locked by administrator.');
-                    } else {
-                        $('#btnSave').removeClass('btn-all-locked').removeAttr('title');
-                    }
-                };
+                        const prefix = isPrimary ? 'pri_' : 'upr_';
+                        const fundFieldGroups = ['cc_bv', 'cc_p', 'cc_up', 'bi', 'lpg', 'nutri', 'mme', 'kd', 'ks', 'ng', 'bc'];
+                        const fundSubTypes = ['open', 'recv', 'exp'];
 
-                if (sectionAccessPreloaded) {
-                    renderLocks(sectionAccessPreloaded);
-                } else {
-                    $.ajax({
-                        url: '/api/monthly-report/section-access',
-                        type: 'GET',
-                        data: { school_id: udise },
-                        dataType: 'json',
-                        success: function (res) {
-                            if (res && res.status === 'success' && res.sections) {
-                                renderLocks(res.sections);
+                        fundFieldGroups.forEach(grp => {
+                            fundSubTypes.forEach(sub => {
+                                const key = prefix + grp + '_' + sub;
+                                const inputId = '#' + grp + '_' + sub;
+                                if (cfg[key]) {
+                                    $(inputId).prop('disabled', true).addClass('input-locked').attr('title', 'This field is locked by administrator.');
+                                }
+                            });
+                        });
+
+                        let lockedCount = 0;
+                        if (isPrimary) {
+                            // Primary school fields
+                            const priFields = [
+                                { key: 'pri_bv_days', id: '#bv_days' },
+                                { key: 'pri_p_days', id: '#p_days' },
+                                { key: 'pri_bv_actual', id: '#bv_actual' },
+                                { key: 'pri_p_actual', id: '#p_actual' },
+                                { key: 'pri_bv_meals', id: '#bv_meals' },
+                                { key: 'pri_p_meals', id: '#p_meals' }
+                            ];
+                            priFields.forEach(f => {
+                                if (cfg[f.key]) {
+                                    $(f.id).prop('disabled', true).addClass('input-locked').attr('title', 'This field is locked by administrator.');
+                                    lockedCount++;
+                                }
+                            });
+                            if (lockedCount === priFields.length) {
+                                $('#secMeal').addClass('section-is-locked');
+                                $('#secMeal .section-header-left').append('<span class="badge-sec-locked" id="lockBadgeMeal"><i class="fa-solid fa-lock"></i> LOCKED</span>');
+                                $('#secMeal .section-header').after('<div class="locked-section-banner" id="lockBannerMeal"><i class="fa-solid fa-lock"></i> <span>Meal Availed Status fields are locked by the administrator.</span></div>');
                             } else {
-                                renderLocks(null);
+                                $('#secMeal').removeClass('section-is-locked');
                             }
-                        },
-                        error: function () {
-                            renderLocks(null);
+                        } else {
+                            // Upper Primary school fields
+                            const uprFields = [
+                                { key: 'upr_p_days', id: '#p_days' },
+                                { key: 'upr_up_days', id: '#up_days' },
+                                { key: 'upr_p_actual', id: '#p_actual' },
+                                { key: 'upr_up_actual', id: '#up_actual' },
+                                { key: 'upr_p_meals', id: '#p_meals' },
+                                { key: 'upr_up_meals', id: '#up_meals' }
+                            ];
+                            uprFields.forEach(f => {
+                                if (cfg[f.key]) {
+                                    $(f.id).prop('disabled', true).addClass('input-locked').attr('title', 'This field is locked by administrator.');
+                                    lockedCount++;
+                                }
+                            });
+                            if (lockedCount === uprFields.length) {
+                                $('#secMeal').addClass('section-is-locked');
+                                $('#secMeal .section-header-left').append('<span class="badge-sec-locked" id="lockBadgeMeal"><i class="fa-solid fa-lock"></i> LOCKED</span>');
+                                $('#secMeal .section-header').after('<div class="locked-section-banner" id="lockBannerMeal"><i class="fa-solid fa-lock"></i> <span>Meal Availed Status fields are locked by the administrator.</span></div>');
+                            } else {
+                                $('#secMeal').removeClass('section-is-locked');
+                            }
                         }
-                    });
-                }
+                    },
+                    error: function() {
+                        $('#secMeal input').removeClass('input-locked').prop('disabled', false);
+                    }
+                });
             }
 
             function loadSchoolMonthlyData() {
@@ -4738,6 +5083,25 @@
                                         $('#rice_p_cons').val(autoRiceCons).trigger('input');
                                     }
                                 }
+
+                                // Populate Children Health Status
+                                $('#ifa_boys').val(d.ifa_boys != null ? d.ifa_boys : 0);
+                                $('#ifa_girls').val(d.ifa_girls != null ? d.ifa_girls : 0);
+                                $('#rbsk_screened').val(d.rbsk_screened != null ? d.rbsk_screened : 0);
+                                $('#rbsk_referred').val(d.rbsk_referred != null ? d.rbsk_referred : 0);
+
+                                // Populate School Inspection & Untoward Incidents
+                                const isInspDone = String(d.inspection_done || '').trim().toLowerCase() === 'yes';
+                                if (isInspDone) {
+                                    $('#insp_done_yes').prop('checked', true).trigger('change');
+                                } else {
+                                    $('#insp_done_no').prop('checked', true).trigger('change');
+                                }
+                                $('#insp_task_force').val(d.insp_task_force != null ? d.insp_task_force : 0);
+                                $('#insp_district_officials').val(d.insp_district_officials != null ? d.insp_district_officials : 0);
+                                $('#insp_block_officials').val(d.insp_block_officials != null ? d.insp_block_officials : 0);
+                                $('#insp_smc_members').val(d.insp_smc_members != null ? d.insp_smc_members : 0);
+                                $('#untoward_incidents').val(d.untoward_incidents != null ? d.untoward_incidents : 0);
                             } else {
                                 setDefaultBankDate();
                             }
@@ -4760,6 +5124,10 @@
                 $('.num-input').val(0);
                 $('#bank_match').val('YES');
                 $('#bank_passbook_balance').val(0);
+                $('#ifa_boys, #ifa_girls, #rbsk_screened, #rbsk_referred').val(0);
+                $('#insp_task_force, #insp_district_officials, #insp_block_officials, #insp_smc_members').val(0);
+                $('#untoward_incidents').val(0);
+                $('#insp_done_no').prop('checked', true).trigger('change');
                 setDefaultBankDate();
                 setPhotoUI(null);
 
@@ -4939,7 +5307,21 @@
                             rice_up_open: $('#rice_up_open').val() || 0,
                             rice_up_recv: $('#rice_up_recv').val() || 0,
                             rice_up_cons: $('#rice_up_cons').val() || 0,
-                            rice_up_close: $('#rice_up_close').val() || 0
+                            rice_up_close: $('#rice_up_close').val() || 0,
+
+                            // Children Health Status
+                            ifa_boys: $('#ifa_boys').val() || 0,
+                            ifa_girls: $('#ifa_girls').val() || 0,
+                            rbsk_screened: $('#rbsk_screened').val() || 0,
+                            rbsk_referred: $('#rbsk_referred').val() || 0,
+
+                            // School Inspection & Untoward Incidents
+                            inspection_done: $('input[name="inspection_done"]:checked').val() || 'No',
+                            insp_task_force: $('#insp_task_force').val() || 0,
+                            insp_district_officials: $('#insp_district_officials').val() || 0,
+                            insp_block_officials: $('#insp_block_officials').val() || 0,
+                            insp_smc_members: $('#insp_smc_members').val() || 0,
+                            untoward_incidents: $('#untoward_incidents').val() || 0
                         };
 
                         const $btn = $('#btnSave');

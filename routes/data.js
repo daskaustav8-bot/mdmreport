@@ -240,6 +240,101 @@ router.get('/infrastructure/options', requireAuth('infrastructure'), handleInfra
 router.get('/get_infrastructure_options.php', requireAuth('infrastructure'), handleInfraOptions);
 
 // ==========================================
+// 2.5 Monthly Report Field Lock Config (Meal Availed Status)
+// ==========================================
+const MONTHLY_REPORT_LOCK_FIELDS = [
+  { key: 'pri_bv_days', category: 'primary', field_name: 'bv_days', label: 'Number of School Days during Month (Bal Vatika PP)' },
+  { key: 'pri_p_days', category: 'primary', field_name: 'p_days', label: 'Number of School Days during Month (Primary I-IV)' },
+  { key: 'pri_bv_actual', category: 'primary', field_name: 'bv_actual', label: 'Actual Number of Days MDM Served (Bal Vatika PP)' },
+  { key: 'pri_p_actual', category: 'primary', field_name: 'p_actual', label: 'Actual Number of Days MDM Served (Primary I-IV)' },
+  { key: 'pri_bv_meals', category: 'primary', field_name: 'bv_meals', label: 'Total Meals Served during Month (Bal Vatika PP)' },
+  { key: 'pri_p_meals', category: 'primary', field_name: 'p_meals', label: 'Total Meals Served during Month (Primary I-IV)' },
+  { key: 'upr_p_days', category: 'upper_primary', field_name: 'p_days', label: 'Number of School Days during Month (Primary V)' },
+  { key: 'upr_up_days', category: 'upper_primary', field_name: 'up_days', label: 'Number of School Days during Month (Upper Primary VI-VIII)' },
+  { key: 'upr_p_actual', category: 'upper_primary', field_name: 'p_actual', label: 'Actual Number of Days MDM Served (Primary V)' },
+  { key: 'upr_up_actual', category: 'upper_primary', field_name: 'up_actual', label: 'Actual Number of Days MDM Served (Upper Primary VI-VIII)' },
+  { key: 'upr_p_meals', category: 'upper_primary', field_name: 'p_meals', label: 'Total Meals Served during Month (Primary V)' },
+  { key: 'upr_up_meals', category: 'upper_primary', field_name: 'up_meals', label: 'Total Meals Served during Month (Upper Primary VI-VIII)' }
+];
+
+async function handleGetMonthlyReportLockConfig(req, res) {
+  try {
+    const category = (req.query.category || '').toLowerCase().trim();
+    let query = 'SELECT key, category, field_name, label, is_locked, updated_at FROM public.monthly_report_field_config';
+    const params = [];
+    if (category) {
+      query += ' WHERE category = $1';
+      params.push(category);
+    }
+    query += ' ORDER BY key ASC';
+
+    const { rows } = await pool.query(query, params);
+    const configMap = {};
+    rows.forEach(r => {
+      configMap[r.key] = Boolean(r.is_locked);
+    });
+
+    MONTHLY_REPORT_LOCK_FIELDS.forEach(f => {
+      if ((!category || f.category === category) && configMap[f.key] === undefined) {
+        configMap[f.key] = false;
+      }
+    });
+
+    return res.json({
+      status: 'success',
+      category: category || 'all',
+      config: configMap,
+      fields: rows.length > 0 ? rows : MONTHLY_REPORT_LOCK_FIELDS.filter(f => !category || f.category === category)
+    });
+  } catch (err) {
+    console.error('Error loading monthly report field lock config:', err.message);
+    return res.status(500).json({ status: 'error', message: 'Failed to load lock settings: ' + err.message });
+  }
+}
+
+async function handleSaveMonthlyReportLockConfig(req, res) {
+  try {
+    const payload = req.body || {};
+    let incomingConfig = payload.config !== undefined ? payload.config : payload.locks !== undefined ? payload.locks : payload;
+
+    if (Array.isArray(incomingConfig)) {
+      const map = {};
+      incomingConfig.forEach(item => {
+        if (item && item.key) {
+          map[item.key] = item.is_locked;
+        }
+      });
+      incomingConfig = map;
+    }
+
+    const updatedConfig = {};
+    for (const key of Object.keys(incomingConfig)) {
+      const val = incomingConfig[key];
+      const isLocked = val === true || val === 'true' || val === 1 || val === '1' || val === 'on';
+      updatedConfig[key] = isLocked;
+
+      await pool.query(`
+        UPDATE public.monthly_report_field_config
+        SET is_locked = $1, updated_at = NOW()
+        WHERE key = $2
+      `, [isLocked, key]);
+    }
+
+    return res.json({
+      status: 'success',
+      message: 'Monthly report lock settings updated successfully!',
+      config: updatedConfig
+    });
+  } catch (err) {
+    console.error('Error saving monthly report field lock config:', err.message);
+    return res.status(500).json({ status: 'error', message: 'Failed to save lock settings: ' + err.message });
+  }
+}
+
+router.get(['/monthly-report/lock-config', '/api/monthly-report/lock-config'], handleGetMonthlyReportLockConfig);
+router.post(['/monthly-report/lock-config', '/api/monthly-report/lock-config'], requireAuth('main'), handleSaveMonthlyReportLockConfig);
+
+// ==========================================
 // 3. Infrastructure School Details (Fetch)
 // ==========================================
 async function handleInfraData(req, res) {
@@ -1189,6 +1284,38 @@ async function handleSaveMonthlyReport(req, res) {
     const circleName = master.circle_name || b.circle_name || 'N/A';
     const gpName = master.gp_name || b.gp_name || 'N/A';
 
+    // Lock enforcement for Meal Availed Status and Fund Details fields
+    try {
+      const cat = (master.school_category || master.category || '').toUpperCase();
+      const isPrimary = (cat.includes('PRIMARY') && !cat.includes('UPPER')) || cat === 'PRIMARY';
+      const categoryType = isPrimary ? 'primary' : 'upper_primary';
+
+      const { rows: lockRows } = await pool.query(
+        'SELECT key, field_name, is_locked FROM public.monthly_report_field_config WHERE category = $1',
+        [categoryType]
+      );
+      const lockMap = {};
+      lockRows.forEach(lr => {
+        lockMap[lr.field_name] = Boolean(lr.is_locked);
+      });
+
+      const { rows: existingRows } = await pool.query(
+        'SELECT * FROM public.mdm_monthly_report WHERE u_dise = $1 AND month_name = $2 AND year = $3 LIMIT 1',
+        [udise, month, year]
+      );
+      const existing = existingRows[0] || null;
+
+      if (existing) {
+        Object.keys(lockMap).forEach(fn => {
+          if (lockMap[fn] && existing[fn] !== null && existing[fn] !== undefined) {
+            b[fn] = existing[fn];
+          }
+        });
+      }
+    } catch (lockCheckErr) {
+      console.warn('Could not enforce field lock checks on monthly report save:', lockCheckErr.message);
+    }
+
     const fundDetailsObj = {
       material_cost_bv: { open: toFloat(b.cc_bv_open), recv: toFloat(b.cc_bv_recv), exp: toFloat(b.cc_bv_exp), close: toFloat(b.cc_bv_close) },
       material_cost_p: { open: toFloat(b.cc_p_open), recv: toFloat(b.cc_p_recv), exp: toFloat(b.cc_p_exp), close: toFloat(b.cc_p_close) },
@@ -1228,7 +1355,10 @@ async function handleSaveMonthlyReport(req, res) {
         rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
         rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
         rice_up_open, rice_up_recv, rice_up_cons, rice_up_close,
-        passbook_photo_file_id, passbook_photo_url
+        passbook_photo_file_id, passbook_photo_url,
+        ifa_boys, ifa_girls, rbsk_screened, rbsk_referred,
+        inspection_done, insp_task_force, insp_district_officials, insp_block_officials, insp_smc_members,
+        untoward_incidents
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, $9, $10, $11, $12, $13, $14, $15,
@@ -1248,7 +1378,10 @@ async function handleSaveMonthlyReport(req, res) {
         $68, $69, $70, $71,
         $72, $73, $74, $75,
         $76, $77, $78, $79,
-        $80, $81
+        $80, $81,
+        $82, $83, $84, $85,
+        $86, $87, $88, $89, $90,
+        $91
       )
       ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
         school_name = EXCLUDED.school_name,
@@ -1280,7 +1413,17 @@ async function handleSaveMonthlyReport(req, res) {
         rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
         rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close,
         passbook_photo_file_id = COALESCE(EXCLUDED.passbook_photo_file_id, public.mdm_monthly_report.passbook_photo_file_id),
-        passbook_photo_url = COALESCE(EXCLUDED.passbook_photo_url, public.mdm_monthly_report.passbook_photo_url);
+        passbook_photo_url = COALESCE(EXCLUDED.passbook_photo_url, public.mdm_monthly_report.passbook_photo_url),
+        ifa_boys = EXCLUDED.ifa_boys,
+        ifa_girls = EXCLUDED.ifa_girls,
+        rbsk_screened = EXCLUDED.rbsk_screened,
+        rbsk_referred = EXCLUDED.rbsk_referred,
+        inspection_done = EXCLUDED.inspection_done,
+        insp_task_force = EXCLUDED.insp_task_force,
+        insp_district_officials = EXCLUDED.insp_district_officials,
+        insp_block_officials = EXCLUDED.insp_block_officials,
+        insp_smc_members = EXCLUDED.insp_smc_members,
+        untoward_incidents = EXCLUDED.untoward_incidents;
     `;
 
     const values = [
@@ -1305,7 +1448,17 @@ async function handleSaveMonthlyReport(req, res) {
       toFloat(b.rice_p_open), toFloat(b.rice_p_recv), toFloat(b.rice_p_cons), toFloat(b.rice_p_close),
       toFloat(b.rice_up_open), toFloat(b.rice_up_recv), toFloat(b.rice_up_cons), toFloat(b.rice_up_close),
       b.passbook_photo_file_id ? String(b.passbook_photo_file_id).trim() : null,
-      b.passbook_photo_url ? String(b.passbook_photo_url).trim() : null
+      b.passbook_photo_url ? String(b.passbook_photo_url).trim() : null,
+      toInt(b.ifa_boys),
+      toInt(b.ifa_girls),
+      toInt(b.rbsk_screened),
+      toInt(b.rbsk_referred),
+      String(b.inspection_done || 'No').trim(),
+      toInt(b.insp_task_force),
+      toInt(b.insp_district_officials),
+      toInt(b.insp_block_officials),
+      toInt(b.insp_smc_members),
+      toInt(b.untoward_incidents)
     ];
 
     try {
@@ -1439,8 +1592,9 @@ async function handleUploadPassbookPhoto(req, res) {
     let fileUrl = null;
 
     const normalizedExt = isPng ? 'png' : (isWebp ? 'webp' : 'jpg');
-    const timestampStr = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
-    const driveFileName = `Passbook_${udise}_${month}_${year}_${timestampStr}.${normalizedExt}`;
+    // Save file as school name.format (e.g., "ABADPARA PRIMARY SCHOOL.jpg")
+    const sanitizedSchoolName = (schoolName || `School_${udise}`).replace(/[\\/:*?"<>|]/g, '-').trim();
+    const driveFileName = `${sanitizedSchoolName}.${normalizedExt}`;
 
     const hasServiceAccount = !!(
       process.env.GOOGLE_SERVICE_ACCOUNT_KEY || 
@@ -1480,7 +1634,7 @@ async function handleUploadPassbookPhoto(req, res) {
         token: gasToken,
         fileBase64: buffer.toString('base64'),
         mimeType: isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg'),
-        fileName: fileName,
+        fileName: driveFileName,
         udise: udise,
         month: month,
         year: year,
@@ -1522,7 +1676,7 @@ async function handleUploadPassbookPhoto(req, res) {
       const photoMetaObj = {
         file_id: fileId,
         file_url: fileUrl,
-        file_name: fileName,
+        file_name: driveFileName,
         uploaded_at: new Date().toISOString()
       };
 
@@ -1579,7 +1733,7 @@ async function handleUploadPassbookPhoto(req, res) {
           file_url = EXCLUDED.file_url,
           submission_status = 'Submitted',
           updated_at = NOW();
-      `, [udise, schoolName, fileId, fileName, fileUrl]);
+      `, [udise, schoolName, fileId, driveFileName, fileUrl]);
     } catch (dbErr) {
       console.error('Warning: could not update Supabase photo columns:', dbErr.message);
     }
@@ -1589,7 +1743,7 @@ async function handleUploadPassbookPhoto(req, res) {
       message: 'Bank passbook photo saved directly to Google Drive successfully.',
       fileId: fileId,
       fileUrl: fileUrl,
-      fileName: fileName,
+      fileName: driveFileName,
       submissionStatus: 'Submitted',
       submittedAt: new Date().toISOString()
     });
