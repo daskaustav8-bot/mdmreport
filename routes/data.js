@@ -5,7 +5,7 @@ const path = require('path');
 const multer = require('multer');
 const { pool, getSchools, getSchoolsMap, clearSchoolsCache } = require('../db/supabase');
 const { requireAuth } = require('../middleware/auth');
-const { uploadToGoogleDriveDirect } = require('../services/googleDriveService');
+const { uploadToGoogleDriveDirect, getGoogleAccessToken } = require('../services/googleDriveService');
 const {
   getSafeGoogleDriveStatus,
   verifyGoogleDriveConnection,
@@ -1849,6 +1849,39 @@ router.get(['/monthly-report/passbook-status', '/api/monthly-report/passbook-sta
   } catch (err) {
     console.error('Error fetching passbook status:', err.message);
     return res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// Authenticated Stream for Passbook Image from Google Drive (for thumbnails and previews)
+router.get(['/monthly-report/passbook-image', '/api/monthly-report/passbook-image'], async (req, res) => {
+  try {
+    const fileId = String(req.query.file_id || req.query.id || '').trim();
+    if (!fileId) {
+      return res.status(400).send('File ID is required');
+    }
+
+    const accessToken = await getGoogleAccessToken();
+    const driveMediaUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media&supportsAllDrives=true`;
+
+    const gRes = await fetch(driveMediaUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    if (!gRes.ok) {
+      return res.status(gRes.status >= 400 && gRes.status < 500 ? gRes.status : 502).send('Image unavailable');
+    }
+
+    const contentType = gRes.headers.get('content-type') || 'image/jpeg';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+
+    const arrayBuffer = await gRes.arrayBuffer();
+    return res.send(Buffer.from(arrayBuffer));
+  } catch (err) {
+    console.error('Error streaming passbook image:', err.message);
+    return res.status(500).send('Error loading image');
   }
 });
 

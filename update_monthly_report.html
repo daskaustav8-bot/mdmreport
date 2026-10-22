@@ -3396,12 +3396,13 @@
                                     </div>
                                 </div>
                                 <div class="verif-label photo-details">
-                                    <div class="photo-heading">Bank Passbook Photo <span class="req-star">*</span></div>
+                                    <div class="photo-heading-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <div class="photo-heading">Bank Passbook Photo <span class="req-star">*</span></div>
+                                        <span id="photoStatusBadge" style="background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; display:none; align-items:center; gap:4px; white-space:nowrap;"><i class="fa-solid fa-circle-check"></i> Submitted</span>
+                                    </div>
                                     <div class="photo-meta">
                                         <span class="photo-filename" id="photoFileName" title="">passbook.jpg</span>
                                         <span id="photoFileSize" style="display:none;">0 KB</span>
-                                        <span id="photoStatusBadge" style="background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; margin-left: 10px; display:none;"><i class="fa-solid fa-circle-check"></i> Submitted</span>
-                                        <span id="photoSubmittedTime" style="font-size:11px; color:#64748b; display:none;"></span>
                                     </div>
                                 </div>
                             </div>
@@ -4350,7 +4351,6 @@
                     $('#photoUploadingState').hide();
                     $('#photoEmptyState').show();
                     $('#photoStatusBadge').hide();
-                    $('#photoSubmittedTime').hide();
                     $('#btnRetryPhoto').hide();
                     return;
                 }
@@ -4366,33 +4366,22 @@
                 if (fileData.dataUrl) {
                     $('#photoThumbImg').attr('src', fileData.dataUrl).show();
                 } else if (fileData.fileId) {
-                    $('#photoThumbImg').attr('src', 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(fileData.fileId) + '&sz=w120').show();
+                    $('#photoThumbImg').attr('src', '/api/monthly-report/passbook-image?file_id=' + encodeURIComponent(fileData.fileId)).show();
                 }
 
                 if (fileData.status === 'Submitted' || fileData.fileId) {
                     $('#photoStatusBadge')
                         .html('<i class="fa-solid fa-circle-check"></i> Submitted')
-                        .attr('style', 'background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; margin-left: 10px; display:inline-flex; align-items:center; gap:4px;');
+                        .attr('style', 'background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; display:inline-flex; align-items:center; gap:4px; white-space:nowrap;');
                     $('#btnRetryPhoto').hide();
                 } else if (fileData.status === 'Failed') {
                     $('#photoStatusBadge')
                         .html('<i class="fa-solid fa-triangle-exclamation"></i> Upload Failed')
-                        .attr('style', 'background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #fecaca; margin-left: 10px; display:inline-flex; align-items:center; gap:4px;');
+                        .attr('style', 'background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #fecaca; display:inline-flex; align-items:center; gap:4px; white-space:nowrap;');
                     $('#btnRetryPhoto').show();
                 } else {
                     $('#photoStatusBadge').hide();
                     $('#btnRetryPhoto').hide();
-                }
-
-                if (fileData.submittedAt) {
-                    try {
-                        const d = new Date(fileData.submittedAt);
-                        $('#photoSubmittedTime').text('Submitted: ' + d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })).css('display', 'inline');
-                    } catch (e) {
-                        $('#photoSubmittedTime').hide();
-                    }
-                } else {
-                    $('#photoSubmittedTime').hide();
                 }
 
                 $('#photoUploadingState').hide();
@@ -5489,9 +5478,10 @@
                     $('#modalPdfFrame').hide();
                     $('#modalImg').attr('src', currentPassbookFile.dataUrl).show();
                 } else if (currentPassbookFile.fileId) {
-                    $('#modalDownloadBtn').attr('href', '#');
+                    const streamUrl = '/api/monthly-report/passbook-image?file_id=' + encodeURIComponent(currentPassbookFile.fileId);
+                    $('#modalDownloadBtn').attr('href', streamUrl);
                     $('#modalPdfFrame').hide();
-                    $('#modalImg').attr('src', 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(currentPassbookFile.fileId) + '&sz=w1000').show();
+                    $('#modalImg').attr('src', streamUrl).show();
                 }
 
                 $('#photoModal').fadeIn(150);
@@ -5740,6 +5730,48 @@
                 });
             }
 
+            function fetchSchoolPreviousPassbook(udise, month, year) {
+                if (!udise) return;
+                $.ajax({
+                    url: '/api/monthly-report/passbook-status',
+                    type: 'GET',
+                    data: { school_id: udise },
+                    dataType: 'json',
+                    success: function (pbRes) {
+                        if (pbRes && pbRes.status === 'success' && pbRes.submission && pbRes.submission.drive_file_id) {
+                            const sub = pbRes.submission;
+                            currentPassbookFile = {
+                                fileId: sub.drive_file_id,
+                                fileUrl: sub.file_url || ('https://drive.google.com/file/d/' + sub.drive_file_id + '/view'),
+                                name: getFormattedPassbookName(sub.file_name),
+                                size: 0,
+                                dataUrl: null,
+                                status: sub.submission_status || 'Submitted',
+                                uploadedToDrive: true
+                            };
+                            setPhotoUI(currentPassbookFile);
+                        } else {
+                            PassbookStore.get(udise, month, year).then(savedPhoto => {
+                                if (savedPhoto && (savedPhoto.fileId || savedPhoto.dataUrl)) {
+                                    setPhotoUI(savedPhoto);
+                                } else {
+                                    setPhotoUI(null);
+                                }
+                            }).catch(() => setPhotoUI(null));
+                        }
+                    },
+                    error: function () {
+                        PassbookStore.get(udise, month, year).then(savedPhoto => {
+                            if (savedPhoto && (savedPhoto.fileId || savedPhoto.dataUrl)) {
+                                setPhotoUI(savedPhoto);
+                            } else {
+                                setPhotoUI(null);
+                            }
+                        }).catch(() => setPhotoUI(null));
+                    }
+                });
+            }
+
             function loadSchoolMonthlyData() {
                 const udise = $('#selectSchool').val();
                 const month = $('#selectMonth').val();
@@ -5849,45 +5881,11 @@
                                         size: (fj.passbook_photo && fj.passbook_photo.file_size) || 0,
                                         dataUrl: null,
                                         status: 'Submitted',
-                                        submittedAt: (fj.passbook_photo && fj.passbook_photo.uploaded_at) || d.created_at || null,
                                         uploadedToDrive: true
                                     };
                                     setPhotoUI(currentPassbookFile);
                                 } else {
-                                    // Check authoritative bank_passbook_submissions table
-                                    $.ajax({
-                                        url: '/api/monthly-report/passbook-status',
-                                        type: 'GET',
-                                        data: { school_id: udise },
-                                        dataType: 'json',
-                                        success: function (pbRes) {
-                                            if (pbRes && pbRes.status === 'success' && pbRes.submission && pbRes.submission.drive_file_id) {
-                                                const sub = pbRes.submission;
-                                                currentPassbookFile = {
-                                                    fileId: sub.drive_file_id,
-                                                    fileUrl: sub.file_url || ('https://drive.google.com/file/d/' + sub.drive_file_id + '/view'),
-                                                    name: getFormattedPassbookName(sub.file_name),
-                                                    size: 0,
-                                                    dataUrl: null,
-                                                    status: sub.submission_status || 'Submitted',
-                                                    submittedAt: sub.submitted_at,
-                                                    uploadedToDrive: true
-                                                };
-                                                setPhotoUI(currentPassbookFile);
-                                            } else {
-                                                PassbookStore.get(udise, month, year).then(savedPhoto => {
-                                                    if (savedPhoto && (savedPhoto.fileId || savedPhoto.dataUrl)) {
-                                                        setPhotoUI(savedPhoto);
-                                                    } else {
-                                                        setPhotoUI(null);
-                                                    }
-                                                });
-                                            }
-                                        },
-                                        error: function () {
-                                            setPhotoUI(null);
-                                        }
-                                    });
+                                    fetchSchoolPreviousPassbook(udise, month, year);
                                 }
                                 const getVal = (col, grp, sub) => {
                                     if (d[col] !== undefined && d[col] !== null && d[col] !== '') return d[col];
@@ -6046,6 +6044,7 @@
                                 $('#untoward_incidents').val(d.untoward_incidents != null ? d.untoward_incidents : 0);
                             } else {
                                 setDefaultBankDate();
+                                fetchSchoolPreviousPassbook(udise, month, year);
                             }
 
                             $('.form-section').fadeIn();
@@ -6054,6 +6053,7 @@
                         },
                         error: function (xhr) {
                             setDefaultBankDate();
+                            fetchSchoolPreviousPassbook(udise, month, year);
                             $('.form-section').fadeIn();
                             $('#actionBar').fadeIn();
                             applySectionAccessLocks(udise, isPrimary, null);
