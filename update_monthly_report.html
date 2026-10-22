@@ -4366,7 +4366,9 @@
                 }
 
                 if (fileData.status === 'Submitted' || fileData.fileId) {
-                    $('#photoStatusBadge').css('display', 'inline-flex');
+                    $('#photoStatusBadge')
+                        .html('<i class="fa-solid fa-circle-check"></i> Submitted')
+                        .attr('style', 'background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; margin-left: 10px; display:inline-flex; align-items:center; gap:4px;');
                 } else {
                     $('#photoStatusBadge').hide();
                 }
@@ -4387,7 +4389,469 @@
                 $('#photoPreviewCard').css('display', 'flex');
             }
 
-            function handleFileSelect(file) {
+            // =========================================================
+            // AUTOMATIC BANK PASSBOOK PHOTO ENHANCEMENT ENGINE
+            // (Client-side Canvas: Perspective, Deskew, Shadow Removal,
+            //  Auto-Levels, Readability Sharpening & Color Preservation)
+            // =========================================================
+            let isPassbookProcessingOrUploading = false;
+
+            async function enhancePassbookPhoto(file, dataUrl) {
+                // Ensure browser canvas support
+                if (!window.HTMLCanvasElement) {
+                    throw new Error('HTML5 Canvas is not supported in this browser');
+                }
+
+                // 1. Load source image respecting EXIF orientation
+                const imgSource = await loadPassbookSourceImage(file, dataUrl);
+                const origW = imgSource.width;
+                const origH = imgSource.height;
+
+                if (!origW || !origH) {
+                    throw new Error('Invalid image dimensions');
+                }
+
+                // 2. Normalize resolution: cap max dimension at 2048px for smooth processing & memory safety
+                const maxDim = 2048;
+                let scale = 1.0;
+                if (Math.max(origW, origH) > maxDim) {
+                    scale = maxDim / Math.max(origW, origH);
+                }
+                const targetW = Math.max(100, Math.round(origW * scale));
+                const targetH = Math.max(100, Math.round(origH * scale));
+
+                // 3. Downscaled analysis canvas for fast deskew & boundary detection
+                const anaW = 320;
+                const anaH = Math.max(1, Math.round(320 * (targetH / targetW)));
+                const anaCanvas = document.createElement('canvas');
+                anaCanvas.width = anaW;
+                anaCanvas.height = anaH;
+                const anaCtx = anaCanvas.getContext('2d', { willReadFrequently: true });
+                anaCtx.drawImage(imgSource.source, 0, 0, anaW, anaH);
+                const anaImgData = anaCtx.getImageData(0, 0, anaW, anaH);
+                const anaPixels = anaImgData.data;
+
+                // Compute grayscale luminance buffer
+                const lum = new Uint8Array(anaW * anaH);
+                for (let i = 0, p = 0; i < anaPixels.length; i += 4, p++) {
+                    lum[p] = (anaPixels[i] * 77 + anaPixels[i + 1] * 150 + anaPixels[i + 2] * 29) >> 8;
+                }
+
+                // Detect rotation skew (range: -6 deg to +6 deg)
+                const deskewAngle = detectPassbookSkewAngle(lum, anaW, anaH);
+
+                // Detect dark borders / desk background for safe crop
+                const cropBox = detectPassbookDocumentCrop(lum, anaW, anaH);
+
+                // 4. Render deskewed and cropped passbook onto primary canvas
+                let srcCropX = 0, srcCropY = 0, srcCropW = origW, srcCropH = origH;
+                let cropW = targetW, cropH = targetH;
+
+                if (cropBox) {
+                    srcCropX = Math.round(cropBox.normLeft * origW);
+                    srcCropY = Math.round(cropBox.normTop * origH);
+                    srcCropW = Math.max(100, Math.round(cropBox.normWidth * origW));
+                    srcCropH = Math.max(100, Math.round(cropBox.normHeight * origH));
+
+                    cropW = Math.max(100, Math.round(cropBox.normWidth * targetW));
+                    cropH = Math.max(100, Math.round(cropBox.normHeight * targetH));
+                }
+
+                const procCanvas = document.createElement('canvas');
+                procCanvas.width = cropW;
+                procCanvas.height = cropH;
+                const procCtx = procCanvas.getContext('2d', { willReadFrequently: true });
+
+                procCtx.save();
+                if (deskewAngle !== 0) {
+                    procCtx.translate(cropW / 2, cropH / 2);
+                    procCtx.rotate(deskewAngle * Math.PI / 180);
+                    procCtx.translate(-cropW / 2, -cropH / 2);
+                }
+                procCtx.drawImage(imgSource.source, srcCropX, srcCropY, srcCropW, srcCropH, 0, 0, cropW, cropH);
+                procCtx.restore();
+
+                // Clean up source bitmap if created
+                if (imgSource.isBitmap && typeof imgSource.source.close === 'function') {
+                    try { imgSource.source.close(); } catch (e) {}
+                }
+
+                // 5. Adaptive Background Illumination Normalization (Shadow removal)
+                // Downscale to coarse grid to estimate local paper brightness (ignoring dark text dots)
+                const bgW = 80;
+                const bgH = Math.max(1, Math.round(80 * (cropH / cropW)));
+                const bgCanvas = document.createElement('canvas');
+                bgCanvas.width = bgW;
+                bgCanvas.height = bgH;
+                const bgCtx = bgCanvas.getContext('2d', { willReadFrequently: true });
+                bgCtx.drawImage(procCanvas, 0, 0, bgW, bgH);
+
+                const bgData = bgCtx.getImageData(0, 0, bgW, bgH);
+                const bgPixels = bgData.data;
+                const bgLum = new Uint8Array(bgW * bgH);
+                for (let i = 0, p = 0; i < bgPixels.length; i += 4, p++) {
+                    bgLum[p] = (bgPixels[i] * 77 + bgPixels[i + 1] * 150 + bgPixels[i + 2] * 29) >> 8;
+                }
+
+                // Local 3x3 max filter on coarse grid to extract paper background luminance
+                const bgFiltered = new Uint8Array(bgW * bgH);
+                for (let by = 0; by < bgH; by++) {
+                    for (let bx = 0; bx < bgW; bx++) {
+                        let maxL = 0;
+                        for (let dy = -1; dy <= 1; dy++) {
+                            const ny = Math.min(bgH - 1, Math.max(0, by + dy));
+                            for (let dx = -1; dx <= 1; dx++) {
+                                const nx = Math.min(bgW - 1, Math.max(0, bx + dx));
+                                const val = bgLum[ny * bgW + nx];
+                                if (val > maxL) maxL = val;
+                            }
+                        }
+                        bgFiltered[by * bgW + bx] = maxL;
+                    }
+                }
+
+                for (let i = 0, p = 0; i < bgPixels.length; i += 4, p++) {
+                    const v = bgFiltered[p];
+                    bgPixels[i] = v;
+                    bgPixels[i + 1] = v;
+                    bgPixels[i + 2] = v;
+                    bgPixels[i + 3] = 255;
+                }
+                bgCtx.putImageData(bgData, 0, 0);
+
+                // Upscale background map to full crop size with hardware bilinear filtering
+                const illumCanvas = document.createElement('canvas');
+                illumCanvas.width = cropW;
+                illumCanvas.height = cropH;
+                const illumCtx = illumCanvas.getContext('2d', { willReadFrequently: true });
+                illumCtx.imageSmoothingEnabled = true;
+                illumCtx.imageSmoothingQuality = 'high';
+                illumCtx.drawImage(bgCanvas, 0, 0, cropW, cropH);
+                const illumData = illumCtx.getImageData(0, 0, cropW, cropH).data;
+
+                // 6. Contrast adjustment & Dynamic Range (Auto-Levels)
+                const procImgData = procCtx.getImageData(0, 0, cropW, cropH);
+                const pixels = procImgData.data;
+                const totalPixels = cropW * cropH;
+
+                // Sample luminance histogram to detect dark text anchor
+                const hist = new Int32Array(256);
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const y = (pixels[i] * 77 + pixels[i + 1] * 150 + pixels[i + 2] * 29) >> 8;
+                    hist[y]++;
+                }
+
+                const p2Threshold = totalPixels * 0.02;
+                let accum = 0;
+                let darkAnchor = 0;
+                for (let j = 0; j < 256; j++) {
+                    accum += hist[j];
+                    if (accum >= p2Threshold) {
+                        darkAnchor = j;
+                        break;
+                    }
+                }
+                darkAnchor = Math.min(55, darkAnchor);
+
+                const targetPaper = 246;
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const bgVal = Math.max(35, illumData[i]);
+                    const gain = targetPaper / bgVal;
+
+                    let r = pixels[i] * gain;
+                    let g = pixels[i + 1] * gain;
+                    let b = pixels[i + 2] * gain;
+
+                    if (darkAnchor > 10) {
+                        const factor = 255 / (255 - darkAnchor);
+                        r = (r - darkAnchor) * factor;
+                        g = (g - darkAnchor) * factor;
+                        b = (b - darkAnchor) * factor;
+                    }
+
+                    pixels[i] = r < 0 ? 0 : (r > 255 ? 255 : r);
+                    pixels[i + 1] = g < 0 ? 0 : (g > 255 ? 255 : g);
+                    pixels[i + 2] = b < 0 ? 0 : (b > 255 ? 255 : b);
+                }
+
+                // 7. Unsharp Mask Sharpening (for dot-matrix text, stamps and handwriting)
+                const sharpCanvas = document.createElement('canvas');
+                sharpCanvas.width = cropW;
+                sharpCanvas.height = cropH;
+                const sharpCtx = sharpCanvas.getContext('2d');
+                const sharpImgData = sharpCtx.createImageData(cropW, cropH);
+                const sharpPixels = sharpImgData.data;
+
+                const rowStride = cropW * 4;
+                const amount = 0.32;
+                const centerWeight = 1.0 + 4 * amount;
+
+                // Copy top and bottom row edges unchanged
+                for (let x = 0; x < cropW; x++) {
+                    const topIdx = x * 4;
+                    const botIdx = ((cropH - 1) * cropW + x) * 4;
+                    sharpPixels[topIdx] = pixels[topIdx];
+                    sharpPixels[topIdx + 1] = pixels[topIdx + 1];
+                    sharpPixels[topIdx + 2] = pixels[topIdx + 2];
+                    sharpPixels[topIdx + 3] = 255;
+                    sharpPixels[botIdx] = pixels[botIdx];
+                    sharpPixels[botIdx + 1] = pixels[botIdx + 1];
+                    sharpPixels[botIdx + 2] = pixels[botIdx + 2];
+                    sharpPixels[botIdx + 3] = 255;
+                }
+
+                for (let y = 1; y < cropH - 1; y++) {
+                    const rowOffset = y * rowStride;
+                    for (let c = 0; c < 4; c++) {
+                        sharpPixels[rowOffset + c] = pixels[rowOffset + c];
+                        const rightIdx = rowOffset + (cropW - 1) * 4 + c;
+                        sharpPixels[rightIdx] = pixels[rightIdx];
+                    }
+                    for (let x = 1; x < cropW - 1; x++) {
+                        const idx = rowOffset + (x << 2);
+                        for (let c = 0; c < 3; c++) {
+                            const v = pixels[idx + c];
+                            const up = pixels[idx - rowStride + c];
+                            const down = pixels[idx + rowStride + c];
+                            const left = pixels[idx - 4 + c];
+                            const right = pixels[idx + 4 + c];
+                            const val = v * centerWeight - (up + down + left + right) * amount;
+                            sharpPixels[idx + c] = val < 0 ? 0 : (val > 255 ? 255 : val);
+                        }
+                        sharpPixels[idx + 3] = 255;
+                    }
+                }
+
+                sharpCtx.putImageData(sharpImgData, 0, 0);
+
+                // 8. Export to Blob and File
+                const enhancedBlob = await new Promise((resolve) => {
+                    sharpCanvas.toBlob(b => resolve(b), 'image/jpeg', 0.90);
+                });
+
+                if (!enhancedBlob || enhancedBlob.size === 0) {
+                    throw new Error('Canvas export resulted in an empty blob');
+                }
+
+                const enhancedDataUrl = sharpCanvas.toDataURL('image/jpeg', 0.90);
+                const outFileName = getFormattedPassbookName(file.name || 'passbook.jpg', 'jpg');
+                const enhancedFile = new File([enhancedBlob], outFileName, { type: 'image/jpeg' });
+
+                return {
+                    file: enhancedFile,
+                    dataUrl: enhancedDataUrl,
+                    enhanced: true,
+                    deskewAngle: deskewAngle,
+                    cropped: Boolean(cropBox)
+                };
+            }
+
+            function loadPassbookSourceImage(file, dataUrl) {
+                return new Promise((resolve, reject) => {
+                    if (typeof window.createImageBitmap === 'function' && file instanceof Blob) {
+                        window.createImageBitmap(file, { imageOrientation: 'from-image' })
+                            .then(bitmap => {
+                                resolve({ source: bitmap, width: bitmap.width, height: bitmap.height, isBitmap: true });
+                            })
+                            .catch(() => {
+                                loadViaHtmlImage(dataUrl, resolve, reject);
+                            });
+                    } else {
+                        loadViaHtmlImage(dataUrl, resolve, reject);
+                    }
+                });
+            }
+
+            function loadViaHtmlImage(src, resolve, reject) {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    resolve({ source: img, width: img.naturalWidth || img.width, height: img.naturalHeight || img.height, isBitmap: false });
+                };
+                img.onerror = () => reject(new Error('Failed to load passbook image into memory'));
+                img.src = src;
+            }
+
+            function detectPassbookSkewAngle(lum, anaW, anaH) {
+                function evalAngle(deg) {
+                    const rad = deg * Math.PI / 180;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    const cx = anaW * 0.5;
+                    const cy = anaH * 0.5;
+                    const yStart = Math.round(anaH * 0.2);
+                    const yEnd = Math.round(anaH * 0.8);
+                    const xStart = Math.round(anaW * 0.15);
+                    const xEnd = Math.round(anaW * 0.85);
+                    const numRows = yEnd - yStart;
+                    const numCols = xEnd - xStart;
+                    if (numRows <= 0 || numCols <= 0) return 0;
+
+                    let sumTotal = 0;
+                    const rowSums = new Float64Array(numRows);
+                    for (let r = 0; r < numRows; r++) {
+                        const y = yStart + r;
+                        let rSum = 0;
+                        for (let c = 0; c < numCols; c++) {
+                            const x = xStart + c;
+                            const rx = Math.round((x - cx) * cos - (y - cy) * sin + cx);
+                            const ry = Math.round((x - cx) * sin + (y - cy) * cos + cy);
+                            if (rx >= 0 && rx < anaW && ry >= 0 && ry < anaH) {
+                                rSum += lum[ry * anaW + rx];
+                            } else {
+                                rSum += 220;
+                            }
+                        }
+                        rowSums[r] = rSum;
+                        sumTotal += rSum;
+                    }
+                    const mean = sumTotal / numRows;
+                    let sumVar = 0;
+                    for (let r = 0; r < numRows; r++) {
+                        const diff = rowSums[r] - mean;
+                        sumVar += diff * diff;
+                    }
+                    return sumVar / numRows;
+                }
+
+                const var0 = evalAngle(0);
+                let maxVar = var0;
+                let bestDeg = 0;
+                for (let deg = -6; deg <= 6; deg += 1) {
+                    if (deg === 0) continue;
+                    const v = evalAngle(deg);
+                    if (v > maxVar) {
+                        maxVar = v;
+                        bestDeg = deg;
+                    }
+                }
+                if (bestDeg !== 0 && var0 > 0 && (maxVar / var0) > 1.10) {
+                    return -bestDeg;
+                }
+                return 0;
+            }
+
+            function detectPassbookDocumentCrop(lum, anaW, anaH) {
+                if (anaW < 60 || anaH < 60) return null;
+                const yStart = Math.round(anaH * 0.25);
+                const yEnd = Math.round(anaH * 0.75);
+                const xStart = Math.round(anaW * 0.25);
+                const xEnd = Math.round(anaW * 0.75);
+                let centerSum = 0, centerCount = 0;
+                for (let y = yStart; y <= yEnd; y++) {
+                    for (let x = xStart; x <= xEnd; x++) {
+                        centerSum += lum[y * anaW + x];
+                        centerCount++;
+                    }
+                }
+                const centerLum = centerSum / (centerCount || 1);
+
+                const maxCropX = Math.round(anaW * 0.16);
+                const maxCropY = Math.round(anaH * 0.16);
+                let cropTop = 0, cropBottom = anaH - 1, cropLeft = 0, cropRight = anaW - 1;
+
+                for (let y = 0; y < maxCropY; y++) {
+                    let rSum = 0;
+                    for (let x = xStart; x <= xEnd; x++) rSum += lum[y * anaW + x];
+                    if (centerLum - (rSum / (xEnd - xStart + 1)) > 40) cropTop = y;
+                    else break;
+                }
+                for (let y = anaH - 1; y >= anaH - maxCropY; y--) {
+                    let rSum = 0;
+                    for (let x = xStart; x <= xEnd; x++) rSum += lum[y * anaW + x];
+                    if (centerLum - (rSum / (xEnd - xStart + 1)) > 40) cropBottom = y;
+                    else break;
+                }
+                for (let x = 0; x < maxCropX; x++) {
+                    let cSum = 0;
+                    for (let y = yStart; y <= yEnd; y++) cSum += lum[y * anaW + x];
+                    if (centerLum - (cSum / (yEnd - yStart + 1)) > 40) cropLeft = x;
+                    else break;
+                }
+                for (let x = anaW - 1; x >= anaW - maxCropX; x--) {
+                    let cSum = 0;
+                    for (let y = yStart; y <= yEnd; y++) cSum += lum[y * anaW + x];
+                    if (centerLum - (cSum / (yEnd - yStart + 1)) > 40) cropRight = x;
+                    else break;
+                }
+
+                const cW = cropRight - cropLeft + 1;
+                const cH = cropBottom - cropTop + 1;
+                const areaRatio = (cW * cH) / (anaW * anaH);
+                if (areaRatio < 0.70 || (cropLeft === 0 && cropTop === 0 && cropRight === anaW - 1 && cropBottom === anaH - 1)) {
+                    return null;
+                }
+
+                const padX = Math.round(anaW * 0.025);
+                const padY = Math.round(anaH * 0.025);
+                const sLeft = Math.max(0, cropLeft - padX);
+                const sTop = Math.max(0, cropTop - padY);
+                const sRight = Math.min(anaW - 1, cropRight + padX);
+                const sBottom = Math.min(anaH - 1, cropBottom + padY);
+
+                return {
+                    normLeft: sLeft / anaW,
+                    normTop: sTop / anaH,
+                    normWidth: (sRight - sLeft + 1) / anaW,
+                    normHeight: (sBottom - sTop + 1) / anaH
+                };
+            }
+
+            async function processAndUploadPassbookPhoto(originalFile, originalDataUrl, udise, month, year) {
+                if (isPassbookProcessingOrUploading) return;
+                isPassbookProcessingOrUploading = true;
+
+                // 1. Small, unobtrusive status indicator: "Enhancing photo..."
+                $('#passbookPhotoContainer').removeClass('photo-error');
+                $('#photoEmptyState').hide();
+                $('#photoPreviewCard').hide();
+                $('#photoUploadingState').css('display', 'flex');
+                $('#photoUploadProgressText').text('Enhancing photo...');
+                $('#btnSave').prop('disabled', true);
+                $('#btnChoosePhoto').prop('disabled', true);
+
+                // Small tick to let browser paint DOM
+                await new Promise(r => setTimeout(r, 60));
+
+                let finalFile = originalFile;
+                let finalDataUrl = originalDataUrl;
+
+                try {
+                    // Timeout wrapper: 6 seconds max
+                    const enhancePromise = enhancePassbookPhoto(originalFile, originalDataUrl);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Enhancement timed out')), 6000)
+                    );
+                    const enhanced = await Promise.race([enhancePromise, timeoutPromise]);
+
+                    if (enhanced && enhanced.file && enhanced.dataUrl) {
+                        finalFile = enhanced.file;
+                        finalDataUrl = enhanced.dataUrl;
+                        console.log('Bank passbook photo auto-enhanced successfully:', {
+                            originalSize: originalFile.size,
+                            enhancedSize: finalFile.size,
+                            deskewAngle: enhanced.deskewAngle,
+                            cropped: enhanced.cropped
+                        });
+                        $('#photoUploadProgressText').text('Uploading enhanced photo...');
+                    } else {
+                        $('#photoUploadProgressText').text('Uploading photo...');
+                    }
+                } catch (err) {
+                    console.warn('Auto-enhancement failed or timed out, falling back to original captured photo:', err);
+                    finalFile = originalFile;
+                    finalDataUrl = originalDataUrl;
+                    $('#photoUploadProgressText').text('Uploading photo...');
+                }
+
+                // Brief pause so user sees progress transition
+                await new Promise(r => setTimeout(r, 40));
+
+                // Proceed with existing upload flow
+                uploadPassbookPhotoToDrive(finalFile, finalDataUrl, udise, month, year);
+            }
+
+            async function handleFileSelect(file) {
                 if (!file) return;
 
                 const udise = $('#selectSchool').val();
@@ -4448,7 +4912,7 @@
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     const localDataUrl = e.target.result;
-                    uploadPassbookPhotoToDrive(file, localDataUrl, udise, month, year);
+                    processAndUploadPassbookPhoto(file, localDataUrl, udise, month, year);
                 };
                 reader.readAsDataURL(file);
             }
@@ -4456,12 +4920,15 @@
             function uploadPassbookPhotoToDrive(file, localDataUrl, udise, month, year) {
                 const school = schools.find(s => s.id === udise);
                 const schoolName = school ? (school.schoolNameOnly || school.text) : ('School (' + udise + ')');
+                const formattedName = getFormattedPassbookName(file.name);
 
                 // Prevent duplicate submissions while upload is processing
                 $('#photoEmptyState').hide();
                 $('#photoPreviewCard').hide();
                 $('#photoUploadingState').css('display', 'flex');
-                $('#photoUploadProgressText').text('Saving ' + file.name + ' to Google Drive...');
+                if (!$('#photoUploadProgressText').text().startsWith('Uploading')) {
+                    $('#photoUploadProgressText').text('Uploading photo...');
+                }
                 $('#btnSave').prop('disabled', true);
                 $('#btnChoosePhoto').prop('disabled', true);
 
@@ -4479,7 +4946,8 @@
                     processData: false,
                     contentType: false,
                     dataType: 'json',
-                                        success: function (resp) {
+                    success: function (resp) {
+                        isPassbookProcessingOrUploading = false;
                         $('#photoUploadingState').hide();
                         $('#btnSave').prop('disabled', false);
                         $('#btnChoosePhoto').prop('disabled', false);
@@ -4488,7 +4956,7 @@
                             currentPassbookFile = {
                                 fileId: resp.fileId,
                                 fileUrl: resp.fileUrl || ('https://drive.google.com/file/d/' + resp.fileId + '/view'),
-                                name: resp.fileName || file.name,
+                                name: resp.fileName || formattedName,
                                 size: file.size,
                                 dataUrl: localDataUrl,
                                 status: 'Submitted',
@@ -4496,15 +4964,9 @@
                                 uploadedToDrive: true
                             };
 
+                            // Update to standard Submitted state
                             setPhotoUI(currentPassbookFile);
                             PassbookStore.save(udise, month, year, currentPassbookFile);
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Bank Passbook Photo Submitted!',
-                                html: 'The passbook photo has been uploaded to Google Drive and saved to database successfully.<br><div style="margin-top:8px; font-size:12px; color:#475569;">Status: <b style="color:#16a34a;">Submitted</b><br>Drive File ID: <code>' + resp.fileId + '</code></div>',
-                                confirmButtonColor: '#0d9488'
-                            });
                         } else {
                             currentPassbookFile = null;
                             setPhotoUI(null);
@@ -4517,6 +4979,7 @@
                         }
                     },
                     error: function (xhr) {
+                        isPassbookProcessingOrUploading = false;
                         $('#photoUploadingState').hide();
                         $('#btnSave').prop('disabled', false);
                         $('#btnChoosePhoto').prop('disabled', false);
@@ -4696,12 +5159,26 @@
                 $flash.addClass('camera-flash-active');
                 setTimeout(() => $flash.removeClass('camera-flash-active'), 120);
 
-                canvas.width = videoEl.videoWidth;
-                canvas.height = videoEl.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                let w = videoEl.videoWidth;
+                let h = videoEl.videoHeight;
+                if (w > 1600 || h > 1600) {
+                    if (w > h) {
+                        h = Math.round((h * 1600) / w);
+                        w = 1600;
+                    } else {
+                        w = Math.round((w * 1600) / h);
+                        h = 1600;
+                    }
+                }
 
-                capturedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(videoEl, 0, 0, w, h);
+
+                capturedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
                 $('#cameraCapturedImg').attr('src', capturedDataUrl).show();
                 $('#cameraVideo').hide();
                 $('#cameraLiveControls').hide();
@@ -4709,7 +5186,7 @@
 
                 canvas.toBlob(function (blob) {
                     capturedBlob = blob;
-                }, 'image/jpeg', 0.92);
+                }, 'image/jpeg', 0.82);
             }
 
             function retakePassbookPhoto() {
@@ -4750,7 +5227,7 @@
                 const photoFile = new File([capturedBlob], fileName, { type: 'image/jpeg' });
 
                 closeCameraModal();
-                uploadPassbookPhotoToDrive(photoFile, capturedDataUrl, udise, month, year);
+                processAndUploadPassbookPhoto(photoFile, capturedDataUrl, udise, month, year);
             }
 
             function closeCameraModal() {
@@ -5563,7 +6040,7 @@
                     return;
                 }
 
-                if ($('#photoUploadingState').is(':visible')) {
+                if (isUploadingPassbook || $('#photoUploadingState').is(':visible')) {
                     Swal.fire({
                         icon: 'info',
                         title: 'Photo Uploading...',

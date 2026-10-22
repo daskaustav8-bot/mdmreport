@@ -1696,36 +1696,9 @@ async function handleUploadPassbookPhoto(req, res) {
             )
         WHERE u_dise = $4 AND LOWER(month_name) = LOWER($5) AND year = $6
       `;
-      const updateRes = await pool.query(updateQuery, [fileId, fileUrl, JSON.stringify(photoMetaObj), udise, month, year]);
-
-      if (updateRes.rowCount === 0) {
-        const circleName = master.circle_name || 'N/A';
-        const gpName = master.gp_name || 'N/A';
-        const insertQuery = `
-          INSERT INTO public.mdm_monthly_report (
-            month_name, year, u_dise, school_name, circle_name, gp_name,
-            passbook_photo_file_id, passbook_photo_url, fund_details_json
-          ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9
-          )
-          ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
-            passbook_photo_file_id = EXCLUDED.passbook_photo_file_id,
-            passbook_photo_url = EXCLUDED.passbook_photo_url,
-            fund_details_json = jsonb_set(
-              COALESCE(public.mdm_monthly_report.fund_details_json, '{}'::jsonb),
-              '{passbook_photo}',
-              $10::jsonb
-            )
-        `;
-        await pool.query(insertQuery, [
-          month, year, udise, schoolName, circleName, gpName,
-          fileId, fileUrl, JSON.stringify({ passbook_photo: photoMetaObj }),
-          JSON.stringify(photoMetaObj)
-        ]);
-      }
 
       // Upsert authoritative bank_passbook_submissions table
-      await pool.query(`
+      const trackerQuery = `
         INSERT INTO public.bank_passbook_submissions (
           school_id, school_name, drive_file_id, file_name, file_url, submission_status, submitted_at, updated_at
         ) VALUES (
@@ -1738,7 +1711,41 @@ async function handleUploadPassbookPhoto(req, res) {
           file_url = EXCLUDED.file_url,
           submission_status = 'Submitted',
           updated_at = NOW();
-      `, [udise, schoolName, fileId, driveFileName, fileUrl]);
+      `;
+
+      const updateMdmPromise = pool.query(updateQuery, [fileId, fileUrl, JSON.stringify(photoMetaObj), udise, month, year])
+        .then(async (updateRes) => {
+          if (updateRes.rowCount === 0) {
+            const circleName = master.circle_name || 'N/A';
+            const gpName = master.gp_name || 'N/A';
+            const insertQuery = `
+              INSERT INTO public.mdm_monthly_report (
+                month_name, year, u_dise, school_name, circle_name, gp_name,
+                passbook_photo_file_id, passbook_photo_url, fund_details_json
+              ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9
+              )
+              ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
+                passbook_photo_file_id = EXCLUDED.passbook_photo_file_id,
+                passbook_photo_url = EXCLUDED.passbook_photo_url,
+                fund_details_json = jsonb_set(
+                  COALESCE(public.mdm_monthly_report.fund_details_json, '{}'::jsonb),
+                  '{passbook_photo}',
+                  $10::jsonb
+                )
+            `;
+            await pool.query(insertQuery, [
+              month, year, udise, schoolName, circleName, gpName,
+              fileId, fileUrl, JSON.stringify({ passbook_photo: photoMetaObj }),
+              JSON.stringify(photoMetaObj)
+            ]);
+          }
+        });
+
+      await Promise.all([
+        updateMdmPromise,
+        pool.query(trackerQuery, [udise, schoolName, fileId, driveFileName, fileUrl])
+      ]);
     } catch (dbErr) {
       console.error('Warning: could not update Supabase photo columns:', dbErr.message);
     }
