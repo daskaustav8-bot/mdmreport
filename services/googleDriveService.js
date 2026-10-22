@@ -1,9 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-
-// Target designated Google Drive folder for Bank Passbook Imgs
-const DEFAULT_DRIVE_FOLDER_ID = '1-RN90axSxvIkYQMIrCp9BESAbw_ty2m6';
+const {
+  getDecryptedRefreshToken,
+  updateGoogleDriveTokenStatus,
+  migrateFromEnvIfEmpty
+} = require('./googleDriveTokenManager');
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -19,8 +21,9 @@ function resetGoogleTokenCache() {
 /**
  * Obtain Google OAuth2 Access Token
  * Supports:
- * 1. Google Service Account (GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_SERVICE_ACCOUNT_KEY, or GOOGLE_SERVICE_ACCOUNT_JSON, or google-service-account.json file)
- * 2. Google OAuth2 Refresh Token (GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN)
+ * 1. Supabase-Stored Encrypted Refresh Token (AES-256-GCM) with client credentials
+ * 2. Safe one-time migration fallback from GOOGLE_REFRESH_TOKEN env
+ * 3. Google Service Account (for Google Workspace Shared Drives or standalone service testing)
  */
 async function getGoogleAccessToken() {
   const now = Date.now();
@@ -28,7 +31,59 @@ async function getGoogleAccessToken() {
     return cachedToken;
   }
 
-  // 1. Google Service Account (No user login prompt needed)
+  // 1. Supabase Encrypted OAuth2 Refresh Token (Primary source of truth)
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (clientId && clientSecret) {
+    let tokenData = null;
+    try {
+      tokenData = await getDecryptedRefreshToken();
+
+      // Check for safe one-time migration if Supabase table is empty
+      if (!tokenData) {
+        const migrationRes = await migrateFromEnvIfEmpty();
+        if (migrationRes && migrationRes.migrated) {
+          tokenData = await getDecryptedRefreshToken();
+        }
+      }
+    } catch (dbErr) {
+      console.warn('Could not retrieve OAuth token from Supabase:', dbErr.message);
+    }
+
+    if (tokenData && tokenData.refreshToken) {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: tokenData.refreshToken,
+          grant_type: 'refresh_token'
+        })
+      });
+
+      const tokenDataJson = await tokenRes.json();
+      if (!tokenRes.ok || !tokenDataJson.access_token) {
+        const errDesc = tokenDataJson.error_description || tokenDataJson.error || tokenRes.statusText;
+        const isInvalidGrant = tokenDataJson.error === 'invalid_grant' || (errDesc && errDesc.includes('invalid_grant'));
+        if (isInvalidGrant) {
+          await updateGoogleDriveTokenStatus({
+            status: 'reconnection_required',
+            lastError: `Google authorization has expired or was revoked (invalid_grant): ${errDesc}`
+          });
+          throw new Error('Google Drive authorization has expired or was revoked. Please reconnect in the Admin Dashboard.');
+        }
+        throw new Error(`Google OAuth auth failed: ${errDesc}`);
+      }
+
+      cachedToken = tokenDataJson.access_token;
+      tokenExpiresAt = now + (tokenDataJson.expires_in || 3600) * 1000;
+      return cachedToken;
+    }
+  }
+
+  // 2. Google Service Account Fallback (Recommended for Google Workspace Shared Drives)
   let serviceEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   let privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
 
@@ -101,34 +156,7 @@ async function getGoogleAccessToken() {
     return cachedToken;
   }
 
-  // 2. Google OAuth2 Client Refresh Token
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-
-  if (clientId && clientSecret && refreshToken) {
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: refreshToken,
-        grant_type: 'refresh_token'
-      })
-    });
-
-    const tokenData = await tokenRes.json();
-    if (!tokenRes.ok || !tokenData.access_token) {
-      throw new Error(`Google OAuth auth failed: ${tokenData.error_description || tokenData.error || tokenRes.statusText}`);
-    }
-
-    cachedToken = tokenData.access_token;
-    tokenExpiresAt = now + (tokenData.expires_in || 3600) * 1000;
-    return cachedToken;
-  }
-
-  throw new Error('Google Drive credentials not configured. Please set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_KEY (or place google-service-account.json in the project root).');
+  throw new Error('Google Drive credentials not configured. Please connect Google Drive in the Admin Dashboard or configure your credentials.');
 }
 
 /**
@@ -145,7 +173,7 @@ async function getGoogleAccessToken() {
  */
 async function uploadToGoogleDriveDirect({ buffer, mimeType, fileName, folderId, description }) {
   const accessToken = await getGoogleAccessToken();
-  const targetFolderId = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID || DEFAULT_DRIVE_FOLDER_ID;
+  const targetFolderId = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
 
   if (!targetFolderId) {
     throw new Error('GOOGLE_DRIVE_FOLDER_ID is not configured. Please specify the target Google Drive folder ID in your environment variables.');
@@ -173,7 +201,7 @@ async function uploadToGoogleDriveDirect({ buffer, mimeType, fileName, folderId,
     Buffer.from(closeDelimiter, 'utf8')
   ]);
 
-  const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink';
+  const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink&supportsAllDrives=true';
   const uploadRes = await fetch(uploadUrl, {
     method: 'POST',
     headers: {

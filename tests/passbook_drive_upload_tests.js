@@ -243,11 +243,17 @@ async function runTests() {
       const origKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
       const origEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
       const origGas = process.env.GOOGLE_DRIVE_WEBAPP_URL;
+      const origClientId = process.env.GOOGLE_CLIENT_ID;
+      const origClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+      const origRefreshToken = process.env.GOOGLE_REFRESH_TOKEN;
       delete process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
       delete process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
       delete process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
       delete process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
       delete process.env.GOOGLE_DRIVE_WEBAPP_URL;
+      delete process.env.GOOGLE_CLIENT_ID;
+      delete process.env.GOOGLE_CLIENT_SECRET;
+      delete process.env.GOOGLE_REFRESH_TOKEN;
 
       const { boundary, body } = buildMultipart(
         { u_dise: testUdise, month: testMonth, year: testYear },
@@ -270,6 +276,9 @@ async function runTests() {
       process.env.GOOGLE_SERVICE_ACCOUNT_KEY = origKey;
       process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = origEmail;
       process.env.GOOGLE_DRIVE_WEBAPP_URL = origGas;
+      if (origClientId) process.env.GOOGLE_CLIENT_ID = origClientId;
+      if (origClientSecret) process.env.GOOGLE_CLIENT_SECRET = origClientSecret;
+      if (origRefreshToken) process.env.GOOGLE_REFRESH_TOKEN = origRefreshToken;
 
       assert.strictEqual(res.status, 503);
       assert.strictEqual(res.json?.code, 'DRIVE_CONFIG_REQUIRED');

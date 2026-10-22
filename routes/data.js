@@ -6,6 +6,14 @@ const multer = require('multer');
 const { pool, getSchools, getSchoolsMap, clearSchoolsCache } = require('../db/supabase');
 const { requireAuth } = require('../middleware/auth');
 const { uploadToGoogleDriveDirect } = require('../services/googleDriveService');
+const {
+  getSafeGoogleDriveStatus,
+  verifyGoogleDriveConnection,
+  saveGoogleDriveToken,
+  getDecryptedRefreshToken,
+  updateGoogleDriveTokenStatus,
+  getGoogleDriveTokenRecord
+} = require('../services/googleDriveTokenManager');
 
 // Multer memory storage for parsing CSV uploads in-memory
 const upload = multer({
@@ -1443,7 +1451,7 @@ async function handleUploadPassbookPhoto(req, res) {
       fs.existsSync(path.join(process.cwd(), 'service-account.json')) ||
       fs.existsSync(path.join(process.cwd(), 'credentials.json'))
     );
-    const hasOAuth = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN);
+    const hasOAuth = !!((process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) || process.env.GOOGLE_REFRESH_TOKEN);
     const gasUrl = process.env.GOOGLE_DRIVE_WEBAPP_URL;
 
     if (hasServiceAccount || hasOAuth) {
@@ -2516,6 +2524,220 @@ router.post('/infrastructure/config', requireAuth('main'), (req, res) => {
     return res.json({ status: 'success', message: 'Configuration saved' });
   } catch (e) {
     return res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// ==========================================
+// 12. Google Drive OAuth Token Management Routes (AES-256-GCM in Supabase)
+// ==========================================
+
+function getOAuthRedirectUri(req) {
+  if (process.env.GOOGLE_REDIRECT_URI) {
+    return process.env.GOOGLE_REDIRECT_URI;
+  }
+  const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  return `${protocol}://${host}/api/google/callback`;
+}
+
+/**
+ * GET /admin/google-drive/status
+ * Returns sanitized connection metadata for admin dashboard. Never returns raw/encrypted tokens.
+ */
+router.get('/admin/google-drive/status', requireAuth('main'), async (req, res) => {
+  try {
+    const status = await getSafeGoogleDriveStatus();
+    return res.json({ status: 'success', data: status });
+  } catch (err) {
+    console.error('Error fetching Google Drive token status:', err.message);
+    return res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+/**
+ * POST /admin/google-drive/verify
+ * Tests Google Drive folder connectivity and token validity server-side.
+ */
+router.post('/admin/google-drive/verify', requireAuth('main'), async (req, res) => {
+  try {
+    const result = await verifyGoogleDriveConnection();
+    return res.json({
+      status: result.success ? 'success' : 'error',
+      data: result
+    });
+  } catch (err) {
+    console.error('Error verifying Google Drive connection:', err.message);
+    return res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+/**
+ * GET /google/connect
+ * Redirects admin to Google OAuth consent screen to authorize / reconnect.
+ */
+router.get('/google/connect', requireAuth('main'), (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return res.status(500).send('Server error: GOOGLE_CLIENT_ID is not configured in .env');
+  }
+
+  const redirectUri = getOAuthRedirectUri(req);
+  const scope = encodeURIComponent('https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email');
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+
+  return res.redirect(authUrl);
+});
+
+/**
+ * GET /google/callback
+ * Handles OAuth callback from Google, exchanges code for refresh token,
+ * securely encrypts and stores in Supabase, and updates status.
+ */
+router.get('/google/callback', async (req, res) => {
+  const code = req.query.code;
+  const error = req.query.error;
+
+  if (error) {
+    console.error('Google OAuth callback error:', error);
+    return res.status(400).send(`Google OAuth Authorization failed: ${error}`);
+  }
+
+  if (!code) {
+    return res.status(400).send('Missing authorization code in Google callback.');
+  }
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    return res.status(500).send('Server error: Google OAuth client credentials not configured.');
+  }
+
+  const redirectUri = getOAuthRedirectUri(req);
+
+  try {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code: code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+      })
+    });
+
+    const tokenData = await tokenRes.json();
+
+    if (!tokenRes.ok || (!tokenData.refresh_token && !tokenData.access_token)) {
+      const errMsg = tokenData.error_description || tokenData.error || 'Failed to exchange authorization code';
+      console.error('Google token exchange failed:', errMsg);
+      return res.status(400).send(`Failed to exchange code: ${errMsg}`);
+    }
+
+    // Attempt to discover account email using the access token
+    let accountEmail = 'dasarnima94@gmail.com';
+    if (tokenData.access_token) {
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: { Authorization: `Bearer ${tokenData.access_token}` }
+        });
+        if (userInfoRes.ok) {
+          const userInfo = await userInfoRes.json();
+          if (userInfo.email) {
+            accountEmail = userInfo.email;
+          }
+        }
+      } catch (uErr) {
+        console.warn('Could not fetch user profile info:', uErr.message);
+      }
+    }
+
+    if (tokenData.refresh_token) {
+      // New refresh token provided: Encrypt and persist to Supabase
+      await saveGoogleDriveToken({
+        refreshToken: tokenData.refresh_token,
+        accountEmail: accountEmail,
+        isTestingMode: true,
+        issuedAt: new Date()
+      });
+    } else {
+      // Re-authorization where Google did not return a replacement refresh token:
+      // Preserve existing token in Supabase as required by specification
+      const existing = await getGoogleDriveTokenRecord();
+      if (existing) {
+        await updateGoogleDriveTokenStatus({
+          status: 'connected',
+          lastError: null,
+          lastVerifiedAt: new Date()
+        });
+      } else {
+        return res.status(400).send('Google did not return a refresh token and no prior token was found in Supabase. Please re-authorize with prompt=consent.');
+      }
+    }
+
+    // Success response with auto-redirect to Admin Dashboard
+    return res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Google Drive Connected</title>
+        <meta http-equiv="refresh" content="3;url=/admin_dashboard">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+          }
+          .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 2.5rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 440px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+          }
+          .icon {
+            font-size: 3rem;
+            color: #10b981;
+            margin-bottom: 1rem;
+          }
+          h2 { margin: 0 0 0.5rem; color: #f8fafc; font-size: 1.5rem; }
+          p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin: 0 0 1.5rem; }
+          .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+          }
+          .btn:hover { background: #1d4ed8; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">✓</div>
+          <h2>Google Drive Connected</h2>
+          <p>The refresh token for <strong>${accountEmail}</strong> was safely encrypted with AES-256-GCM and stored in Supabase.</p>
+          <a href="/admin_dashboard" class="btn">Return to Dashboard</a>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error('Error handling Google OAuth callback:', err);
+    return res.status(500).send(`Server error saving Google Drive authorization: ${err.message}`);
   }
 });
 

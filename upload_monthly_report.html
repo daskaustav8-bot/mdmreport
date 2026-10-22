@@ -205,6 +205,53 @@
         .photo-na {
             font-size: 12px; color: #94a3b8; font-style: italic;
         }
+
+        /* Primary School Section Access Control Styling */
+        .badge-lock {
+            display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+            border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+        }
+        .badge-lock-unlocked {
+            background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;
+        }
+        .badge-lock-locked {
+            background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+        }
+        .access-control-cell {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .btn-toggle-lock {
+            display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+            border-radius: 7px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+            border: 1px solid transparent; transition: all 0.2s ease;
+        }
+        .btn-toggle-to-lock {
+            background: #f8fafc; color: #b91c1c; border-color: #fecaca;
+        }
+        .btn-toggle-to-lock:hover {
+            background: #ef4444; color: #ffffff; border-color: #ef4444;
+        }
+        .btn-toggle-to-unlock {
+            background: #f0fdf4; color: #15803d; border-color: #bbf7d0;
+        }
+        .btn-toggle-to-unlock:hover {
+            background: #10b981; color: #ffffff; border-color: #10b981;
+        }
+        .btn-toggle-lock:disabled {
+            opacity: 0.65; cursor: not-allowed;
+        }
+        .access-toast {
+            position: fixed; bottom: 24px; right: 24px; padding: 13px 20px;
+            border-radius: 12px; font-size: 13.5px; font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); z-index: 9999;
+            display: none; align-items: center; gap: 10px; transition: all 0.3s ease;
+        }
+        .access-toast-success {
+            background: #0f766e; color: #ffffff;
+        }
+        .access-toast-error {
+            background: #b91c1c; color: #ffffff;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
@@ -447,6 +494,7 @@
                     await trackerLoadingPromise;
                 } else {
                     await loadPassbookTracker();
+        loadPrimaryAccessData();
                 }
             } catch (e) {
                 console.warn('Proceeding with export without waiting for tracker:', e);
@@ -544,6 +592,287 @@
         XLSX.writeFile(wb, filename);
     }
 
+
+    // ==========================================
+    // Primary School Section Access Control Logic
+    // ==========================================
+    let primaryAccessMasterData = [];
+    let currentAccessFilter = 'all';
+    let currentAccessSearchTerm = '';
+    let accessDetailsExpanded = false;
+
+    async function loadPrimaryAccessData() {
+        const refreshIcon = document.getElementById('refreshAccessIcon');
+        if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+        try {
+            const res = await fetch('/api/monthly-report/section-access');
+            if (res.status === 401) {
+                console.warn('Admin authentication required for section access.');
+                return;
+            }
+            const data = await res.json();
+            if (data.status === 'success' && Array.isArray(data.schools)) {
+                primaryAccessMasterData = data.schools;
+                updateAccessSummaryMetrics();
+                populateQuickAccessSelect();
+                renderAccessTable();
+            } else {
+                primaryAccessMasterData = [];
+                renderAccessTable();
+            }
+        } catch (err) {
+            console.error('Failed to load primary access settings:', err);
+            const tbody = document.getElementById('accessTbody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 25px; color:#ef4444;">Failed to load access records from Supabase.</td></tr>';
+            }
+        } finally {
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        }
+    }
+
+    function toggleAccessDetails() {
+        accessDetailsExpanded = !accessDetailsExpanded;
+        const sec = document.getElementById('accessDetailsSection');
+        const label = document.getElementById('toggleAccessLabel');
+        const icon = document.getElementById('toggleAccessIcon');
+        if (accessDetailsExpanded) {
+            sec.style.display = 'block';
+            label.textContent = 'Hide Details';
+            icon.className = 'fas fa-chevron-up';
+        } else {
+            sec.style.display = 'none';
+            label.textContent = 'View Details';
+            icon.className = 'fas fa-table';
+        }
+    }
+
+    function filterAccessByMetric(status) {
+        if (!accessDetailsExpanded) {
+            toggleAccessDetails();
+        }
+        setAccessFilter(status);
+    }
+
+    function setAccessFilter(status) {
+        currentAccessFilter = status;
+        const pillMap = {
+            'all': 'accessPillAll',
+            'locked': 'accessPillLocked',
+            'meal_locked': 'accessPillMealLocked',
+            'fund_locked': 'accessPillFundLocked',
+            'rice_locked': 'accessPillRiceLocked',
+            'unlocked': 'accessPillUnlocked'
+        };
+        Object.keys(pillMap).forEach(k => {
+            const el = document.getElementById(pillMap[k]);
+            if (el) el.classList.toggle('active', k === status);
+        });
+        renderAccessTable();
+    }
+
+    function onAccessSearchInput() {
+        currentAccessSearchTerm = (document.getElementById('accessSchoolSearch').value || '').trim().toLowerCase();
+        renderAccessTable();
+    }
+
+    function onQuickAccessSchoolChange(val) {
+        document.getElementById('accessSchoolSearch').value = val;
+        onAccessSearchInput();
+    }
+
+    function updateAccessSummaryMetrics() {
+        const list = Array.isArray(primaryAccessMasterData) ? primaryAccessMasterData : [];
+        const total = list.length;
+        let lockedCount = 0;
+        let mealLocked = 0;
+        let fundLocked = 0;
+        let riceLocked = 0;
+
+        list.forEach(s => {
+            const mLock = Boolean(s.sections?.meal_availed?.is_locked);
+            const fLock = Boolean(s.sections?.fund_details?.is_locked);
+            const rLock = Boolean(s.sections?.food_grains?.is_locked);
+            if (mLock || fLock || rLock) lockedCount++;
+            if (mLock) mealLocked++;
+            if (fLock) fundLocked++;
+            if (rLock) riceLocked++;
+        });
+
+        const unlockedCount = total - lockedCount;
+
+        const countTotalEl = document.getElementById('accessCountTotal');
+        const countUnlockedEl = document.getElementById('accessCountUnlocked');
+        const countLockedEl = document.getElementById('accessCountLocked');
+        if (countTotalEl) countTotalEl.textContent = total;
+        if (countUnlockedEl) countUnlockedEl.textContent = unlockedCount;
+        if (countLockedEl) countLockedEl.textContent = lockedCount;
+
+        const setPillText = (id, count) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '(' + count + ')';
+        };
+        setPillText('accessPillCountAll', total);
+        setPillText('accessPillCountLocked', lockedCount);
+        setPillText('accessPillCountMeal', mealLocked);
+        setPillText('accessPillCountFund', fundLocked);
+        setPillText('accessPillCountRice', riceLocked);
+        setPillText('accessPillCountUnlocked', unlockedCount);
+    }
+
+    function populateQuickAccessSelect() {
+        const sel = document.getElementById('quickAccessSchoolSelect');
+        if (!sel || !Array.isArray(primaryAccessMasterData)) return;
+        const currentVal = sel.value;
+        sel.innerHTML = '<option value="">— Jump to Primary School —</option>';
+        primaryAccessMasterData.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.school_id;
+            opt.textContent = s.school_name + ' (' + s.school_id + ')';
+            sel.appendChild(opt);
+        });
+        if (currentVal) sel.value = currentVal;
+    }
+
+    function getFilteredAccessSchools() {
+        return primaryAccessMasterData.filter(s => {
+            const mLock = Boolean(s.sections?.meal_availed?.is_locked);
+            const fLock = Boolean(s.sections?.fund_details?.is_locked);
+            const rLock = Boolean(s.sections?.food_grains?.is_locked);
+            const anyLock = mLock || fLock || rLock;
+
+            if (currentAccessFilter === 'locked' && !anyLock) return false;
+            if (currentAccessFilter === 'unlocked' && anyLock) return false;
+            if (currentAccessFilter === 'meal_locked' && !mLock) return false;
+            if (currentAccessFilter === 'fund_locked' && !fLock) return false;
+            if (currentAccessFilter === 'rice_locked' && !rLock) return false;
+
+            if (currentAccessSearchTerm) {
+                const name = (s.school_name || '').toLowerCase();
+                const id = (s.school_id || '').toLowerCase();
+                const circle = (s.circle_name || '').toLowerCase();
+                const gp = (s.gp_name || '').toLowerCase();
+                return name.includes(currentAccessSearchTerm) || id.includes(currentAccessSearchTerm) || circle.includes(currentAccessSearchTerm) || gp.includes(currentAccessSearchTerm);
+            }
+            return true;
+        });
+    }
+
+    function renderAccessTable() {
+        const tbody = document.getElementById('accessTbody');
+        const counter = document.getElementById('accessRecordCounter');
+        const totalCount = Array.isArray(primaryAccessMasterData) ? primaryAccessMasterData.length : 0;
+        const list = getFilteredAccessSchools();
+
+        if (counter) {
+            counter.textContent = 'Showing ' + list.length + ' of ' + totalCount + ' Primary schools';
+        }
+
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 25px; color:#94a3b8;">No matching Primary schools found.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        list.forEach((s, idx) => {
+            const mLock = Boolean(s.sections?.meal_availed?.is_locked);
+            const fLock = Boolean(s.sections?.fund_details?.is_locked);
+            const rLock = Boolean(s.sections?.food_grains?.is_locked);
+
+            const mBadge = mLock
+                ? '<span class="badge-lock badge-lock-locked"><i class="fas fa-lock"></i> LOCKED</span>'
+                : '<span class="badge-lock badge-lock-unlocked"><i class="fas fa-lock-open"></i> UNLOCKED</span>';
+            const mBtn = mLock
+                ? '<button type="button" class="btn-toggle-lock btn-toggle-to-unlock" onclick="toggleSectionLock(\'' + s.school_id + '\', \'meal_availed\', false, this)"><i class="fas fa-lock-open"></i> Unlock</button>'
+                : '<button type="button" class="btn-toggle-lock btn-toggle-to-lock" onclick="toggleSectionLock(\'' + s.school_id + '\', \'meal_availed\', true, this)"><i class="fas fa-lock"></i> Lock</button>';
+
+            const fBadge = fLock
+                ? '<span class="badge-lock badge-lock-locked"><i class="fas fa-lock"></i> LOCKED</span>'
+                : '<span class="badge-lock badge-lock-unlocked"><i class="fas fa-lock-open"></i> UNLOCKED</span>';
+            const fBtn = fLock
+                ? '<button type="button" class="btn-toggle-lock btn-toggle-to-unlock" onclick="toggleSectionLock(\'' + s.school_id + '\', \'fund_details\', false, this)"><i class="fas fa-lock-open"></i> Unlock</button>'
+                : '<button type="button" class="btn-toggle-lock btn-toggle-to-lock" onclick="toggleSectionLock(\'' + s.school_id + '\', \'fund_details\', true, this)"><i class="fas fa-lock"></i> Lock</button>';
+
+            const rBadge = rLock
+                ? '<span class="badge-lock badge-lock-locked"><i class="fas fa-lock"></i> LOCKED</span>'
+                : '<span class="badge-lock badge-lock-unlocked"><i class="fas fa-lock-open"></i> UNLOCKED</span>';
+            const rBtn = rLock
+                ? '<button type="button" class="btn-toggle-lock btn-toggle-to-unlock" onclick="toggleSectionLock(\'' + s.school_id + '\', \'food_grains\', false, this)"><i class="fas fa-lock-open"></i> Unlock</button>'
+                : '<button type="button" class="btn-toggle-lock btn-toggle-to-lock" onclick="toggleSectionLock(\'' + s.school_id + '\', \'food_grains\', true, this)"><i class="fas fa-lock"></i> Lock</button>';
+
+            html += '<tr>' +
+                '<td style="color:#64748b; font-weight:600;">' + (idx + 1) + '</td>' +
+                '<td>' +
+                    '<div style="font-weight:600; color:#0f172a;">' + escapeHtml(s.school_name) + '</div>' +
+                    (s.circle_name ? '<span style="font-size:11px; color:#64748b;"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(s.circle_name) + '</span>' : '') +
+                    (s.gp_name ? '<span style="font-size:11px; color:#94a3b8; margin-left:8px;"><i class="fas fa-landmark"></i> ' + escapeHtml(s.gp_name) + '</span>' : '') +
+                '</td>' +
+                '<td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#0f766e; font-weight:600;">' + escapeHtml(s.school_id) + '</code></td>' +
+                '<td><div class="access-control-cell">' + mBadge + mBtn + '</div></td>' +
+                '<td><div class="access-control-cell">' + fBadge + fBtn + '</div></td>' +
+                '<td><div class="access-control-cell">' + rBadge + rBtn + '</div></td>' +
+            '</tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    async function toggleSectionLock(schoolId, sectionId, willLock, btn) {
+        if (!schoolId || !sectionId) return;
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (willLock ? 'Locking...' : 'Unlocking...');
+
+        try {
+            const res = await fetch('/api/monthly-report/section-access', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    school_id: schoolId,
+                    section_id: sectionId,
+                    is_locked: willLock
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                const item = primaryAccessMasterData.find(s => s.school_id === schoolId);
+                if (item && item.sections && item.sections[sectionId]) {
+                    item.sections[sectionId].is_locked = willLock;
+                    item.sections[sectionId].updated_at = new Date().toISOString();
+                }
+                updateAccessSummaryMetrics();
+                renderAccessTable();
+
+                const secNames = {
+                    meal_availed: 'Meal Availed Status',
+                    fund_details: 'Fund Details',
+                    food_grains: 'Food Grains Details'
+                };
+                const sName = (item && item.school_name) ? item.school_name : schoolId;
+                showAccessToast('success', (secNames[sectionId] || sectionId) + ' ' + (willLock ? 'LOCKED' : 'UNLOCKED') + ' for ' + sName + '.');
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                showAccessToast('error', data.message || 'Failed to update section access.');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            showAccessToast('error', 'Network error while updating section access.');
+        }
+    }
+
+    function showAccessToast(type, message) {
+        const toast = document.getElementById('accessToast');
+        if (!toast) return;
+        toast.className = 'access-toast access-toast-' + type;
+        toast.innerHTML = (type === 'success' ? '<i class="fas fa-check-circle"></i> ' : '<i class="fas fa-exclamation-circle"></i> ') + escapeHtml(message);
+        toast.style.display = 'flex';
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 4000);
+    }
 </script>
 </head>
 <body>
@@ -658,6 +987,113 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Primary School Section Access Control Card -->
+    <div class="card" id="primaryAccessCard" style="margin-bottom: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-shield-alt" style="color: var(--primary);"></i> Primary School Section Access Control
+                </h3>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted);">
+                    Lock or unlock specific sections (Meal Availed Status, Fund Details, Food Grains Details) for Primary category schools.
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn-sm btn-sm-details" onclick="loadPrimaryAccessData()" title="Reload section access statuses from Supabase">
+                    <i class="fas fa-sync-alt" id="refreshAccessIcon"></i> Refresh
+                </button>
+                <button type="button" class="btn-sm btn-sm-details" id="btnToggleAccessDetails" onclick="toggleAccessDetails()" title="Toggle School-wise Access Control Table">
+                    <i class="fas fa-table" id="toggleAccessIcon"></i> <span id="toggleAccessLabel">View Details</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div class="tracker-metrics">
+            <div class="metric-box metric-box-total" onclick="filterAccessByMetric('all')" title="Click to view all primary schools">
+                <div class="metric-title"><i class="fas fa-school"></i> Total Primary Schools</div>
+                <div class="metric-number" id="accessCountTotal">194</div>
+                <div class="metric-subtext">Category: Primary Only</div>
+            </div>
+            <div class="metric-box metric-box-submitted" onclick="filterAccessByMetric('unlocked')" title="Click to view fully unlocked schools">
+                <div class="metric-title"><i class="fas fa-lock-open"></i> Fully Unlocked</div>
+                <div class="metric-number" id="accessCountUnlocked">--</div>
+                <div class="metric-subtext">All 3 Sections Editable</div>
+            </div>
+            <div class="metric-box metric-box-pending" onclick="filterAccessByMetric('locked')" title="Click to view schools with locked sections">
+                <div class="metric-title"><i class="fas fa-lock"></i> Locked Sections</div>
+                <div class="metric-number" id="accessCountLocked">--</div>
+                <div class="metric-subtext">One or More Sections Locked</div>
+            </div>
+        </div>
+
+        <!-- Detailed School-Wise Access Control Data Section -->
+        <div id="accessDetailsSection" style="display: none; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                <!-- Filter Pills -->
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="filter-pill active" id="accessPillAll" onclick="setAccessFilter('all')">
+                        All Primary <span class="pill-count" id="accessPillCountAll">(194)</span>
+                    </button>
+                    <button type="button" class="filter-pill" id="accessPillLocked" onclick="setAccessFilter('locked')">
+                        Any Locked <span class="pill-count" id="accessPillCountLocked">(0)</span>
+                    </button>
+                    <button type="button" class="filter-pill" id="accessPillMealLocked" onclick="setAccessFilter('meal_locked')">
+                        Meal Locked <span class="pill-count" id="accessPillCountMeal">(0)</span>
+                    </button>
+                    <button type="button" class="filter-pill" id="accessPillFundLocked" onclick="setAccessFilter('fund_locked')">
+                        Fund Locked <span class="pill-count" id="accessPillCountFund">(0)</span>
+                    </button>
+                    <button type="button" class="filter-pill" id="accessPillRiceLocked" onclick="setAccessFilter('rice_locked')">
+                        Rice Locked <span class="pill-count" id="accessPillCountRice">(0)</span>
+                    </button>
+                    <button type="button" class="filter-pill" id="accessPillUnlocked" onclick="setAccessFilter('unlocked')">
+                        Fully Unlocked <span class="pill-count" id="accessPillCountUnlocked">(0)</span>
+                    </button>
+                </div>
+
+                <!-- Search and Quick Selector Toolbar -->
+                <div style="display: flex; gap: 8px; align-items: center; flex: 1; max-width: 520px; justify-content: flex-end;">
+                    <select id="quickAccessSchoolSelect" style="max-width: 220px; padding: 7px 10px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border);" onchange="onQuickAccessSchoolChange(this.value)">
+                        <option value="">— Jump to Primary School —</option>
+                    </select>
+                    <div class="search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="accessSchoolSearch" class="search-input" placeholder="Search school name or UDISE..." oninput="onAccessSearchInput()">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 12px; color: var(--text-muted);" id="accessRecordCounter">Showing 194 of 194 Primary schools</span>
+                <span style="font-size: 11px; color: #0d9488; font-weight: 600;"><i class="fas fa-database"></i> Supabase Live Access Settings</span>
+            </div>
+
+            <!-- Table Container with Sticky Header -->
+            <div style="max-height: 520px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: #fff;">
+                <table style="margin-top: 0; width: 100%;">
+                    <thead style="position: sticky; top: 0; z-index: 2; background: #f8fafc;">
+                        <tr>
+                            <th style="width: 60px;">Sl. No.</th>
+                            <th>Primary School Name</th>
+                            <th style="width: 140px;">UDISE Code</th>
+                            <th style="width: 220px;">Meal Availed Status</th>
+                            <th style="width: 220px;">Fund Details (IN Rs)</th>
+                            <th style="width: 220px;">Food Grains Details (Rice)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accessTbody">
+                        <tr><td colspan="6" style="text-align:center; padding: 30px; color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading Primary school access settings...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Feedback Toast -->
+    <div id="accessToast" class="access-toast"></div>
 
     <div class="grid-2">
         <!-- Card 1: Download Templates -->

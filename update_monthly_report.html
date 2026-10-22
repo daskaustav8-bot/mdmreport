@@ -922,7 +922,7 @@
         }
 
         /* =========================================
-           BANK PASSBOOK PHOTO UPLOAD STYLING
+           BANK PASSBOOK PHOTO CAMERA STYLING
            ========================================= */
         .verif-match-box {
             grid-column: 1;
@@ -942,12 +942,6 @@
             box-sizing: border-box;
             min-width: 0;
             overflow: hidden;
-        }
-
-        .verif-photo-box.drag-over {
-            border-color: var(--primary) !important;
-            background: var(--primary-light) !important;
-            border-style: dashed !important;
         }
 
         .photo-state-row {
@@ -1280,6 +1274,300 @@
             border: none;
             border-radius: 6px;
             background: white;
+        }
+
+        /* =========================================
+           DIRECT CAMERA MODAL & VIEWFINDER STYLING
+           ========================================= */
+        .camera-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fadeInModal 0.2s ease-out;
+        }
+
+        .camera-modal-box {
+            background: #0f172a;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+            max-width: 640px;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            animation: zoomInModal 0.25s ease-out;
+        }
+
+        .camera-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #1e293b;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .camera-modal-header h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .camera-modal-header h3 i {
+            color: #2dd4bf;
+        }
+
+        .btn-camera-action-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-camera-action-sm:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .camera-viewport-wrap {
+            position: relative;
+            width: 100%;
+            background: #000000;
+            min-height: 320px;
+            max-height: 55vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #cameraVideo {
+            width: 100%;
+            height: 100%;
+            max-height: 55vh;
+            object-fit: contain;
+            display: block;
+            background: #000000;
+        }
+
+        .camera-captured-preview {
+            width: 100%;
+            height: 100%;
+            max-height: 55vh;
+            object-fit: contain;
+            display: block;
+            background: #000000;
+        }
+
+        .camera-overlay-guide {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .guide-frame {
+            position: relative;
+            width: 88%;
+            height: 75%;
+            max-width: 500px;
+            max-height: 300px;
+            border: 2px dashed rgba(45, 212, 191, 0.7);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 12px;
+        }
+
+        .guide-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: #2dd4bf;
+            border-style: solid;
+        }
+
+        .guide-corner.top-left {
+            top: -2px;
+            left: -2px;
+            border-width: 4px 0 0 4px;
+            border-top-left-radius: 12px;
+        }
+
+        .guide-corner.top-right {
+            top: -2px;
+            right: -2px;
+            border-width: 4px 4px 0 0;
+            border-top-right-radius: 12px;
+        }
+
+        .guide-corner.bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-width: 0 0 4px 4px;
+            border-bottom-left-radius: 12px;
+        }
+
+        .guide-corner.bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-width: 0 4px 4px 0;
+            border-bottom-right-radius: 12px;
+        }
+
+        .guide-label {
+            background: rgba(15, 23, 42, 0.85);
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        .camera-flash-effect {
+            position: absolute;
+            inset: 0;
+            background: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.12s ease-out;
+        }
+
+        .camera-flash-active {
+            opacity: 0.85;
+        }
+
+        .camera-modal-footer {
+            padding: 16px 20px;
+            background: #1e293b;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .camera-ctrl-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .camera-hint {
+            color: #94a3b8;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .camera-hint i {
+            color: #2dd4bf;
+        }
+
+        .btn-shutter {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: transparent;
+            border: 3.5px solid #ffffff;
+            padding: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            flex-shrink: 0;
+        }
+
+        .btn-shutter:hover {
+            transform: scale(1.06);
+            border-color: #2dd4bf;
+        }
+
+        .btn-shutter:active {
+            transform: scale(0.94);
+        }
+
+        .shutter-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4);
+        }
+
+        .btn-camera-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .btn-camera-primary:hover {
+            background: #0f766e;
+            transform: translateY(-1px);
+        }
+
+        .btn-camera-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-camera-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
         }
 
         .hint-text {
@@ -2272,6 +2560,65 @@
                 padding: 0 9px;
             }
         }
+
+        /* =========================================
+           PRIMARY SCHOOL SECTION LOCK STYLING
+           ========================================= */
+        .locked-section-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 5px solid #ef4444;
+            color: #991b1b;
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin: 14px 0 18px 0;
+            font-size: 13.5px;
+            font-weight: 600;
+            line-height: 1.5;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.08);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .locked-section-banner i {
+            font-size: 18px;
+            color: #ef4444;
+            flex-shrink: 0;
+        }
+        .badge-sec-locked {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-left: 10px;
+            text-transform: uppercase;
+        }
+        .form-section.section-is-locked {
+            border-color: #fecaca !important;
+            background: linear-gradient(to bottom, #ffffff, #fafafa) !important;
+        }
+        .form-section.section-is-locked .input-locked {
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+            cursor: not-allowed !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            user-select: none !important;
+        }
+        .btn-all-locked {
+            opacity: 0.7;
+            background: #64748b !important;
+            cursor: not-allowed !important;
+        }
     </style>
 </head>
 
@@ -2336,20 +2683,21 @@
                     <label for="selectMonth">
                         <i class="fa-regular fa-calendar"></i> Reporting Month
                     </label>
-                    <select id="selectMonth" class="form-control">
-                        <option value="January">January</option>
-                        <option value="February">February</option>
-                        <option value="March">March</option>
-                        <option value="April">April</option>
-                        <option value="May">May</option>
-                        <option value="June">June</option>
-                        <option value="July">July</option>
-                        <option value="August">August</option>
-                        <option value="September">September</option>
+                    <select id="selectMonth" class="form-control" title="Reporting Month is set to the current month">
                         <option value="October" selected>October</option>
-                        <option value="November">November</option>
-                        <option value="December">December</option>
                     </select>
+                    <script>
+                        (function() {
+                            try {
+                                var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                                var curMonth = monthNames[new Date().getMonth()];
+                                var el = document.getElementById('selectMonth');
+                                if (el) {
+                                    el.innerHTML = '<option value="' + curMonth + '" selected>' + curMonth + '</option>';
+                                }
+                            } catch(e) {}
+                        })();
+                    </script>
                 </div>
 
                 <!-- Hidden Year select (maintained in DOM for backward-compatibility) -->
@@ -2664,9 +3012,9 @@
 
                     <!-- 2. BANK PASSBOOK PHOTO (BESIDE BANK PASS BOOK BALANCE) -->
                     <div class="verif-photo-box" id="passbookPhotoContainer">
-                        <input type="file" id="bank_passbook_photo" name="bank_passbook_photo" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display: none;">
+                        <input type="file" id="bank_passbook_photo" name="bank_passbook_photo" accept="image/*" capture="environment" style="display: none;">
 
-                        <!-- Empty Upload State -->
+                        <!-- Empty Camera State -->
                         <div id="photoEmptyState" class="photo-state-row" style="display: flex;">
                             <div class="verif-photo-left">
                                 <div class="verif-photo-icon-badge">
@@ -2674,13 +3022,13 @@
                                 </div>
                                 <div class="verif-label">
                                     <div class="photo-heading">Bank Passbook Photo</div>
-                                    <span>Upload passbook photo (JPG, PNG)</span>
+                                    <span>Take passbook photo with camera</span>
                                 </div>
                             </div>
                             <div class="verif-photo-right">
                                 <button type="button" class="btn-choose-photo" id="btnChoosePhoto">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Upload Photo</span>
+                                    <i class="fa-solid fa-camera"></i>
+                                    <span>Open Camera</span>
                                 </button>
                             </div>
                         </div>
@@ -2722,8 +3070,8 @@
                                 <button type="button" class="btn-photo-action btn-photo-view" id="btnViewPhoto" title="View Full Preview">
                                     <i class="fa-solid fa-eye"></i> <span class="photo-btn-text">View</span>
                                 </button>
-                                <button type="button" class="btn-photo-action" id="btnChangePhoto" title="Change Photo">
-                                    <i class="fa-solid fa-arrow-rotate-right"></i> <span class="photo-btn-text">Change</span>
+                                <button type="button" class="btn-photo-action" id="btnChangePhoto" title="Retake Photo with Camera">
+                                    <i class="fa-solid fa-camera"></i> <span class="photo-btn-text">Retake</span>
                                 </button>
                                 <button type="button" class="btn-photo-action btn-photo-remove" id="btnRemovePhoto" title="Remove Photo">
                                     <i class="fa-solid fa-trash-can"></i>
@@ -2886,6 +3234,62 @@
         </div>
     </div>
 
+    <!-- Direct Camera Capture Modal -->
+    <div id="cameraModal" class="camera-modal-backdrop" style="display: none;">
+        <div class="camera-modal-box">
+            <div class="camera-modal-header">
+                <h3>
+                    <i class="fa-solid fa-camera"></i>
+                    <span>Capture Bank Passbook Photo</span>
+                </h3>
+                <div class="photo-modal-controls">
+                    <button type="button" id="btnSwitchCamera" class="btn-camera-action-sm" title="Switch Front/Rear Camera" style="display: none;">
+                        <i class="fa-solid fa-camera-rotate"></i>
+                        <span>Switch</span>
+                    </button>
+                    <button type="button" id="btnTriggerNativeCam" class="btn-camera-action-sm" title="Open Native System Camera">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <span>System Camera</span>
+                    </button>
+                    <button type="button" class="modal-close-btn" id="btnCloseCameraModal" title="Close Camera">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="camera-viewport-wrap" id="cameraViewportWrap">
+                <video id="cameraVideo" playsinline autoplay muted></video>
+                <div class="camera-overlay-guide">
+                    <div class="guide-frame">
+                        <div class="guide-corner top-left"></div>
+                        <div class="guide-corner top-right"></div>
+                        <div class="guide-corner bottom-left"></div>
+                        <div class="guide-corner bottom-right"></div>
+                        <div class="guide-label"><i class="fa-solid fa-book"></i> Align Bank Passbook Inside Frame</div>
+                    </div>
+                </div>
+                <img id="cameraCapturedImg" class="camera-captured-preview" style="display: none;" alt="Captured Passbook Photo" />
+                <div id="cameraFlash" class="camera-flash-effect"></div>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+            </div>
+            <div class="camera-modal-footer">
+                <div id="cameraLiveControls" class="camera-ctrl-row">
+                    <span class="camera-hint"><i class="fa-solid fa-circle-info"></i> Hold passbook steady and ensure details are legible</span>
+                    <button type="button" id="btnSnapPhoto" class="btn-shutter" title="Take Photo">
+                        <span class="shutter-inner"><i class="fa-solid fa-camera"></i></span>
+                    </button>
+                </div>
+                <div id="cameraReviewControls" class="camera-ctrl-row" style="display: none;">
+                    <button type="button" id="btnRetakeCaptured" class="btn-camera-secondary">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> Retake
+                    </button>
+                    <button type="button" id="btnConfirmCaptured" class="btn-camera-primary">
+                        <i class="fa-solid fa-circle-check"></i> Use This Photo &amp; Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts: Supabase, jQuery, Select2, SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-client.js"></script>
@@ -2936,13 +3340,21 @@
                 });
                 populateSchoolSelect();
 
-                // Check URL parameters for direct linking (e.g. ?u_dise=19120500703&month=October)
+                // Lock Reporting Month strictly to current month (no other month permitted)
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const currentMonth = monthNames[new Date().getMonth()];
+                const currentYear = String(new Date().getFullYear());
+                $('#selectMonth').html('<option value="' + currentMonth + '" selected>' + currentMonth + '</option>');
+
+                // Check URL parameters for direct linking (school selection)
                 const urlParams = new URLSearchParams(window.location.search);
                 const initialUdise = urlParams.get('u_dise') || urlParams.get('udise');
-                const initialMonth = urlParams.get('month') || urlParams.get('month_name');
                 const initialYear = urlParams.get('year');
-                if (initialMonth) $('#selectMonth').val(initialMonth);
-                if (initialYear) $('#selectYear').val(initialYear);
+                if (initialYear && $('#selectYear option[value="' + initialYear + '"]').length) {
+                    $('#selectYear').val(initialYear);
+                } else {
+                    $('#selectYear').val(currentYear);
+                }
                 if (initialUdise && schools.some(s => s.id === initialUdise)) {
                     $('#selectSchool').val(initialUdise).trigger('change');
                 }
@@ -2979,6 +3391,18 @@
                 if ($('#navDateBadge').length) {
                     $('#navDateBadge').text(dateStr);
                 }
+            } catch (e) {}
+
+            // Ensure Reporting Month is always locked to current month only
+            try {
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const curMonth = monthNames[new Date().getMonth()];
+                const curYear = String(new Date().getFullYear());
+                $('#selectMonth').html('<option value="' + curMonth + '" selected>' + curMonth + '</option>');
+                if (!$('#selectYear option[value="' + curYear + '"]').length) {
+                    $('#selectYear').append($('<option>', { value: curYear, text: curYear }));
+                }
+                $('#selectYear').val(curYear);
             } catch (e) {}
 
             // Initialize Select2 with placeholder
@@ -3449,7 +3873,7 @@
                     Swal.fire({
                         icon: 'warning',
                         title: 'Select School First',
-                        text: 'Please select a School before uploading the bank passbook photo.',
+                        text: 'Please select a School before capturing the bank passbook photo.',
                         confirmButtonColor: '#0d9488'
                     });
                     $('#bank_passbook_photo').val('');
@@ -3460,7 +3884,7 @@
                     Swal.fire({
                         icon: 'warning',
                         title: 'Select Period',
-                        text: 'Please select the reporting Month and Year before uploading.',
+                        text: 'Please select the reporting Month and Year before capturing the photo.',
                         confirmButtonColor: '#0d9488'
                     });
                     $('#bank_passbook_photo').val('');
@@ -3590,33 +4014,272 @@
                 });
             }
 
+            // =========================================
+            // DIRECT CAMERA INTEGRATION FOR BANK PASSBOOK
+            // =========================================
+            let cameraStream = null;
+            let currentFacingMode = 'environment';
+            let capturedBlob = null;
+            let capturedDataUrl = null;
+
+            function validatePeriodBeforeCapture() {
+                const udise = $('#selectSchool').val();
+                const month = $('#selectMonth').val();
+                const year = $('#selectYear').val();
+
+                if (!udise) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Select School First',
+                        text: 'Please select a School before capturing the bank passbook photo.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    return false;
+                }
+
+                if (!month || !year) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Select Period',
+                        text: 'Please select the reporting Month and Year before capturing the photo.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    return false;
+                }
+                return true;
+            }
+
+            async function openPassbookCamera() {
+                if (!validatePeriodBeforeCapture()) return;
+
+                // Fallback to native system camera input if getUserMedia is not supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    $('#bank_passbook_photo').trigger('click');
+                    return;
+                }
+
+                capturedBlob = null;
+                capturedDataUrl = null;
+                $('#cameraCapturedImg').hide().attr('src', '');
+                $('#cameraVideo').show();
+                $('.camera-overlay-guide').show();
+                $('#cameraLiveControls').show();
+                $('#cameraReviewControls').hide();
+                $('#cameraModal').fadeIn(150);
+
+                await startCameraStream();
+            }
+
+            async function startCameraStream() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                    cameraStream = null;
+                }
+
+                const videoEl = document.getElementById('cameraVideo');
+
+                try {
+                    const constraints = {
+                        video: {
+                            facingMode: { ideal: currentFacingMode },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        },
+                        audio: false
+                    };
+
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    cameraStream = stream;
+                    videoEl.srcObject = stream;
+                    await videoEl.play();
+
+                    // Detect multiple video input devices (front/back)
+                    try {
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        const videoInputs = devices.filter(d => d.kind === 'videoinput');
+                        if (videoInputs.length > 1) {
+                            $('#btnSwitchCamera').show();
+                        } else {
+                            $('#btnSwitchCamera').hide();
+                        }
+                    } catch (e) {
+                        $('#btnSwitchCamera').hide();
+                    }
+
+                } catch (err) {
+                    console.warn('High-res camera stream failed, trying fallback constraints:', err);
+                    try {
+                        const fallbackStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: currentFacingMode },
+                            audio: false
+                        });
+                        cameraStream = fallbackStream;
+                        videoEl.srcObject = fallbackStream;
+                        await videoEl.play();
+                    } catch (fallbackErr) {
+                        try {
+                            const basicStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                            cameraStream = basicStream;
+                            videoEl.srcObject = basicStream;
+                            await videoEl.play();
+                        } catch (errFinal) {
+                            console.error('All camera attempts failed:', errFinal);
+                            closeCameraModal();
+
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Camera Access Needed',
+                                text: 'Browser camera stream could not start. Would you like to use your device camera?',
+                                showCancelButton: true,
+                                confirmButtonColor: '#0d9488',
+                                confirmButtonText: '<i class="fa-solid fa-camera"></i> Open System Camera',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $('#bank_passbook_photo').trigger('click');
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
+            function snapPassbookPhoto() {
+                const videoEl = document.getElementById('cameraVideo');
+                const canvas = document.getElementById('cameraCanvas');
+                if (!videoEl || !videoEl.videoWidth) return;
+
+                // Flash animation effect
+                const $flash = $('#cameraFlash');
+                $flash.addClass('camera-flash-active');
+                setTimeout(() => $flash.removeClass('camera-flash-active'), 120);
+
+                canvas.width = videoEl.videoWidth;
+                canvas.height = videoEl.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+                capturedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                $('#cameraCapturedImg').attr('src', capturedDataUrl).show();
+                $('#cameraVideo').hide();
+                $('.camera-overlay-guide').hide();
+                $('#cameraLiveControls').hide();
+                $('#cameraReviewControls').css('display', 'flex');
+
+                canvas.toBlob(function (blob) {
+                    capturedBlob = blob;
+                }, 'image/jpeg', 0.92);
+            }
+
+            function retakePassbookPhoto() {
+                capturedBlob = null;
+                capturedDataUrl = null;
+                $('#cameraCapturedImg').hide().attr('src', '');
+                $('#cameraVideo').show();
+                $('.camera-overlay-guide').show();
+                $('#cameraReviewControls').hide();
+                $('#cameraLiveControls').show();
+            }
+
+            function confirmCapturedPassbookPhoto() {
+                if (!capturedBlob && capturedDataUrl) {
+                    const byteString = atob(capturedDataUrl.split(',')[1]);
+                    const mimeString = capturedDataUrl.split(',')[0].split(':')[1].split(';')[0];
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    capturedBlob = new Blob([ab], { type: mimeString });
+                }
+
+                if (!capturedBlob) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Capture Failed',
+                        text: 'Could not generate the captured photo. Please retake the photo.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    return;
+                }
+
+                const udise = $('#selectSchool').val() || 'school';
+                const month = $('#selectMonth').val();
+                const year = $('#selectYear').val();
+                const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+                const fileName = `Passbook_${udise}_${month}_${year}_${timestamp}.jpg`;
+                const photoFile = new File([capturedBlob], fileName, { type: 'image/jpeg' });
+
+                closeCameraModal();
+                uploadPassbookPhotoToDrive(photoFile, capturedDataUrl, udise, month, year);
+            }
+
+            function closeCameraModal() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                    cameraStream = null;
+                }
+                const videoEl = document.getElementById('cameraVideo');
+                if (videoEl) videoEl.srcObject = null;
+
+                $('#cameraModal').fadeOut(150, function () {
+                    retakePassbookPhoto();
+                });
+            }
+
             $('#btnChoosePhoto, #btnChangePhoto').on('click', function (e) {
                 e.preventDefault();
+                openPassbookCamera();
+            });
+
+            $('#btnSnapPhoto').on('click', function (e) {
+                e.preventDefault();
+                snapPassbookPhoto();
+            });
+
+            $('#btnRetakeCaptured').on('click', function (e) {
+                e.preventDefault();
+                retakePassbookPhoto();
+            });
+
+            $('#btnConfirmCaptured').on('click', function (e) {
+                e.preventDefault();
+                confirmCapturedPassbookPhoto();
+            });
+
+            $('#btnCloseCameraModal').on('click', function (e) {
+                e.preventDefault();
+                closeCameraModal();
+            });
+
+            $('#btnSwitchCamera').on('click', async function (e) {
+                e.preventDefault();
+                currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+                await startCameraStream();
+            });
+
+            $('#btnTriggerNativeCam').on('click', function (e) {
+                e.preventDefault();
+                closeCameraModal();
                 $('#bank_passbook_photo').trigger('click');
+            });
+
+            $('#cameraModal').on('click', function (e) {
+                if ($(e.target).is('#cameraModal')) {
+                    closeCameraModal();
+                }
+            });
+
+            $(document).on('keydown', function (e) {
+                if (e.key === 'Escape' && $('#cameraModal').is(':visible')) {
+                    closeCameraModal();
+                }
             });
 
             $('#bank_passbook_photo').on('change', function (e) {
                 const file = e.target.files && e.target.files[0];
                 if (file) {
                     handleFileSelect(file);
-                }
-            });
-
-            const $dropArea = $('#passbookPhotoContainer');
-            $dropArea.on('dragover dragenter', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                $dropArea.addClass('drag-over');
-            });
-            $dropArea.on('dragleave dragend drop', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                $dropArea.removeClass('drag-over');
-            });
-            $dropArea.on('drop', function (e) {
-                const files = e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files;
-                if (files && files.length > 0) {
-                    handleFileSelect(files[0]);
                 }
             });
 
@@ -3699,6 +4362,107 @@
                 setDefaultBankDate();
                 loadSchoolMonthlyData();
             });
+
+
+            // ==========================================
+            // PRIMARY CATEGORY SECTION ACCESS LOCKING
+            // ==========================================
+            let currentSectionAccess = { meal_availed: false, fund_details: false, food_grains: false };
+
+            function applySectionAccessLocks(udise, isPrimary, sectionAccessPreloaded) {
+                // Non-Primary schools retain existing behaviour completely unchanged
+                if (!isPrimary) {
+                    currentSectionAccess = { meal_availed: false, fund_details: false, food_grains: false };
+                    $('.badge-sec-locked, .locked-section-banner').remove();
+                    $('#secMeal, #secFund, #secRice').removeClass('section-is-locked');
+                    $('#secMeal input, #secMeal select, #secFund input, #secFund select, #secRice input').removeClass('input-locked').prop('disabled', false);
+                    $('#fund_row_bv').find('input').prop('disabled', true); // Bal Vatika disabled for Upper Primary
+                    $('#btnSave').removeClass('btn-all-locked').removeAttr('title');
+                    return;
+                }
+
+                const renderLocks = (sections) => {
+                    currentSectionAccess = {
+                        meal_availed: Boolean(sections?.meal_availed?.is_locked),
+                        fund_details: Boolean(sections?.fund_details?.is_locked),
+                        food_grains: Boolean(sections?.food_grains?.is_locked)
+                    };
+
+                    const sectionsConfig = [
+                        {
+                            key: 'meal_availed',
+                            secId: '#secMeal',
+                            bannerId: 'lockBannerMeal',
+                            badgeId: 'lockBadgeMeal',
+                            inputs: '#bv_days, #p_days, #bv_actual, #p_actual, #bv_meals, #p_meals'
+                        },
+                        {
+                            key: 'fund_details',
+                            secId: '#secFund',
+                            bannerId: 'lockBannerFund',
+                            badgeId: 'lockBadgeFund',
+                            inputs: '#cc_bv_open, #cc_bv_recv, #cc_bv_exp, #cc_p_open, #cc_p_recv, #cc_p_exp, #bi_open, #bi_recv, #bi_exp, #lpg_open, #lpg_recv, #lpg_exp, #nutri_open, #nutri_recv, #nutri_exp, #mme_open, #mme_recv, #mme_exp, #kd_open, #kd_recv, #kd_exp, #ks_open, #ks_recv, #ks_exp, #ng_open, #ng_recv, #ng_exp, #bc_open, #bc_recv, #bc_exp, #bank_match, #bank_passbook_balance, #bank_balance_date'
+                        },
+                        {
+                            key: 'food_grains',
+                            secId: '#secRice',
+                            bannerId: 'lockBannerRice',
+                            badgeId: 'lockBadgeRice',
+                            inputs: '#rice_bv_open, #rice_bv_recv, #rice_bv_cons, #rice_p_open, #rice_p_recv, #rice_p_cons'
+                        }
+                    ];
+
+                    sectionsConfig.forEach(cfg => {
+                        const isLocked = currentSectionAccess[cfg.key];
+                        const $sec = $(cfg.secId);
+                        const $header = $sec.find('.section-header');
+                        const $headerLeft = $sec.find('.section-header-left');
+
+                        // Clean previous lock artifacts
+                        $header.find('#' + cfg.badgeId).remove();
+                        $sec.find('#' + cfg.bannerId).remove();
+
+                        if (isLocked) {
+                            $sec.addClass('section-is-locked');
+                            $headerLeft.append('<span class="badge-sec-locked" id="' + cfg.badgeId + '"><i class="fa-solid fa-lock"></i> LOCKED</span>');
+                            $header.after('<div class="locked-section-banner" id="' + cfg.bannerId + '"><i class="fa-solid fa-lock"></i> <span>This section has been locked by the administrator. Please contact the administrator for assistance.</span></div>');
+                            $sec.find(cfg.inputs).prop('disabled', true).addClass('input-locked');
+                        } else {
+                            $sec.removeClass('section-is-locked');
+                            $sec.find(cfg.inputs).prop('disabled', false).removeClass('input-locked');
+                        }
+                    });
+
+                    // Check if all 3 sections are locked
+                    const allLocked = currentSectionAccess.meal_availed && currentSectionAccess.fund_details && currentSectionAccess.food_grains;
+                    if (allLocked) {
+                        $('#btnSave').addClass('btn-all-locked').attr('title', 'All sections are locked by administrator.');
+                    } else {
+                        $('#btnSave').removeClass('btn-all-locked').removeAttr('title');
+                    }
+                };
+
+                if (sectionAccessPreloaded) {
+                    renderLocks(sectionAccessPreloaded);
+                } else {
+                    $.ajax({
+                        url: '/api/monthly-report/section-access',
+                        type: 'GET',
+                        data: { school_id: udise },
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res && res.status === 'success' && res.sections) {
+                                renderLocks(res.sections);
+                            } else {
+                                renderLocks(null);
+                            }
+                        },
+                        error: function () {
+                            renderLocks(null);
+                        }
+                    });
+                }
+            }
 
             function loadSchoolMonthlyData() {
                 const udise = $('#selectSchool').val();
@@ -3980,11 +4744,13 @@
 
                             $('.form-section').fadeIn();
                             $('#actionBar').fadeIn();
+                            applySectionAccessLocks(udise, isPrimary, res ? res.section_access : null);
                         },
                         error: function (xhr) {
                             setDefaultBankDate();
                             $('.form-section').fadeIn();
                             $('#actionBar').fadeIn();
+                            applySectionAccessLocks(udise, isPrimary, null);
                         }
                     });
                 }
@@ -4048,6 +4814,18 @@
 
                 const school = schools.find(s => s.id === udise);
                 if (!school) return;
+
+                const cat = (school.category || '').toUpperCase();
+                const isPrimary = (cat.includes('PRIMARY') && !cat.includes('UPPER')) || cat === 'PRIMARY';
+                if (isPrimary && currentSectionAccess.meal_availed && currentSectionAccess.fund_details && currentSectionAccess.food_grains) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Sections Locked',
+                        text: 'All sections of the monthly report for this school have been locked by the administrator. Please contact the administrator for assistance.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    return;
+                }
 
                 // Validate Material Cost Expenditure limits (Meals Served * rate)
                 if (!validateExpenditure('bv', true)) return;

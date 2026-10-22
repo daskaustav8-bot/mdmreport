@@ -30,13 +30,34 @@ const pool = new Pool({
   password: dbPass,
   database: dbName,
   ssl: { rejectUnauthorized: false },
-  max: 20,
+  max: 10,
   min: 0,
-  idleTimeoutMillis: 300000, // 5 minutes before idle connection is released
+  idleTimeoutMillis: 15000, // 15 seconds to prevent stale sockets with Supavisor pooler
   connectionTimeoutMillis: 30000, // 30 seconds for reliable cloud connections
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000
 });
+
+// Wrap pool.query to transparently retry once on cloud pooler socket disconnects
+const _rawQuery = pool.query.bind(pool);
+pool.query = async function(...args) {
+  try {
+    return await _rawQuery(...args);
+  } catch (err) {
+    const isConnErr = err.code === 'ECONNRESET' ||
+      err.code === 'EPIPE' ||
+      (err.message && (
+        err.message.includes('socket disconnected') ||
+        err.message.includes('Connection terminated') ||
+        err.message.includes('closed unexpectedly')
+      ));
+    if (isConnErr) {
+      await new Promise(r => setTimeout(r, 250));
+      return await _rawQuery(...args);
+    }
+    throw err;
+  }
+};
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle Supabase database client:', err.message);

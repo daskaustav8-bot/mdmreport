@@ -157,6 +157,231 @@
             line-height: 1.6;
         }
 
+        
+        /* GOOGLE DRIVE TOKEN MANAGEMENT PANEL */
+        .token-card {
+            background: var(--card);
+            border-radius: 22px;
+            padding: 28px 32px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .06);
+            margin-bottom: 35px;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            transition: .35s ease;
+        }
+
+        .token-card:hover {
+            box-shadow: 0 18px 40px rgba(0, 0, 0, .09);
+        }
+
+        .token-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .token-header-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .token-header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .token-header-text h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .token-header-text p {
+            margin: 4px 0 0;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .status-badge.connected {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-badge.expiring-soon {
+            background: #fef9c3;
+            color: #a16207;
+            border: 1px solid #fde047;
+        }
+
+        .status-badge.expired,
+        .status-badge.reconnection-required {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .status-badge.loading {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+
+        .status-indicator-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: currentColor;
+            display: inline-block;
+        }
+
+        .token-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .token-item {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 16px 18px;
+            border: 1px solid #edf2f7;
+        }
+
+        .token-item.wide {
+            grid-column: 1 / -1;
+        }
+
+        .token-item-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .token-item-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        .token-item-value.countdown {
+            font-family: 'Inter', monospace;
+            font-size: 1.05rem;
+            color: #2563eb;
+            letter-spacing: 0.3px;
+        }
+
+        .token-item-value.countdown.warning {
+            color: #d97706;
+        }
+
+        .token-item-value.countdown.danger {
+            color: #dc2626;
+        }
+
+        .token-alert-banner {
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .token-alert-banner.warning {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            color: #92400e;
+        }
+
+        .token-alert-banner.danger {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #991b1b;
+        }
+
+        .token-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding-top: 10px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .btn-drive-verify {
+            background: #f1f5f9;
+            color: var(--text);
+            border: 1px solid #cbd5e1;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: .2s ease;
+        }
+
+        .btn-drive-verify:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-drive-reconnect {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            text-decoration: none;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
+            transition: .2s ease;
+        }
+
+        .btn-drive-reconnect:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            color: white;
+        }
+
         /* FOOT FEEL */
         .footer-note {
             text-align: center;
@@ -191,6 +416,58 @@
                 <a href="/"><i class="fas fa-home"></i> Home</a>
                 <a href="/api/auth/logout?type=main" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        
+        <!-- GOOGLE DRIVE TOKEN MANAGEMENT CARD -->
+        <div class="token-card" id="googleDrivePanel">
+            <div class="token-header">
+                <div class="token-header-title">
+                    <div class="token-header-icon"><i class="fab fa-google-drive"></i></div>
+                    <div class="token-header-text">
+                        <h3>Google Drive Token Management</h3>
+                        <p>OAuth Refresh Token for Bank Passbook Photo Uploads (Encrypted in Supabase)</p>
+                    </div>
+                </div>
+                <div class="status-badge loading" id="driveStatusBadge">
+                    <span class="status-indicator-dot"></span>
+                    <span id="driveStatusText">Checking Status...</span>
+                </div>
+            </div>
+
+            <div class="token-grid">
+                <div class="token-item">
+                    <div class="token-item-label"><i class="fas fa-user-circle"></i> Google Account</div>
+                    <div class="token-item-value" id="driveAccountEmail">--</div>
+                </div>
+                <div class="token-item">
+                    <div class="token-item-label"><i class="fas fa-calendar-check"></i> Authorized On</div>
+                    <div class="token-item-value" id="driveIssuedAt">--</div>
+                </div>
+                <div class="token-item">
+                    <div class="token-item-label"><i class="fas fa-hourglass-end"></i> Token Expiry</div>
+                    <div class="token-item-value" id="driveExpiresAt">--</div>
+                </div>
+                <div class="token-item">
+                    <div class="token-item-label"><i class="fas fa-stopwatch"></i> Time Remaining</div>
+                    <div class="token-item-value countdown" id="driveTimeRemaining">--</div>
+                </div>
+                <div class="token-item wide">
+                    <div class="token-item-label"><i class="fas fa-shield-alt"></i> Last Verified</div>
+                    <div class="token-item-value" id="driveLastVerified">--</div>
+                </div>
+            </div>
+
+            <div id="driveAlertBanner" class="token-alert-banner" style="display: none;"></div>
+
+            <div class="token-actions">
+                <button id="btnVerifyDrive" class="btn-drive-verify" onclick="verifyGoogleDrive()">
+                    <i class="fas fa-sync-alt" id="verifySpinner"></i> Verify Connection
+                </button>
+                <a href="/api/google/connect" id="btnReconnectDrive" class="btn-drive-reconnect">
+                    <i class="fas fa-plug"></i> Reconnect Google Drive
                 </a>
             </div>
         </div>
@@ -277,6 +554,163 @@
                 window.location.replace('/admin_login');
             });
         })();
+
+        // =========================================================================
+        // Google Drive Token Management Client Logic
+        // =========================================================================
+        let tokenExpiryTimestamp = null;
+        let countdownTimer = null;
+
+        function updateCountdownDisplay() {
+            const countdownEl = document.getElementById('driveTimeRemaining');
+            if (!countdownEl || !tokenExpiryTimestamp) return;
+
+            const now = Date.now();
+            const remainingMs = tokenExpiryTimestamp - now;
+
+            if (remainingMs <= 0) {
+                countdownEl.textContent = 'Expired (0d 0h 0m 0s)';
+                countdownEl.className = 'token-item-value countdown danger';
+                applyStatusBadge('expired', 'Expired');
+                showDriveAlert('danger', 'Google Drive OAuth refresh token has expired. Please click Reconnect Google Drive to restore photo uploads.');
+                return;
+            }
+
+            const totalSeconds = Math.floor(remainingMs / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            countdownEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+            if (remainingMs <= 24 * 60 * 60 * 1000) {
+                countdownEl.className = 'token-item-value countdown warning';
+                applyStatusBadge('expiring_soon', 'Expiring Soon');
+                showDriveAlert('warning', 'Google Drive OAuth token expires in less than 24 hours. Reconnect soon to prevent interruptions.');
+            } else {
+                countdownEl.className = 'token-item-value countdown';
+            }
+        }
+
+        function applyStatusBadge(statusKey, label) {
+            const badge = document.getElementById('driveStatusBadge');
+            const text = document.getElementById('driveStatusText');
+            if (!badge || !text) return;
+
+            const formattedKey = statusKey.replace(/_/g, '-');
+            badge.className = 'status-badge ' + formattedKey;
+            text.textContent = label;
+        }
+
+        function showDriveAlert(type, message) {
+            const banner = document.getElementById('driveAlertBanner');
+            if (!banner) return;
+            banner.className = 'token-alert-banner ' + type;
+            banner.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <span>${message}</span>`;
+            banner.style.display = 'flex';
+        }
+
+        function hideDriveAlert() {
+            const banner = document.getElementById('driveAlertBanner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        function formatDisplayDate(isoString) {
+            if (!isoString) return 'Not Available';
+            try {
+                const d = new Date(isoString);
+                return d.toLocaleDateString('en-IN', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+            } catch (e) {
+                return isoString;
+            }
+        }
+
+        function loadGoogleDriveStatus() {
+            fetch('/api/admin/google-drive/status', {
+                credentials: 'same-origin',
+                cache: 'no-store'
+            })
+            .then(res => res.json())
+            .then(payload => {
+                if (payload.status !== 'success' || !payload.data) {
+                    applyStatusBadge('reconnection_required', 'Status Error');
+                    return;
+                }
+
+                const data = payload.data;
+                document.getElementById('driveAccountEmail').textContent = data.account_email || 'Not Connected';
+                document.getElementById('driveIssuedAt').textContent = formatDisplayDate(data.issued_at);
+                document.getElementById('driveExpiresAt').textContent = formatDisplayDate(data.expires_at);
+                document.getElementById('driveLastVerified').textContent = formatDisplayDate(data.last_verified_at);
+
+                if (data.expires_at) {
+                    tokenExpiryTimestamp = new Date(data.expires_at).getTime();
+                    updateCountdownDisplay();
+                    if (countdownTimer) clearInterval(countdownTimer);
+                    countdownTimer = setInterval(updateCountdownDisplay, 1000);
+                } else {
+                    document.getElementById('driveTimeRemaining').textContent = 'N/A';
+                }
+
+                if (data.connection_status === 'connected') {
+                    applyStatusBadge('connected', 'Connected');
+                    hideDriveAlert();
+                } else if (data.connection_status === 'expiring_soon') {
+                    applyStatusBadge('expiring_soon', 'Expiring Soon');
+                    showDriveAlert('warning', 'Google Drive OAuth token expires in less than 24 hours. Please reconnect.');
+                } else if (data.connection_status === 'expired') {
+                    applyStatusBadge('expired', 'Expired');
+                    showDriveAlert('danger', 'Google Drive token has expired. Please click Reconnect Google Drive.');
+                } else if (data.connection_status === 'reconnection_required') {
+                    applyStatusBadge('reconnection_required', 'Reconnection Required');
+                    showDriveAlert('danger', data.last_error || 'Google Drive authorization was revoked or expired. Please click Reconnect Google Drive.');
+                } else {
+                    applyStatusBadge('loading', 'Not Configured');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load Google Drive token status:', err);
+                applyStatusBadge('loading', 'Offline');
+            });
+        }
+
+        function verifyGoogleDrive() {
+            const btn = document.getElementById('btnVerifyDrive');
+            const spinner = document.getElementById('verifySpinner');
+            btn.disabled = true;
+            spinner.className = 'fas fa-spinner fa-spin';
+
+            fetch('/api/admin/google-drive/verify', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(result => {
+                btn.disabled = false;
+                spinner.className = 'fas fa-sync-alt';
+                if (result.status === 'success') {
+                    alert('✓ Google Drive connection verified successfully!');
+                } else {
+                    alert('⚠️ Verification notice: ' + (result.data?.message || result.message || 'Check failed'));
+                }
+                loadGoogleDriveStatus();
+            })
+            .catch(err => {
+                btn.disabled = false;
+                spinner.className = 'fas fa-sync-alt';
+                alert('Verification error: ' + err.message);
+                loadGoogleDriveStatus();
+            });
+        }
+
+        // Initialize Google Drive token management status
+        loadGoogleDriveStatus();
+
     </script>
 </body>
 
