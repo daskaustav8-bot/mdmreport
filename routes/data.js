@@ -1975,8 +1975,11 @@ async function handleDownloadTemplate(req, res) {
   const year = req.query?.year || String(new Date().getFullYear());
 
   const headers = [
+    // 1. School Information
     'u_dise', 'school_name', 'category', 'circle_name', 'gp_name', 'month_name', 'year',
+    // 2. Meal Availed Status (9 columns)
     'bv_days', 'p_days', 'up_days', 'bv_actual', 'p_actual', 'up_actual', 'bv_meals', 'p_meals', 'up_meals',
+    // 3. Fund Details (All 11 MDCF Components - 44 columns)
     'cc_bv_open', 'cc_bv_recv', 'cc_bv_exp', 'cc_bv_close',
     'cc_p_open', 'cc_p_recv', 'cc_p_exp', 'cc_p_close',
     'cc_up_open', 'cc_up_recv', 'cc_up_exp', 'cc_up_close',
@@ -1988,61 +1991,116 @@ async function handleDownloadTemplate(req, res) {
     'ks_open', 'ks_recv', 'ks_exp', 'ks_close',
     'ng_open', 'ng_recv', 'ng_exp', 'ng_close',
     'bc_open', 'bc_recv', 'bc_exp', 'bc_close',
+    // Bank Details (3 columns)
     'bank_passbook_balance', 'bank_balance_date', 'bank_match',
+    // 4. Food Grains Details - Rice (12 columns)
     'rice_bv_open', 'rice_bv_recv', 'rice_bv_cons', 'rice_bv_close',
     'rice_p_open', 'rice_p_recv', 'rice_p_cons', 'rice_p_close',
-    'rice_up_open', 'rice_up_recv', 'rice_up_cons', 'rice_up_close'
+    'rice_up_open', 'rice_up_recv', 'rice_up_cons', 'rice_up_close',
+    // 6. Children Health Status (4 columns)
+    'ifa_boys', 'ifa_girls', 'rbsk_screened', 'rbsk_referred',
+    // 7. School Inspection & Untoward Incidents (6 columns)
+    'inspection_done', 'insp_task_force', 'insp_district_officials', 'insp_block_officials', 'insp_smc_members',
+    'untoward_incidents'
   ];
 
-  const filename = type === 'blank' ? 'monthly_report_template_blank.csv' : `monthly_report_template_${month.toLowerCase()}_${year}.csv`;
+  const filename = type === 'blank' ? 'monthly_report_template_blank.csv' : 'monthly_report_template_' + month.toLowerCase() + '_' + year + '.csv';
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
 
   let csvContent = '\uFEFF' + headers.join(',') + '\n';
 
   if (type === 'blank') {
     csvContent += '19120502701,"CHOWBERA PRIMARY SCHOOL (19120502701)","PRIMARY ONLY","BOINCHEE","BANTIKA BOINCHI",' +
-      `"${month}","${year}",10,10,0,10,10,0,25,20,0,` +
+      '"' + month + '","' + year + '",10,10,0,10,10,0,25,20,0,' +
       '2000.00,2000.00,5000.00,-1000.00,2000.00,2000.00,1000000.00,-9996000.00,0.00,0.00,0.00,0.00,' +
       '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' +
       '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' +
-      `0.00,${new Date().toISOString().slice(0, 10)},YES,` +
-      '100.00,2000.00,500.00,1600.00,1222.00,2000.00,2200.00,1022.00,0.00,0.00,0.00,0.00\n';
+      '0.00,' + new Date().toISOString().slice(0, 10) + ',YES,' +
+      '100.00,2000.00,500.00,1600.00,1222.00,2000.00,2200.00,1022.00,0.00,0.00,0.00,0.00,' +
+      '15,18,40,2,Yes,1,0,1,2,0\n';
     return res.send(csvContent);
   }
 
   try {
     const schools = await getSchools();
+
+    // Query existing saved monthly reports from update_monthly_report.html
+    const { rows: savedReports } = await pool.query(
+      'SELECT * FROM public.mdm_monthly_report WHERE LOWER(month_name) = LOWER($1) AND year = $2',
+      [month, year]
+    );
+
+    const reportMap = new Map();
+    for (const r of savedReports) {
+      if (r.u_dise) {
+        reportMap.set(String(r.u_dise).trim(), r);
+      }
+    }
+
+    const fmtNum = (val, isDecimal = true) => {
+      if (val === null || val === undefined || val === '') {
+        return isDecimal ? '0.00' : '0';
+      }
+      const num = Number(val);
+      if (isNaN(num)) return isDecimal ? '0.00' : '0';
+      return isDecimal ? num.toFixed(2) : String(Math.round(num));
+    };
+
     for (const s of schools) {
+      const rep = reportMap.get(String(s.udise).trim()) || {};
       const row = [
         s.udise,
-        `"${s.school_name.replace(/"/g, '""')}"`,
-        `"${s.category}"`,
-        `"${s.circle_name}"`,
-        `"${s.gp_name}"`,
-        `"${month}"`,
-        `"${year}"`,
-        // Meals default 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0,
-        // Funds default 0.00 (11 components * 4)
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        // Bank details
-        '0.00', new Date().toISOString().slice(0, 10), 'YES',
-        // Rice default 0.00
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00',
-        '0.00', '0.00', '0.00', '0.00'
+        '"' + (s.school_name || '').replace(/"/g, '""') + '"',
+        '"' + (s.category || '').replace(/"/g, '""') + '"',
+        '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
+        '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
+        '"' + month + '"',
+        '"' + year + '"',
+        // Meals (9 columns)
+        fmtNum(rep.bv_days, false),
+        fmtNum(rep.p_days, false),
+        fmtNum(rep.up_days, false),
+        fmtNum(rep.bv_actual, false),
+        fmtNum(rep.p_actual, false),
+        fmtNum(rep.up_actual, false),
+        fmtNum(rep.bv_meals, false),
+        fmtNum(rep.p_meals, false),
+        fmtNum(rep.up_meals, false),
+        // Funds (11 components * 4 = 44 columns)
+        fmtNum(rep.cc_bv_open), fmtNum(rep.cc_bv_recv), fmtNum(rep.cc_bv_exp), fmtNum(rep.cc_bv_close),
+        fmtNum(rep.cc_p_open), fmtNum(rep.cc_p_recv), fmtNum(rep.cc_p_exp), fmtNum(rep.cc_p_close),
+        fmtNum(rep.cc_up_open), fmtNum(rep.cc_up_recv), fmtNum(rep.cc_up_exp), fmtNum(rep.cc_up_close),
+        fmtNum(rep.bi_open), fmtNum(rep.bi_recv), fmtNum(rep.bi_exp), fmtNum(rep.bi_close),
+        fmtNum(rep.lpg_open), fmtNum(rep.lpg_recv), fmtNum(rep.lpg_exp), fmtNum(rep.lpg_close),
+        fmtNum(rep.nutri_open), fmtNum(rep.nutri_recv), fmtNum(rep.nutri_exp), fmtNum(rep.nutri_close),
+        fmtNum(rep.mme_open), fmtNum(rep.mme_recv), fmtNum(rep.mme_exp), fmtNum(rep.mme_close),
+        fmtNum(rep.kd_open), fmtNum(rep.kd_recv), fmtNum(rep.kd_exp), fmtNum(rep.kd_close),
+        fmtNum(rep.ks_open), fmtNum(rep.ks_recv), fmtNum(rep.ks_exp), fmtNum(rep.ks_close),
+        fmtNum(rep.ng_open), fmtNum(rep.ng_recv), fmtNum(rep.ng_exp), fmtNum(rep.ng_close),
+        fmtNum(rep.bc_open), fmtNum(rep.bc_recv), fmtNum(rep.bc_exp), fmtNum(rep.bc_close),
+        // Bank details (3 columns)
+        fmtNum(rep.bank_passbook_balance),
+        rep.bank_balance_date || new Date().toISOString().slice(0, 10),
+        rep.bank_match || 'YES',
+        // Rice (12 columns)
+        fmtNum(rep.rice_bv_open), fmtNum(rep.rice_bv_recv), fmtNum(rep.rice_bv_cons), fmtNum(rep.rice_bv_close),
+        fmtNum(rep.rice_p_open), fmtNum(rep.rice_p_recv), fmtNum(rep.rice_p_cons), fmtNum(rep.rice_p_close),
+        fmtNum(rep.rice_up_open), fmtNum(rep.rice_up_recv), fmtNum(rep.rice_up_cons), fmtNum(rep.rice_up_close),
+        // Children Health Status (4 columns)
+        fmtNum(rep.ifa_boys, false),
+        fmtNum(rep.ifa_girls, false),
+        fmtNum(rep.rbsk_screened, false),
+        fmtNum(rep.rbsk_referred, false),
+        // School Inspection (5 columns)
+        rep.inspection_done || 'No',
+        fmtNum(rep.insp_task_force, false),
+        fmtNum(rep.insp_district_officials, false),
+        fmtNum(rep.insp_block_officials, false),
+        fmtNum(rep.insp_smc_members, false),
+        // Untoward Incidents (1 column)
+        fmtNum(rep.untoward_incidents, false)
       ];
       csvContent += row.join(',') + '\n';
     }
@@ -2399,7 +2457,7 @@ const handleUploadCsv = async (req, res) => {
         if (insertRes.rows.length > 0) {
           wasInserted = Boolean(insertRes.rows[0].was_inserted);
         }
-      } catch (upsertErr) {
+      } catch (upsertErr) { console.error('upsertErr in upload-full-csv:', upsertErr.message);
         // Fallback update if conflict handling encountered non-unique index
         await pool.query(
           'UPDATE public.mdm_monthly_report SET school_name = $1, p_days = $2, p_actual = $3, p_meals = $4, rice_p_close = $5 WHERE u_dise = $6 AND month_name = $7 AND year = $8',
@@ -2566,7 +2624,10 @@ router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv'
           bank_match, bank_passbook_balance, bank_balance_date,
           rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
           rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
-          rice_up_open, rice_up_recv, rice_up_cons, rice_up_close
+          rice_up_open, rice_up_recv, rice_up_cons, rice_up_close,
+          ifa_boys, ifa_girls, rbsk_screened, rbsk_referred,
+          inspection_done, insp_task_force, insp_district_officials, insp_block_officials, insp_smc_members,
+          untoward_incidents
         ) VALUES (
           $1, $2, $3, $4, $5, $6,
           $7, $8, $9, $10, $11, $12, $13, $14, $15,
@@ -2575,7 +2636,11 @@ router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv'
           $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47,
           $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59,
           $60, $61, $62,
-          $63, $64, $65, $66, $67, $68, $69, $70, $71, $72, $73, $74
+          $63, $64, $65, $66,
+          $67, $68, $69, $70, $71, $72, $73, $74, $75, $76, $77, $78,
+          $79, $80, $81, $82,
+          $83, $84, $85, $86, $87,
+          $88
         )
         ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
           school_name = EXCLUDED.school_name, circle_name = EXCLUDED.circle_name, gp_name = EXCLUDED.gp_name,
@@ -2597,7 +2662,17 @@ router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv'
           bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
           rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
           rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
-          rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close;
+          rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close,
+          ifa_boys = EXCLUDED.ifa_boys,
+          ifa_girls = EXCLUDED.ifa_girls,
+          rbsk_screened = EXCLUDED.rbsk_screened,
+          rbsk_referred = EXCLUDED.rbsk_referred,
+          inspection_done = EXCLUDED.inspection_done,
+          insp_task_force = EXCLUDED.insp_task_force,
+          insp_district_officials = EXCLUDED.insp_district_officials,
+          insp_block_officials = EXCLUDED.insp_block_officials,
+          insp_smc_members = EXCLUDED.insp_smc_members,
+          untoward_incidents = EXCLUDED.untoward_incidents;
       `;
 
       const vals = [
@@ -2620,12 +2695,23 @@ router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv'
         getVal(r, 'bank_match', 62) || 'YES', toFloat(getVal(r, 'bank_passbook_balance', 60)), getVal(r, 'bank_balance_date', 61) || new Date().toISOString().slice(0, 10),
         toFloat(getVal(r, 'rice_bv_open', 63)), toFloat(getVal(r, 'rice_bv_recv', 64)), toFloat(getVal(r, 'rice_bv_cons', 65)), toFloat(getVal(r, 'rice_bv_close', 66)),
         toFloat(getVal(r, 'rice_p_open', 67)), toFloat(getVal(r, 'rice_p_recv', 68)), toFloat(getVal(r, 'rice_p_cons', 69)), toFloat(getVal(r, 'rice_p_close', 70)),
-        toFloat(getVal(r, 'rice_up_open', 71)), toFloat(getVal(r, 'rice_up_recv', 72)), toFloat(getVal(r, 'rice_up_cons', 73)), toFloat(getVal(r, 'rice_up_close', 74))
+        toFloat(getVal(r, 'rice_up_open', 71)), toFloat(getVal(r, 'rice_up_recv', 72)), toFloat(getVal(r, 'rice_up_cons', 73)), toFloat(getVal(r, 'rice_up_close', 74)),
+        toInt(getVal(r, 'ifa_boys', 75)),
+        toInt(getVal(r, 'ifa_girls', 76)),
+        toInt(getVal(r, 'rbsk_screened', 77)),
+        toInt(getVal(r, 'rbsk_referred', 78)),
+        getVal(r, 'inspection_done', 79) || 'No',
+        toInt(getVal(r, 'insp_task_force', 80)),
+        toInt(getVal(r, 'insp_district_officials', 81)),
+        toInt(getVal(r, 'insp_block_officials', 82)),
+        toInt(getVal(r, 'insp_smc_members', 83)),
+        toInt(getVal(r, 'untoward_incidents', 84))
       ];
 
       try {
         await pool.query(q, vals);
       } catch (upsertErr) {
+        console.error("upsertErr in upload-full-csv line 2709:", upsertErr.message);
         // Fallback update
         await pool.query(
           'UPDATE public.mdm_monthly_report SET school_name = $1, p_days = $2, p_actual = $3, p_meals = $4, rice_p_close = $5 WHERE u_dise = $6 AND month_name = $7 AND year = $8',

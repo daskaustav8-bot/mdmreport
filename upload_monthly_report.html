@@ -466,6 +466,41 @@
             font-size: 20px;
             font-weight: 700;
         }
+        .food-grains-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+            margin-top: 25px;
+        }
+        .rice-icon-badge {
+            width: 44px;
+            height: 44px;
+            background: #fef3c7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d97706;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .lock-control-calc-cell {
+            min-height: 48px;
+            border-radius: 12px;
+            padding: 8px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border: 1.5px dashed #cbd5e1;
+            color: #64748b;
+            gap: 2px;
+            user-select: none;
+        }
         .row-quick-toggle {
             display: inline-flex;
             align-items: center;
@@ -891,6 +926,14 @@
         upr_ng_open: false, upr_ng_recv: false, upr_ng_exp: false,
         upr_bc_open: false, upr_bc_recv: false, upr_bc_exp: false,
 
+        // Rice Details - Primary
+        pri_rice_bv_open: false, pri_rice_bv_recv: false, pri_rice_bv_cons: false,
+        pri_rice_p_open: false, pri_rice_p_recv: false, pri_rice_p_cons: false,
+
+        // Rice Details - Upper Primary
+        upr_rice_p_open: false, upr_rice_p_recv: false, upr_rice_p_cons: false,
+        upr_rice_up_open: false, upr_rice_up_recv: false, upr_rice_up_cons: false,
+
         pri_bv_days: false,
         pri_p_days: false,
         pri_bv_actual: false,
@@ -917,7 +960,23 @@
         upr_p_actual: 'Actual Days MDM Served (Primary V)',
         upr_up_actual: 'Actual Days MDM Served (Upper Primary VI-VIII)',
         upr_p_meals: 'Total Meals Served (Primary V)',
-        upr_up_meals: 'Total Meals Served (Upper Primary VI-VIII)'
+        upr_up_meals: 'Total Meals Served (Upper Primary VI-VIII)',
+
+        // Rice Details - Primary
+        pri_rice_bv_open: 'Rice Bal Vatika Opening Balance (KG)',
+        pri_rice_bv_recv: 'Rice Bal Vatika Received (KG)',
+        pri_rice_bv_cons: 'Rice Bal Vatika Consumption (KG)',
+        pri_rice_p_open: 'Rice Primary (I-IV) Opening Balance (KG)',
+        pri_rice_p_recv: 'Rice Primary (I-IV) Received (KG)',
+        pri_rice_p_cons: 'Rice Primary (I-IV) Consumption (KG)',
+
+        // Rice Details - Upper Primary
+        upr_rice_p_open: 'Rice Primary (V) Opening Balance (KG)',
+        upr_rice_p_recv: 'Rice Primary (V) Received (KG)',
+        upr_rice_p_cons: 'Rice Primary (V) Consumption (KG)',
+        upr_rice_up_open: 'Rice Upper Primary (VI-VIII) Opening Balance (KG)',
+        upr_rice_up_recv: 'Rice Upper Primary (VI-VIII) Received (KG)',
+        upr_rice_up_cons: 'Rice Upper Primary (VI-VIII) Consumption (KG)'
     };
 
     async function loadMonthlyReportLockConfig() {
@@ -942,14 +1001,14 @@
         if (cat === 'primary') {
             btnPri.classList.add('active');
             btnUpr.classList.remove('active');
-            document.querySelectorAll('.col-pri-bv, .col-pri-p, .row-fund-pri, .col-fund-pri').forEach(el => el.style.display = '');
-            document.querySelectorAll('.col-upr-p, .col-upr-up, .row-fund-upr, .col-fund-upr').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.col-pri-bv, .col-pri-p, .row-fund-pri, .col-fund-pri, .row-rice-pri').forEach(el => el.style.display = '');
+            document.querySelectorAll('.col-upr-p, .col-upr-up, .row-fund-upr, .col-fund-upr, .row-rice-upr').forEach(el => el.style.display = 'none');
             document.getElementById('mealHintText').textContent = 'Enter zero (0) if Bal Vatika or Upper Primary is not applicable for your school. Locked fields cannot be edited by schools during monthly report submission or update.';
         } else {
             btnUpr.classList.add('active');
             btnPri.classList.remove('active');
-            document.querySelectorAll('.col-pri-bv, .col-pri-p, .row-fund-pri, .col-fund-pri').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.col-upr-p, .col-upr-up, .row-fund-upr, .col-fund-upr').forEach(el => el.style.display = '');
+            document.querySelectorAll('.col-pri-bv, .col-pri-p, .row-fund-pri, .col-fund-pri, .row-rice-pri').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.col-upr-p, .col-upr-up, .row-fund-upr, .col-fund-upr, .row-rice-upr').forEach(el => el.style.display = '');
             document.getElementById('mealHintText').textContent = 'Bal Vatika PP is not applicable for Upper Primary schools. Locked fields cannot be edited by schools during monthly report submission or update.';
         }
     }
@@ -1026,6 +1085,48 @@
             updateLockCellUI(k);
         });
         showLockToast('success', (shouldLock ? 'LOCKED' : 'UNLOCKED') + ' ' + colType.toUpperCase() + ' column.');
+        try {
+            await fetch('/api/monthly-report/lock-config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config: updates })
+            });
+        } catch(e) {}
+    }
+
+    async function toggleRiceRowLocks(groupPrefix) {
+        const prefix = currentLockCategory === 'primary' ? 'pri_' : 'upr_';
+        const keys = [prefix + 'rice_' + groupPrefix + '_open', prefix + 'rice_' + groupPrefix + '_recv', prefix + 'rice_' + groupPrefix + '_cons'];
+        const allCurrentlyLocked = keys.every(k => lockConfig[k]);
+        const shouldLock = !allCurrentlyLocked;
+        const updates = {};
+        keys.forEach(k => {
+            lockConfig[k] = shouldLock;
+            updates[k] = shouldLock;
+            updateLockCellUI(k);
+        });
+        showLockToast('success', (shouldLock ? 'LOCKED' : 'UNLOCKED') + ' rice row fields.');
+        try {
+            await fetch('/api/monthly-report/lock-config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config: updates })
+            });
+        } catch(e) {}
+    }
+
+    async function toggleRiceColumnLocks(colType) {
+        const prefix = currentLockCategory === 'primary' ? 'pri_' : 'upr_';
+        const keys = Object.keys(lockConfig).filter(k => k.startsWith(prefix + 'rice_') && k.endsWith('_' + colType));
+        const allCurrentlyLocked = keys.every(k => lockConfig[k]);
+        const shouldLock = !allCurrentlyLocked;
+        const updates = {};
+        keys.forEach(k => {
+            lockConfig[k] = shouldLock;
+            updates[k] = shouldLock;
+            updateLockCellUI(k);
+        });
+        showLockToast('success', (shouldLock ? 'LOCKED' : 'UNLOCKED') + ' Rice ' + colType.toUpperCase() + ' column.');
         try {
             await fetch('/api/monthly-report/lock-config', {
                 method: 'POST',
@@ -1120,7 +1221,7 @@
     <div class="hero-card">
         <div class="hero-info">
             <h2>MDCF Monthly Report Upload</h2>
-            <p>Upload the 75-column monthly report CSV or download pre-populated templates for schools.</p>
+            <p>Upload the 85-column monthly report CSV or download pre-populated templates for schools (includes Funds, Rice, Children Health Status &amp; Inspections).</p>
         </div>
     </div>
 
@@ -1417,6 +1518,7 @@
                 <i class="fas fa-question-circle"></i>
                 <span id="mealHintText">Enter zero (0) if Bal Vatika or Upper Primary is not applicable for your school. Locked fields cannot be edited by schools during monthly report submission or update.</span>
             </div>
+        </div>
         
         <!-- Box 3: 3. FUND DETAILS (IN Rs) -->
         <div class="fund-details-box" id="fundDetailsBox">
@@ -1932,6 +2034,190 @@
             </div>
         </div>
 
+        <!-- Box 4: 4. Food Grains Details - Rice (চাল সংক্রান্ত তথ্য in KG) -->
+        <div class="food-grains-box" id="foodGrainsBox">
+            <div class="meal-availed-header">
+                <div class="meal-header-left">
+                    <div class="rice-icon-badge">
+                        <i class="fa-solid fa-wheat-awn"></i>
+                    </div>
+                    <div class="meal-header-title">
+                        <strong>4. Food Grains Details - Rice (চাল সংক্রান্ত তথ্য in KG)</strong>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span class="meal-section-tag" style="background:#fef3c7; color:#b45309;">FOOD GRAINS</span>
+                </div>
+            </div>
+
+            <div class="meal-table-wrapper">
+                <table class="meal-status-table">
+                    <thead>
+                        <tr>
+                            <th class="col-desc" style="width: 22%;">CATEGORY</th>
+                            <th style="width: 11%;">FOOD ITEM</th>
+                            <th style="width: 17%; cursor:pointer;" onclick="toggleRiceColumnLocks('open')" title="Click to toggle lock for entire Opening Balance column">
+                                OPENING BALANCE (KG) <i class="fas fa-sort" style="font-size:10px; opacity:0.6;"></i>
+                            </th>
+                            <th style="width: 17%; cursor:pointer;" onclick="toggleRiceColumnLocks('recv')" title="Click to toggle lock for entire Received column">
+                                RECEIVED (KG) <i class="fas fa-sort" style="font-size:10px; opacity:0.6;"></i>
+                            </th>
+                            <th style="width: 17%; cursor:pointer;" onclick="toggleRiceColumnLocks('cons')" title="Click to toggle lock for entire Consumption column">
+                                CONSUMPTION (KG) <i class="fas fa-sort" style="font-size:10px; opacity:0.6;"></i>
+                            </th>
+                            <th style="width: 16%;">CLOSING BALANCE (KG)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Primary School Rows -->
+                        <tr class="row-rice-pri">
+                            <td class="desc-cell">
+                                Bal Vatika <span class="badge-pp">PP</span>
+                                <span class="row-quick-toggle" onclick="toggleRiceRowLocks('bv')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <td style="font-weight: 600; color: #475569;">Rice</td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_rice_bv_open" onclick="toggleFieldLock('pri_rice_bv_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_rice_bv_recv" onclick="toggleFieldLock('pri_rice_bv_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_rice_bv_cons" onclick="toggleFieldLock('pri_rice_bv_cons')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-calc-cell" title="Closing Balance = Opening + Received - Consumption (Auto-calculated)">
+                                    <div style="display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:#d97706;">
+                                        <i class="fas fa-calculator"></i>
+                                        <span>AUTO-CALC</span>
+                                    </div>
+                                    <span style="font-size:10px; color:#94a3b8; font-weight:600;">(Auto-calculated)</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="row-rice-pri">
+                            <td class="desc-cell">
+                                Primary <span class="badge-iv">I-IV</span>
+                                <span class="row-quick-toggle" onclick="toggleRiceRowLocks('p')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <td style="font-weight: 600; color: #475569;">Rice</td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_rice_p_open" onclick="toggleFieldLock('pri_rice_p_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_rice_p_recv" onclick="toggleFieldLock('pri_rice_p_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_rice_p_cons" onclick="toggleFieldLock('pri_rice_p_cons')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-calc-cell" title="Closing Balance = Opening + Received - Consumption (Auto-calculated)">
+                                    <div style="display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:#d97706;">
+                                        <i class="fas fa-calculator"></i>
+                                        <span>AUTO-CALC</span>
+                                    </div>
+                                    <span style="font-size:10px; color:#94a3b8; font-weight:600;">(Auto-calculated)</span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Upper Primary School Rows -->
+                        <tr class="row-rice-upr" style="display:none;">
+                            <td class="desc-cell">
+                                Primary <span class="badge-v">V</span>
+                                <span class="row-quick-toggle" onclick="toggleRiceRowLocks('p')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <td style="font-weight: 600; color: #475569;">Rice</td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_rice_p_open" onclick="toggleFieldLock('upr_rice_p_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_rice_p_recv" onclick="toggleFieldLock('upr_rice_p_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_rice_p_cons" onclick="toggleFieldLock('upr_rice_p_cons')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-calc-cell" title="Closing Balance = Opening + Received - Consumption (Auto-calculated)">
+                                    <div style="display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:#d97706;">
+                                        <i class="fas fa-calculator"></i>
+                                        <span>AUTO-CALC</span>
+                                    </div>
+                                    <span style="font-size:10px; color:#94a3b8; font-weight:600;">(Auto-calculated)</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="row-rice-upr" style="display:none;">
+                            <td class="desc-cell">
+                                Upper Primary <span class="badge-upp">VI-VIII</span>
+                                <span class="row-quick-toggle" onclick="toggleRiceRowLocks('up')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <td style="font-weight: 600; color: #475569;">Rice</td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_rice_up_open" onclick="toggleFieldLock('upr_rice_up_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_rice_up_recv" onclick="toggleFieldLock('upr_rice_up_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_rice_up_cons" onclick="toggleFieldLock('upr_rice_up_cons')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-calc-cell" title="Closing Balance = Opening + Received - Consumption (Auto-calculated)">
+                                    <div style="display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:#d97706;">
+                                        <i class="fas fa-calculator"></i>
+                                        <span>AUTO-CALC</span>
+                                    </div>
+                                    <span style="font-size:10px; color:#94a3b8; font-weight:600;">(Auto-calculated)</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="meal-hint-footer">
+                <i class="fas fa-calculator" style="color: #d97706;"></i>
+                <span>Closing Balance = Opening + Received − Consumption (Auto-calculated). Locked rice fields cannot be edited by schools during monthly report submission or update.</span>
+            </div>
+        </div>
+
     </div>
 
     <!-- Floating Feedback Toast -->
@@ -1942,7 +2228,7 @@
         <div class="card">
             <h3><i class="fas fa-download" style="color:var(--blue);"></i> 1. Download Templates</h3>
             <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
-                Download pre-populated CSV template with all 246 schools from Supabase master database.
+                Download pre-populated 85-column CSV template with all 246 schools from Supabase master database, pre-filled with all saved data from monthly update reports.
             </p>
 
             <div class="select-row">

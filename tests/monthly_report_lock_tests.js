@@ -122,7 +122,26 @@ async function runTests() {
     assert(uploadHtml.includes(fc), `Must contain fund lock control: ${fc}`);
   }
 
-  console.log('✅ PASS: upload_monthly_report.html contains complete Lock/Unlock section and matching box markup for both Meal Availed and Fund Details.\n');
+  // Verify Food Grains Details - Rice Box (Box 4)
+  assert(uploadHtml.includes('4. Food Grains Details - Rice (চাল সংক্রান্ত তথ্য in KG)'), 'Must contain 4. Food Grains Details - Rice header');
+  assert(uploadHtml.includes('FOOD GRAINS'), 'Must contain FOOD GRAINS tag');
+  assert(uploadHtml.includes('fa-wheat-awn'), 'Must contain wheat icon badge');
+  assert(uploadHtml.includes('OPENING BALANCE (KG)'), 'Must contain OPENING BALANCE (KG) header');
+  assert(uploadHtml.includes('RECEIVED (KG)'), 'Must contain RECEIVED (KG) header');
+  assert(uploadHtml.includes('CONSUMPTION (KG)'), 'Must contain CONSUMPTION (KG) header');
+  assert(uploadHtml.includes('CLOSING BALANCE (KG)'), 'Must contain CLOSING BALANCE (KG) header');
+
+  const expectedRiceControls = [
+    'ctrl_pri_rice_bv_open', 'ctrl_pri_rice_bv_recv', 'ctrl_pri_rice_bv_cons',
+    'ctrl_pri_rice_p_open', 'ctrl_pri_rice_p_recv', 'ctrl_pri_rice_p_cons',
+    'ctrl_upr_rice_p_open', 'ctrl_upr_rice_p_recv', 'ctrl_upr_rice_p_cons',
+    'ctrl_upr_rice_up_open', 'ctrl_upr_rice_up_recv', 'ctrl_upr_rice_up_cons'
+  ];
+  for (const rc of expectedRiceControls) {
+    assert(uploadHtml.includes(rc), `Must contain rice lock control: ${rc}`);
+  }
+
+  console.log('✅ PASS: upload_monthly_report.html contains complete Lock/Unlock section and matching box markup for Meal Availed, Fund Details, and Food Grains (Rice).\n');
 
   // 2. Test GET /api/monthly-report/lock-config
   console.log('--- Test 2: GET /api/monthly-report/lock-config Endpoint ---');
@@ -290,6 +309,53 @@ async function runTests() {
   assert.strictEqual(Number(fundCheckRows[0].bi_recv), 150.00, 'Locked fund field bi_recv must preserve existing value (150.00) rather than 999.00');
   console.log('✅ PASS: Server-side enforcement successfully protects locked Fund Details fields.');
 
+  // Test locking a rice field: pri_rice_bv_open
+  const riceLockRes = await makeRequest({
+    hostname: 'localhost',
+    port: 3000,
+    path: '/api/monthly-report/lock-config',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': adminCookie
+    }
+  }, {
+    config: {
+      pri_rice_bv_open: true
+    }
+  });
+  assert.strictEqual(riceLockRes.statusCode, 200);
+
+  // Set existing rice value in database
+  await pool.query(
+    'UPDATE public.mdm_monthly_report SET rice_bv_open = 42.50, rice_bv_cons = 10.00 WHERE u_dise = $1 AND month_name = $2 AND year = $3',
+    [testUdise, testMonth, testYear]
+  );
+
+  // Attempt to save report with rice_bv_open = 999.00 and rice_bv_cons = 30.00
+  // Locked field rice_bv_open should remain 42.50, unlocked field rice_bv_cons should update to 30.00
+  await makeRequest({
+    hostname: 'localhost',
+    port: 3000,
+    path: '/api/monthly-report/save',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }, {
+    u_dise: testUdise,
+    month_name: testMonth,
+    year: testYear,
+    rice_bv_open: 999.00,
+    rice_bv_cons: 30.00
+  });
+
+  const { rows: riceCheckRows } = await pool.query(
+    'SELECT rice_bv_open, rice_bv_cons FROM public.mdm_monthly_report WHERE u_dise = $1 AND month_name = $2 AND year = $3',
+    [testUdise, testMonth, testYear]
+  );
+  assert.strictEqual(Number(riceCheckRows[0].rice_bv_open), 42.50, 'Locked rice field rice_bv_open must preserve existing value (42.50) rather than 999.00');
+  assert.strictEqual(Number(riceCheckRows[0].rice_bv_cons), 30.00, 'Unlocked rice field rice_bv_cons must update to 30.00');
+  console.log('✅ PASS: Server-side enforcement successfully protects locked Food Grains (Rice) fields while allowing unlocked fields to update.');
+
   // Clean up: unlock test fields
   await makeRequest({
     hostname: 'localhost',
@@ -304,7 +370,8 @@ async function runTests() {
     config: {
       pri_bv_days: false,
       pri_bv_actual: false,
-      pri_bi_recv: false
+      pri_bi_recv: false,
+      pri_rice_bv_open: false
     }
   });
   console.log('✅ PASS: Test cleanup completed (fields unlocked).');

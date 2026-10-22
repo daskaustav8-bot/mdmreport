@@ -3183,6 +3183,15 @@
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="bc_close" name="bc_close" value="0"></td>
                             </tr>
 
+                            <!-- 12. OTHERS -->
+                            <tr>
+                                <td>OTHERS</td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="oth" id="oth_open" name="oth_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="oth" id="oth_recv" name="oth_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="oth" id="oth_exp" name="oth_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="oth_close" name="oth_close" value="0"></td>
+                            </tr>
+
                             <!-- TOTAL ROW -->
                             <tr class="total-row">
                                 <td><strong>GRAND TOTAL (₹)</strong></td>
@@ -4740,8 +4749,12 @@
                         $('#secFund input').removeClass('input-locked').prop('disabled', false).removeAttr('title');
                         $('#lockBadgeFund, #lockBannerFund').remove();
 
+                        // Clean previous lock artifacts on Rice Details
+                        $('#secRice input:not(.closing-field)').removeClass('input-locked').prop('disabled', false).removeAttr('title');
+                        $('#lockBadgeRice, #lockBannerRice').remove();
+
                         const prefix = isPrimary ? 'pri_' : 'upr_';
-                        const fundFieldGroups = ['cc_bv', 'cc_p', 'cc_up', 'bi', 'lpg', 'nutri', 'mme', 'kd', 'ks', 'ng', 'bc'];
+                        const fundFieldGroups = ['cc_bv', 'cc_p', 'cc_up', 'bi', 'lpg', 'nutri', 'mme', 'kd', 'ks', 'ng', 'bc', 'oth'];
                         const fundSubTypes = ['open', 'recv', 'exp'];
 
                         fundFieldGroups.forEach(grp => {
@@ -4778,6 +4791,30 @@
                             } else {
                                 $('#secMeal').removeClass('section-is-locked');
                             }
+
+                            // Primary Rice fields
+                            const priRiceFields = [
+                                { key: 'pri_rice_bv_open', id: '#rice_bv_open' },
+                                { key: 'pri_rice_bv_recv', id: '#rice_bv_recv' },
+                                { key: 'pri_rice_bv_cons', id: '#rice_bv_cons' },
+                                { key: 'pri_rice_p_open', id: '#rice_p_open' },
+                                { key: 'pri_rice_p_recv', id: '#rice_p_recv' },
+                                { key: 'pri_rice_p_cons', id: '#rice_p_cons' }
+                            ];
+                            let riceLockedCount = 0;
+                            priRiceFields.forEach(f => {
+                                if (cfg[f.key]) {
+                                    $(f.id).prop('disabled', true).addClass('input-locked').attr('title', 'This field is locked by administrator.');
+                                    riceLockedCount++;
+                                }
+                            });
+                            if (riceLockedCount === priRiceFields.length) {
+                                $('#secRice').addClass('section-is-locked');
+                                $('#secRice .section-header-left').append('<span class="badge-sec-locked" id="lockBadgeRice"><i class="fa-solid fa-lock"></i> LOCKED</span>');
+                                $('#secRice .section-header').after('<div class="locked-section-banner" id="lockBannerRice"><i class="fa-solid fa-lock"></i> <span>Food Grains (Rice) fields are locked by the administrator.</span></div>');
+                            } else {
+                                $('#secRice').removeClass('section-is-locked');
+                            }
                         } else {
                             // Upper Primary school fields
                             const uprFields = [
@@ -4801,10 +4838,34 @@
                             } else {
                                 $('#secMeal').removeClass('section-is-locked');
                             }
+
+                            // Upper Primary Rice fields
+                            const uprRiceFields = [
+                                { key: 'upr_rice_p_open', id: '#rice_p_open' },
+                                { key: 'upr_rice_p_recv', id: '#rice_p_recv' },
+                                { key: 'upr_rice_p_cons', id: '#rice_p_cons' },
+                                { key: 'upr_rice_up_open', id: '#rice_up_open' },
+                                { key: 'upr_rice_up_recv', id: '#rice_up_recv' },
+                                { key: 'upr_rice_up_cons', id: '#rice_up_cons' }
+                            ];
+                            let riceLockedCount = 0;
+                            uprRiceFields.forEach(f => {
+                                if (cfg[f.key]) {
+                                    $(f.id).prop('disabled', true).addClass('input-locked').attr('title', 'This field is locked by administrator.');
+                                    riceLockedCount++;
+                                }
+                            });
+                            if (riceLockedCount === uprRiceFields.length) {
+                                $('#secRice').addClass('section-is-locked');
+                                $('#secRice .section-header-left').append('<span class="badge-sec-locked" id="lockBadgeRice"><i class="fa-solid fa-lock"></i> LOCKED</span>');
+                                $('#secRice .section-header').after('<div class="locked-section-banner" id="lockBannerRice"><i class="fa-solid fa-lock"></i> <span>Food Grains (Rice) fields are locked by the administrator.</span></div>');
+                            } else {
+                                $('#secRice').removeClass('section-is-locked');
+                            }
                         }
                     },
                     error: function() {
-                        $('#secMeal input').removeClass('input-locked').prop('disabled', false);
+                        $('#secMeal input, #secFund input, #secRice input:not(.closing-field)').removeClass('input-locked').prop('disabled', false);
                     }
                 });
             }
@@ -5034,6 +5095,10 @@
                                 $('#bc_open').val(getVal('bc_open', 'bank_charges', 'open'));
                                 $('#bc_recv').val(getVal('bc_recv', 'bank_charges', 'recv'));
                                 $('#bc_exp').val(getVal('bc_exp', 'bank_charges', 'exp'));
+
+                                $('#oth_open').val(getVal('oth_open', 'others', 'open') || getVal('others_open', 'others', 'open'));
+                                $('#oth_recv').val(getVal('oth_recv', 'others', 'recv') || getVal('others_recv', 'others', 'recv'));
+                                $('#oth_exp').val(getVal('oth_exp', 'others', 'exp') || getVal('others_exp', 'others', 'exp'));
 
                                 $('#bank_match').val(d.bank_match || fj.bank_match || 'YES');
                                 $('#bank_passbook_balance').val(d.bank_passbook_balance != null ? d.bank_passbook_balance : (fj.bank_passbook_balance != null ? fj.bank_passbook_balance : 0));
@@ -5285,6 +5350,11 @@
                             bc_recv: $('#bc_recv').val() || 0,
                             bc_exp: $('#bc_exp').val() || 0,
                             bc_close: $('#bc_close').val() || 0,
+
+                            oth_open: $('#oth_open').val() || 0,
+                            oth_recv: $('#oth_recv').val() || 0,
+                            oth_exp: $('#oth_exp').val() || 0,
+                            oth_close: $('#oth_close').val() || 0,
 
                             bank_match: $('#bank_match').val() || 'YES',
                             bank_passbook_balance: $('#bank_passbook_balance').val() || 0,
