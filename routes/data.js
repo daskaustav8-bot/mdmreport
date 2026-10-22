@@ -2836,7 +2836,8 @@ router.get('/google/connect', requireAuth('main'), (req, res) => {
 
   const redirectUri = getOAuthRedirectUri(req);
   const scope = encodeURIComponent('https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email');
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+  // Include both consent and select_account to strictly force Google to issue a brand-new refresh token
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent%20select_account`;
 
   return res.redirect(authUrl);
 });
@@ -2914,18 +2915,49 @@ router.get('/google/callback', async (req, res) => {
         isTestingMode: true,
         issuedAt: new Date()
       });
+
+      // Verify connection immediately so status, folder access and timestamps are fresh
+      await verifyGoogleDriveConnection();
     } else {
       // Re-authorization where Google did not return a replacement refresh token:
-      // Preserve existing token in Supabase as required by specification
+      // Verify if existing token is valid. If not, inform admin to revoke app permission first.
       const existing = await getGoogleDriveTokenRecord();
+      let isValidExisting = false;
       if (existing) {
-        await updateGoogleDriveTokenStatus({
-          status: 'connected',
-          lastError: null,
-          lastVerifiedAt: new Date()
-        });
-      } else {
-        return res.status(400).send('Google did not return a refresh token and no prior token was found in Supabase. Please re-authorize with prompt=consent.');
+        const verifyRes = await verifyGoogleDriveConnection();
+        isValidExisting = Boolean(verifyRes && verifyRes.success);
+      }
+
+      if (!isValidExisting) {
+        return res.status(400).send(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>Reconnection Action Needed</title>
+            <style>
+              body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+              .card { background: #1e293b; border: 1px solid #334155; padding: 2.5rem; border-radius: 16px; max-width: 520px; line-height: 1.6; }
+              h2 { color: #f59e0b; margin-top: 0; }
+              a.btn { display: inline-block; background: #0d9488; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 15px; }
+              code { background: #334155; padding: 2px 6px; border-radius: 4px; color: #38bdf8; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h2>⚠️ Google Did Not Return a Refresh Token</h2>
+              <p>Google reused your previous login session and did not generate a new 7-day refresh token.</p>
+              <p><strong>To fix this in 10 seconds:</strong></p>
+              <ol>
+                <li>Open <a href="https://myaccount.google.com/connections" target="_blank" style="color: #38bdf8;">Google Account Connections</a>.</li>
+                <li>Find your app and click <strong>Delete all connections / Remove access</strong>.</li>
+                <li>Return to the Admin Dashboard and click <strong>Reconnect Google Drive</strong>. Google will then issue a brand new 7-day refresh token.</li>
+              </ol>
+              <a href="/admin_dashboard" class="btn">Return to Admin Dashboard</a>
+            </div>
+          </body>
+          </html>
+        `);
       }
     }
 

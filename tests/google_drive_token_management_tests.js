@@ -67,6 +67,13 @@ async function runTests() {
   adminCookie = await getAdminSessionCookie();
   await poolQuery('SELECT 1');
 
+  // Preserve any existing live token before running test suite
+  const originalTokenRows = await poolQuery("SELECT * FROM public.google_drive_oauth_tokens WHERE provider = 'google';");
+  const originalBackup = originalTokenRows.rows.length > 0 ? originalTokenRows.rows[0] : null;
+  const originalEnvToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+  try {
+
   // Test 1: AES-256-GCM Encryption, Decryption, and Tamper Detection
   await test('AES-256-GCM encrypts, decrypts, and detects tampered data', async () => {
     const originalToken = '1//04_TEST_REALISTIC_GOOGLE_REFRESH_TOKEN_' + Date.now();
@@ -286,7 +293,48 @@ async function runTests() {
     assert(!html.includes('encrypted_refresh_token'), 'Dashboard HTML must not reference encrypted_refresh_token');
   });
 
-  await stopTestServer();
+  } finally {
+    await stopTestServer();
+    process.env.GOOGLE_REFRESH_TOKEN = originalEnvToken;
+
+    // Restore original token state if one existed before tests, or clear dummy test records
+    if (originalBackup && !originalBackup.encrypted_refresh_token.includes('MIGRATION_SOURCE_TOKEN')) {
+      await poolQuery(`
+        INSERT INTO public.google_drive_oauth_tokens (
+          provider, account_email, encrypted_refresh_token, token_iv, token_auth_tag,
+          issued_at, expires_at, is_testing_mode, status, last_verified_at, last_error, updated_at
+        ) VALUES (
+          'google', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (provider) DO UPDATE SET
+          account_email = EXCLUDED.account_email,
+          encrypted_refresh_token = EXCLUDED.encrypted_refresh_token,
+          token_iv = EXCLUDED.token_iv,
+          token_auth_tag = EXCLUDED.token_auth_tag,
+          issued_at = EXCLUDED.issued_at,
+          expires_at = EXCLUDED.expires_at,
+          is_testing_mode = EXCLUDED.is_testing_mode,
+          status = EXCLUDED.status,
+          last_verified_at = EXCLUDED.last_verified_at,
+          last_error = EXCLUDED.last_error,
+          updated_at = CURRENT_TIMESTAMP;
+      `, [
+        originalBackup.account_email,
+        originalBackup.encrypted_refresh_token,
+        originalBackup.token_iv,
+        originalBackup.token_auth_tag,
+        originalBackup.issued_at,
+        originalBackup.expires_at,
+        originalBackup.is_testing_mode,
+        originalBackup.status,
+        originalBackup.last_verified_at,
+        originalBackup.last_error
+      ]);
+    } else {
+      // Clear mock test token from database
+      await poolQuery("DELETE FROM public.google_drive_oauth_tokens WHERE provider = 'google';");
+    }
+  }
 
   console.log('\n================================================================');
   console.log(`TEST SUMMARY: ${passed}/${passed + failed} PASSED`);

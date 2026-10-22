@@ -72,14 +72,15 @@ async function getGoogleAccessToken() {
             status: 'reconnection_required',
             lastError: `Google authorization has expired or was revoked (invalid_grant): ${errDesc}`
           });
-          throw new Error('Google Drive authorization has expired or was revoked. Please reconnect in the Admin Dashboard.');
+          console.warn('OAuth refresh token expired (invalid_grant), falling back to Service Account if available...');
+        } else {
+          console.warn(`Google OAuth auth failed (${errDesc}), falling back to Service Account if available...`);
         }
-        throw new Error(`Google OAuth auth failed: ${errDesc}`);
+      } else {
+        cachedToken = tokenDataJson.access_token;
+        tokenExpiresAt = now + (tokenDataJson.expires_in || 3600) * 1000;
+        return cachedToken;
       }
-
-      cachedToken = tokenDataJson.access_token;
-      tokenExpiresAt = now + (tokenDataJson.expires_in || 3600) * 1000;
-      return cachedToken;
     }
   }
 
