@@ -1087,10 +1087,14 @@
             font-size: 11.5px;
             font-weight: 700;
             color: var(--text-dark);
-            max-width: 110px;
+            max-width: 200px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        #photoStatusBadge {
+            margin-left: 10px;
         }
 
         .photo-meta .badge-ready {
@@ -1812,7 +1816,11 @@
             }
 
             .photo-filename {
-                max-width: 75px;
+                max-width: 140px;
+            }
+
+            #photoStatusBadge {
+                margin-left: 8px;
             }
 
             .btn-photo-action .photo-btn-text {
@@ -2224,8 +2232,8 @@
             /* Step 4: Verification Sub-Panel (Mobile Stacked Layout) */
             .verification-panel {
                 display: grid;
-                grid-template-columns: 1fr;
-                gap: 8px;
+                grid-template-columns: 1fr !important;
+                gap: 10px;
                 padding: 10px 8px;
                 border-radius: 0 0 8px 8px;
                 margin-bottom: 10px;
@@ -2233,40 +2241,88 @@
 
             .verif-box {
                 display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                padding: 8px 10px;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                padding: 10px 12px;
                 gap: 8px;
-                border-radius: 6px;
+                border-radius: 8px;
+            }
+
+            .verif-box .verif-label {
+                width: 100%;
+                font-size: 12px;
+                font-weight: 700;
+                line-height: 1.35;
+                color: var(--text-dark);
+            }
+
+            .verif-box .verif-label span {
+                display: block;
+                font-size: 10px;
+                font-weight: 500;
+                color: var(--text-muted);
+                margin-top: 2px;
+            }
+
+            .verif-box .verif-controls {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .verif-box .verif-controls .verif-date-input {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                height: 34px !important;
+                min-height: 34px !important;
+                font-size: 12px !important;
+                padding: 0 8px !important;
+                box-sizing: border-box !important;
+            }
+
+            .verif-box .verif-controls .verif-balance-input {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                height: 34px !important;
+                min-height: 34px !important;
+                font-size: 13px !important;
+                font-weight: 800 !important;
+                text-align: center !important;
+                padding: 0 8px !important;
+                box-sizing: border-box !important;
             }
 
             .verif-box.verif-match-box {
                 grid-column: 1;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
             }
 
-            .verif-label {
-                font-size: 10.5px;
-                line-height: 1.25;
+            .verif-box.verif-match-box .verif-label {
+                flex: 1 1 auto;
+                min-width: 0;
+                font-size: 11.5px;
             }
 
-            .verif-label span {
-                font-size: 8.5px;
-            }
-
-            .verif-controls {
-                display: flex;
-                gap: 5px;
+            .verif-box.verif-match-box .verif-controls {
+                width: auto;
                 flex-shrink: 0;
             }
 
-            .verif-controls select,
-            .verif-controls input {
-                height: 30px !important;
-                min-height: 30px !important;
-                font-size: 11px !important;
-                padding: 0 5px !important;
-                border-radius: 4px !important;
+            .verif-box.verif-match-box .verif-match-select {
+                width: 85px !important;
+                min-width: 85px !important;
+                height: 34px !important;
+                min-height: 34px !important;
+                font-size: 12px !important;
                 box-sizing: border-box !important;
             }
 
@@ -2369,6 +2425,9 @@
             padding: 12px 14px;
             border-bottom: 2px solid var(--border);
             border-right: 1px solid var(--border-light);
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: break-word;
         }
 
         table.health-table th:last-child,
@@ -2503,6 +2562,37 @@
         }
 
         @media (max-width: 768px) {
+            .verification-panel {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            table.health-table th,
+            table.inspection-table th {
+                white-space: normal !important;
+                word-break: normal !important;
+                overflow-wrap: break-word !important;
+                font-size: 9.5px !important;
+                padding: 8px 6px !important;
+                letter-spacing: 0.2px !important;
+                line-height: 1.3 !important;
+            }
+
+            table.health-table th:first-child,
+            table.inspection-table th:first-child {
+                padding-left: 8px !important;
+                text-align: left !important;
+            }
+
+            table.health-table th:last-child,
+            table.inspection-table th:last-child {
+                width: 110px !important;
+                min-width: 110px !important;
+                max-width: 110px !important;
+                padding: 8px 4px !important;
+                text-align: center !important;
+            }
+
             table.health-table td:first-child,
             table.inspection-table td:first-child {
                 font-size: 11px !important;
@@ -2512,8 +2602,11 @@
 
             table.health-table td:last-child,
             table.inspection-table td:last-child {
-                width: 100px !important;
+                width: 110px !important;
+                min-width: 110px !important;
+                max-width: 110px !important;
                 padding: 4px 4px !important;
+                text-align: center !important;
             }
 
             .insp-toggle-wrap {
@@ -2731,20 +2824,59 @@
                 padding: 1px 3px;
             }
 
-            .verif-label {
-                font-size: 8.5px;
+            .verif-box .verif-label {
+                font-size: 10.5px;
             }
 
-            .verif-label span {
-                font-size: 7.5px;
+            .verif-box .verif-label span {
+                font-size: 9px;
             }
 
-            .verif-controls select,
-            .verif-controls input {
-                height: 25px !important;
-                min-height: 25px !important;
-                font-size: 9px !important;
-                padding: 0 2px !important;
+            .verif-box .verif-controls .verif-date-input,
+            .verif-box .verif-controls .verif-balance-input {
+                height: 30px !important;
+                min-height: 30px !important;
+                font-size: 10.5px !important;
+                padding: 0 4px !important;
+            }
+
+            .verif-box.verif-match-box .verif-match-select {
+                height: 30px !important;
+                min-height: 30px !important;
+                font-size: 10.5px !important;
+                width: 75px !important;
+                min-width: 75px !important;
+            }
+
+            .photo-filename {
+                max-width: 105px !important;
+            }
+
+            #photoStatusBadge {
+                margin-left: 6px !important;
+            }
+
+            table.health-table th,
+            table.inspection-table th {
+                font-size: 8.5px !important;
+                padding: 6px 4px !important;
+                letter-spacing: 0 !important;
+                line-height: 1.2 !important;
+            }
+
+            table.health-table th:last-child,
+            table.inspection-table th:last-child,
+            table.health-table td:last-child,
+            table.inspection-table td:last-child {
+                width: 95px !important;
+                min-width: 95px !important;
+                max-width: 95px !important;
+            }
+
+            table.health-table td:first-child,
+            table.inspection-table td:first-child {
+                font-size: 10px !important;
+                padding: 5px 6px !important;
             }
 
             .summary-chip strong {
@@ -3270,16 +3402,12 @@
                                     <div class="photo-meta">
                                         <span class="photo-filename" id="photoFileName" title="">passbook.jpg</span>
                                         <span id="photoFileSize" style="display:none;">0 KB</span>
-                                        <span class="badge-ready" id="photoDriveBadge"><i class="fa-brands fa-google-drive"></i> Google Drive</span>
-                                        <span id="photoStatusBadge" style="background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; display:none;"><i class="fa-solid fa-circle-check"></i> Submitted</span>
+                                        <span id="photoStatusBadge" style="background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; margin-left: 10px; display:none;"><i class="fa-solid fa-circle-check"></i> Submitted</span>
                                         <span id="photoSubmittedTime" style="font-size:11px; color:#64748b; display:none;"></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="photo-actions">
-                                <button type="button" class="btn-photo-action btn-photo-view" id="btnViewPhoto" title="View Full Preview">
-                                    <i class="fa-solid fa-eye"></i> <span class="photo-btn-text">View</span>
-                                </button>
                                 <button type="button" class="btn-photo-action" id="btnChangePhoto" title="Retake Photo with Camera">
                                     <i class="fa-solid fa-camera"></i> <span class="photo-btn-text">Retake</span>
                                 </button>
@@ -3412,7 +3540,7 @@
                         <thead>
                             <tr>
                                 <th style="text-align: left; padding-left: 18px;">HEALTH PARAMETER / DESCRIPTION</th>
-                                <th style="width: 180px; text-align: center;">COUNT</th>
+                                <th style="text-align: center;">COUNT</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -3466,7 +3594,7 @@
                         <thead>
                             <tr>
                                 <th style="text-align: left; padding-left: 18px;">INSPECTION &amp; MONITORING DETAILS</th>
-                                <th style="width: 180px; text-align: center;">STATUS / VISITS</th>
+                                <th style="text-align: center;">STATUS / VISITS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -4176,6 +4304,31 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
             }
 
+            function getFormattedPassbookName(rawName, ext) {
+                const udise = $('#selectSchool').val();
+                const school = (schools && Array.isArray(schools)) ? schools.find(s => s.id === udise) : null;
+                const cleanSchoolName = school ? (school.schoolNameOnly || school.text).replace(/\s*\([^)]*\)\s*$/, '').trim() : '';
+
+                let extension = ext || 'jpg';
+                if (rawName && typeof rawName === 'string' && rawName.includes('.')) {
+                    extension = rawName.split('.').pop().toLowerCase();
+                }
+                if (!['jpg', 'jpeg', 'png', 'webp'].includes(extension)) {
+                    extension = 'jpg';
+                }
+
+                if (cleanSchoolName) {
+                    const sanitized = cleanSchoolName.replace(/[\\/:*?"<>|]/g, '-').trim();
+                    return `${sanitized}.${extension}`;
+                }
+
+                if (rawName && typeof rawName === 'string' && !rawName.toLowerCase().startsWith('passbook')) {
+                    return rawName;
+                }
+
+                return `School_${udise || 'Photo'}.${extension}`;
+            }
+
             function setPhotoUI(fileData) {
                 if (!fileData || (!fileData.dataUrl && !fileData.fileId)) {
                     currentPassbookFile = null;
@@ -4189,18 +4342,16 @@
                     return;
                 }
 
+                const displayName = getFormattedPassbookName(fileData.name);
+                fileData.name = displayName;
                 currentPassbookFile = fileData;
-                $('#photoFileName').text(fileData.name || 'passbook_photo.jpg').attr('title', fileData.name || '');
+                $('#photoFileName').text(displayName).attr('title', displayName);
                 $('#photoFileSize').text(formatBytes(fileData.size || 0));
 
                 if (fileData.dataUrl) {
                     $('#photoThumbImg').attr('src', fileData.dataUrl).show();
                 } else if (fileData.fileId) {
                     $('#photoThumbImg').attr('src', 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(fileData.fileId) + '&sz=w120').show();
-                }
-
-                if (fileData.fileId) {
-                    $('#photoDriveBadge').html('<i class="fa-brands fa-google-drive"></i> Google Drive').show();
                 }
 
                 if (fileData.status === 'Submitted' || fileData.fileId) {
@@ -4569,8 +4720,7 @@
                 const udise = $('#selectSchool').val() || 'school';
                 const month = $('#selectMonth').val();
                 const year = $('#selectYear').val();
-                const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
-                const fileName = `Passbook_${udise}_${month}_${year}_${timestamp}.jpg`;
+                const fileName = getFormattedPassbookName(null, 'jpg');
                 const photoFile = new File([capturedBlob], fileName, { type: 'image/jpeg' });
 
                 closeCameraModal();
@@ -4651,17 +4801,17 @@
 
                 $('#modalTitle').text(currentPassbookFile.name || 'Bank Passbook Photo');
 
-                const targetUrl = currentPassbookFile.fileUrl || currentPassbookFile.dataUrl;
-                if (currentPassbookFile.fileUrl) {
-                    $('#modalDownloadBtn').attr('href', currentPassbookFile.fileUrl).attr('target', '_blank').removeAttr('download').html('<i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Drive');
-                } else {
-                    $('#modalDownloadBtn').attr('href', currentPassbookFile.dataUrl || '#').attr('download', currentPassbookFile.name || 'passbook_photo').removeAttr('target').html('<i class="fa-solid fa-download"></i> Download');
-                }
+                $('#modalDownloadBtn')
+                    .attr('download', currentPassbookFile.name || 'passbook_photo.jpg')
+                    .removeAttr('target')
+                    .html('<i class="fa-solid fa-download"></i> Download');
 
                 if (currentPassbookFile.dataUrl) {
+                    $('#modalDownloadBtn').attr('href', currentPassbookFile.dataUrl);
                     $('#modalPdfFrame').hide();
                     $('#modalImg').attr('src', currentPassbookFile.dataUrl).show();
                 } else if (currentPassbookFile.fileId) {
+                    $('#modalDownloadBtn').attr('href', '#');
                     $('#modalPdfFrame').hide();
                     $('#modalImg').attr('src', 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(currentPassbookFile.fileId) + '&sz=w1000').show();
                 }
@@ -4676,9 +4826,50 @@
                 });
             }
 
-            $('#thumbTrigger, #btnViewPhoto').on('click', function (e) {
+            $('#thumbTrigger').on('click', function (e) {
                 e.preventDefault();
                 openPhotoModal();
+            });
+
+            $('#modalDownloadBtn').on('click', function (e) {
+                if (!currentPassbookFile) return;
+                if (currentPassbookFile.dataUrl) {
+                    return;
+                }
+                if (currentPassbookFile.fileId) {
+                    e.preventDefault();
+                    const fileName = currentPassbookFile.name || 'passbook_photo.jpg';
+                    const imgSrc = $('#modalImg').attr('src');
+                    if (imgSrc) {
+                        fetch(imgSrc)
+                            .then(res => res.blob())
+                            .then(blob => {
+                                const blobUrl = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = blobUrl;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                            })
+                            .catch(() => {
+                                const a = document.createElement('a');
+                                a.href = 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(currentPassbookFile.fileId);
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                            });
+                    } else {
+                        const a = document.createElement('a');
+                        a.href = 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(currentPassbookFile.fileId);
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                }
             });
 
             $('#btnCloseModal').on('click', function () {
@@ -4966,7 +5157,7 @@
                                 // Load photo reference from Supabase record
                                 const driveFileId = d.passbook_photo_file_id || (fj.passbook_photo && fj.passbook_photo.file_id) || null;
                                 const driveFileUrl = d.passbook_photo_url || (fj.passbook_photo && fj.passbook_photo.file_url) || null;
-                                const photoName = (fj.passbook_photo && fj.passbook_photo.file_name) || (driveFileId ? ('Passbook_' + udise + '_' + month + '_' + year + '.jpg') : null);
+                                const photoName = getFormattedPassbookName((fj.passbook_photo && fj.passbook_photo.file_name) || null);
 
                                 if (driveFileId) {
                                     currentPassbookFile = {
@@ -4993,7 +5184,7 @@
                                                 currentPassbookFile = {
                                                     fileId: sub.drive_file_id,
                                                     fileUrl: sub.file_url || ('https://drive.google.com/file/d/' + sub.drive_file_id + '/view'),
-                                                    name: sub.file_name || ('passbook_' + udise + '.jpg'),
+                                                    name: getFormattedPassbookName(sub.file_name),
                                                     size: 0,
                                                     dataUrl: null,
                                                     status: sub.submission_status || 'Submitted',

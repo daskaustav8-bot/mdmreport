@@ -1500,7 +1500,7 @@ async function handleSaveMonthlyReport(req, res) {
           udise,
           schoolName,
           String(b.passbook_photo_file_id).trim(),
-          b.bank_passbook_photo_name || `Passbook_${udise}.jpg`,
+          b.bank_passbook_photo_name || `${(schoolName || ('School_' + udise)).replace(/[\\/:*?"<>|]/g, '-').trim()}.jpg`,
           b.passbook_photo_url || `https://drive.google.com/file/d/${String(b.passbook_photo_file_id).trim()}/view`
         ]);
       } catch (subErr) {
@@ -1803,7 +1803,7 @@ router.get(['/monthly-report/passbook-status', '/api/monthly-report/passbook-sta
         school_id: r.school_id,
         school_name: r.school_name,
         drive_file_id: r.drive_file_id,
-        file_name: (fj.passbook_photo && fj.passbook_photo.file_name) || `Passbook_${r.school_id}.jpg`,
+        file_name: (fj.passbook_photo && fj.passbook_photo.file_name && !fj.passbook_photo.file_name.toLowerCase().startsWith('passbook_')) ? fj.passbook_photo.file_name : `${(r.school_name || ('School_' + r.school_id)).replace(/[\\/:*?"<>|]/g, '-').trim()}.jpg`,
         file_url: r.file_url || `https://drive.google.com/file/d/${r.drive_file_id}/view`,
         submission_status: 'Submitted',
         submitted_at: (fj.passbook_photo && fj.passbook_photo.uploaded_at) || new Date().toISOString()
@@ -1859,7 +1859,7 @@ router.get(['/monthly-report/passbook-tracker', '/api/monthly-report/passbook-tr
           school_id: udise,
           school_name: r.school_name,
           drive_file_id: r.passbook_photo_file_id,
-          file_name: (fj.passbook_photo && fj.passbook_photo.file_name) || `Passbook_${udise}.jpg`,
+          file_name: (fj.passbook_photo && fj.passbook_photo.file_name && !fj.passbook_photo.file_name.toLowerCase().startsWith('passbook_')) ? fj.passbook_photo.file_name : `${(r.school_name || ('School_' + udise)).replace(/[\\/:*?"<>|]/g, '-').trim()}.jpg`,
           file_url: r.passbook_photo_url || `https://drive.google.com/file/d/${r.passbook_photo_file_id}/view`,
           submission_status: 'Submitted',
           submitted_at: (fj.passbook_photo && fj.passbook_photo.uploaded_at) || new Date().toISOString()

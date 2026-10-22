@@ -913,6 +913,7 @@
         pri_ks_open: false, pri_ks_recv: false, pri_ks_exp: false,
         pri_ng_open: false, pri_ng_recv: false, pri_ng_exp: false,
         pri_bc_open: false, pri_bc_recv: false, pri_bc_exp: false,
+        pri_oth_open: false, pri_oth_recv: false, pri_oth_exp: false,
 
         // Fund Details - Upper Primary
         upr_cc_p_open: false, upr_cc_p_recv: false, upr_cc_p_exp: false,
@@ -925,6 +926,7 @@
         upr_ks_open: false, upr_ks_recv: false, upr_ks_exp: false,
         upr_ng_open: false, upr_ng_recv: false, upr_ng_exp: false,
         upr_bc_open: false, upr_bc_recv: false, upr_bc_exp: false,
+        upr_oth_open: false, upr_oth_recv: false, upr_oth_exp: false,
 
         // Rice Details - Primary
         pri_rice_bv_open: false, pri_rice_bv_recv: false, pri_rice_bv_cons: false,
@@ -976,7 +978,15 @@
         upr_rice_p_cons: 'Rice Primary (V) Consumption (KG)',
         upr_rice_up_open: 'Rice Upper Primary (VI-VIII) Opening Balance (KG)',
         upr_rice_up_recv: 'Rice Upper Primary (VI-VIII) Received (KG)',
-        upr_rice_up_cons: 'Rice Upper Primary (VI-VIII) Consumption (KG)'
+        upr_rice_up_cons: 'Rice Upper Primary (VI-VIII) Consumption (KG)',
+
+        // Fund Details - Others
+        pri_oth_open: 'Others Primary Opening Balance (₹)',
+        pri_oth_recv: 'Others Primary Received (₹)',
+        pri_oth_exp: 'Others Primary Expenditure (₹)',
+        upr_oth_open: 'Others Upper Primary Opening Balance (₹)',
+        upr_oth_recv: 'Others Upper Primary Received (₹)',
+        upr_oth_exp: 'Others Upper Primary Expenditure (₹)'
     };
 
     async function loadMonthlyReportLockConfig() {
@@ -2019,6 +2029,52 @@
                             </td>
                             <td class="col-fund-upr" style="display:none;">
                                 <div class="lock-control-cell is-unlocked" id="ctrl_upr_bc_exp" onclick="toggleFieldLock('upr_bc_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 12. OTHERS -->
+                        <tr>
+                            <td class="desc-cell">
+                                OTHERS
+                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('oth')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <!-- Primary Cells -->
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_oth_open" onclick="toggleFieldLock('pri_oth_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_oth_recv" onclick="toggleFieldLock('pri_oth_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_oth_exp" onclick="toggleFieldLock('pri_oth_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <!-- Upper Primary Cells -->
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_oth_open" onclick="toggleFieldLock('upr_oth_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_oth_recv" onclick="toggleFieldLock('upr_oth_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_oth_exp" onclick="toggleFieldLock('upr_oth_exp')">
                                     <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
                                     <div class="lock-switch-slider"><span class="slider-knob"></span></div>
                                 </div>

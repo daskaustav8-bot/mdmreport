@@ -104,6 +104,7 @@ async function runTests() {
   assert(uploadHtml.includes('KITCHEN SHED REPAIR'), 'Must contain KITCHEN SHED REPAIR row');
   assert(uploadHtml.includes('NUTRITION GARDEN'), 'Must contain NUTRITION GARDEN row');
   assert(uploadHtml.includes('BANK CHARGES (SMS/CHEQUE BOOK)'), 'Must contain BANK CHARGES row');
+  assert(uploadHtml.includes('OTHERS'), 'Must contain OTHERS row');
 
   // Verify Fund controls
   const expectedFundControls = [
@@ -116,7 +117,8 @@ async function runTests() {
     'ctrl_pri_kd_open', 'ctrl_pri_kd_recv', 'ctrl_pri_kd_exp',
     'ctrl_pri_ks_open', 'ctrl_pri_ks_recv', 'ctrl_pri_ks_exp',
     'ctrl_pri_ng_open', 'ctrl_pri_ng_recv', 'ctrl_pri_ng_exp',
-    'ctrl_pri_bc_open', 'ctrl_pri_bc_recv', 'ctrl_pri_bc_exp'
+    'ctrl_pri_bc_open', 'ctrl_pri_bc_recv', 'ctrl_pri_bc_exp',
+    'ctrl_pri_oth_open', 'ctrl_pri_oth_recv', 'ctrl_pri_oth_exp'
   ];
   for (const fc of expectedFundControls) {
     assert(uploadHtml.includes(fc), `Must contain fund lock control: ${fc}`);
