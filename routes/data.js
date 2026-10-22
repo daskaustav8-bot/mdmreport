@@ -1328,6 +1328,7 @@ async function handleSaveMonthlyReport(req, res) {
       kitchen_shed_repair: { open: toFloat(b.ks_open), recv: toFloat(b.ks_recv), exp: toFloat(b.ks_exp), close: toFloat(b.ks_close) },
       nutrition_garden: { open: toFloat(b.ng_open), recv: toFloat(b.ng_recv), exp: toFloat(b.ng_exp), close: toFloat(b.ng_close) },
       bank_charges: { open: toFloat(b.bc_open), recv: toFloat(b.bc_recv), exp: toFloat(b.bc_exp), close: toFloat(b.bc_close) },
+      others: { open: toFloat(b.oth_open || b.others_open), recv: toFloat(b.oth_recv || b.others_recv), exp: toFloat(b.oth_exp || b.others_exp), close: toFloat(b.oth_close || b.others_close) },
       bank_match: String(b.bank_match || 'YES').trim(),
       bank_passbook_balance: toFloat(b.bank_passbook_balance),
       bank_balance_date: String(b.bank_balance_date || '').trim(),
@@ -1351,6 +1352,7 @@ async function handleSaveMonthlyReport(req, res) {
         ks_open, ks_recv, ks_exp, ks_close,
         ng_open, ng_recv, ng_exp, ng_close,
         bc_open, bc_recv, bc_exp, bc_close,
+        oth_open, oth_recv, oth_exp, oth_close,
         bank_match, bank_passbook_balance, bank_balance_date, fund_details_json,
         rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
         rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
@@ -1378,10 +1380,11 @@ async function handleSaveMonthlyReport(req, res) {
         $68, $69, $70, $71,
         $72, $73, $74, $75,
         $76, $77, $78, $79,
-        $80, $81,
-        $82, $83, $84, $85,
-        $86, $87, $88, $89, $90,
-        $91
+        $80, $81, $82, $83,
+        $84, $85,
+        $86, $87, $88, $89,
+        $90, $91, $92, $93, $94,
+        $95
       )
       ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
         school_name = EXCLUDED.school_name,
@@ -1408,6 +1411,7 @@ async function handleSaveMonthlyReport(req, res) {
         ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
         ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
         bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        oth_open = EXCLUDED.oth_open, oth_recv = EXCLUDED.oth_recv, oth_exp = EXCLUDED.oth_exp, oth_close = EXCLUDED.oth_close,
         bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date, fund_details_json = EXCLUDED.fund_details_json,
         rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
         rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
@@ -1443,6 +1447,7 @@ async function handleSaveMonthlyReport(req, res) {
       toFloat(b.ks_open), toFloat(b.ks_recv), toFloat(b.ks_exp), toFloat(b.ks_close),
       toFloat(b.ng_open), toFloat(b.ng_recv), toFloat(b.ng_exp), toFloat(b.ng_close),
       toFloat(b.bc_open), toFloat(b.bc_recv), toFloat(b.bc_exp), toFloat(b.bc_close),
+      toFloat(b.oth_open || b.others_open), toFloat(b.oth_recv || b.others_recv), toFloat(b.oth_exp || b.others_exp), toFloat(b.oth_close || b.others_close),
       String(b.bank_match || 'YES').trim(), toFloat(b.bank_passbook_balance), String(b.bank_balance_date || '').trim(), JSON.stringify(fundDetailsObj),
       toFloat(b.rice_bv_open), toFloat(b.rice_bv_recv), toFloat(b.rice_bv_cons), toFloat(b.rice_bv_close),
       toFloat(b.rice_p_open), toFloat(b.rice_p_recv), toFloat(b.rice_p_cons), toFloat(b.rice_p_close),
@@ -2178,10 +2183,10 @@ async function handleClosingBalance(req, res) {
     const fmt = v => Number(toFloat(v)).toFixed(2);
     const showVal = (v, active) => active ? (v !== null && v !== '' ? v : 0) : '---';
 
-    const fOpenTotal = toFloat(d.cc_bv_open) + toFloat(d.cc_p_open) + toFloat(d.cc_up_open) + toFloat(d.bi_open) + toFloat(d.lpg_open) + toFloat(d.nutri_open) + toFloat(d.mme_open) + toFloat(d.kd_open) + toFloat(d.ks_open) + toFloat(d.ng_open) + toFloat(d.bc_open);
-    const fRecvTotal = toFloat(d.cc_bv_recv) + toFloat(d.cc_p_recv) + toFloat(d.cc_up_recv) + toFloat(d.bi_recv) + toFloat(d.lpg_recv) + toFloat(d.nutri_recv) + toFloat(d.mme_recv) + toFloat(d.kd_recv) + toFloat(d.ks_recv) + toFloat(d.ng_recv) + toFloat(d.bc_recv);
-    const fExpTotal = toFloat(d.cc_bv_exp) + toFloat(d.cc_p_exp) + toFloat(d.cc_up_exp) + toFloat(d.bi_exp) + toFloat(d.lpg_exp) + toFloat(d.nutri_exp) + toFloat(d.mme_exp) + toFloat(d.kd_exp) + toFloat(d.ks_exp) + toFloat(d.ng_exp) + toFloat(d.bc_exp);
-    const fCloseTotal = toFloat(d.cc_bv_close) + toFloat(d.cc_p_close) + toFloat(d.cc_up_close) + toFloat(d.bi_close) + toFloat(d.lpg_close) + toFloat(d.nutri_close) + toFloat(d.mme_close) + toFloat(d.kd_close) + toFloat(d.ks_close) + toFloat(d.ng_close) + toFloat(d.bc_close);
+    const fOpenTotal = toFloat(d.cc_bv_open) + toFloat(d.cc_p_open) + toFloat(d.cc_up_open) + toFloat(d.bi_open) + toFloat(d.lpg_open) + toFloat(d.nutri_open) + toFloat(d.mme_open) + toFloat(d.kd_open) + toFloat(d.ks_open) + toFloat(d.ng_open) + toFloat(d.bc_open) + toFloat(d.oth_open);
+    const fRecvTotal = toFloat(d.cc_bv_recv) + toFloat(d.cc_p_recv) + toFloat(d.cc_up_recv) + toFloat(d.bi_recv) + toFloat(d.lpg_recv) + toFloat(d.nutri_recv) + toFloat(d.mme_recv) + toFloat(d.kd_recv) + toFloat(d.ks_recv) + toFloat(d.ng_recv) + toFloat(d.bc_recv) + toFloat(d.oth_recv);
+    const fExpTotal = toFloat(d.cc_bv_exp) + toFloat(d.cc_p_exp) + toFloat(d.cc_up_exp) + toFloat(d.bi_exp) + toFloat(d.lpg_exp) + toFloat(d.nutri_exp) + toFloat(d.mme_exp) + toFloat(d.kd_exp) + toFloat(d.ks_exp) + toFloat(d.ng_exp) + toFloat(d.bc_exp) + toFloat(d.oth_exp);
+    const fCloseTotal = toFloat(d.cc_bv_close) + toFloat(d.cc_p_close) + toFloat(d.cc_up_close) + toFloat(d.bi_close) + toFloat(d.lpg_close) + toFloat(d.nutri_close) + toFloat(d.mme_close) + toFloat(d.kd_close) + toFloat(d.ks_close) + toFloat(d.ng_close) + toFloat(d.bc_close) + toFloat(d.oth_close);
 
     let html = `
       <div class="report-card">
@@ -2253,6 +2258,7 @@ async function handleClosingBalance(req, res) {
             <tr><td style="text-align:left;">KITCHEN SHED REPAIR</td><td>${fmt(d.ks_open)}</td><td>${fmt(d.ks_recv)}</td><td>${fmt(d.ks_exp)}</td><td>${fmt(d.ks_close)}</td></tr>
             <tr><td style="text-align:left;">NUTRITION GARDEN</td><td>${fmt(d.ng_open)}</td><td>${fmt(d.ng_recv)}</td><td>${fmt(d.ng_exp)}</td><td>${fmt(d.ng_close)}</td></tr>
             <tr><td style="text-align:left;">BANK CHARGES (SMS/CHEQUE BOOK)</td><td>${fmt(d.bc_open)}</td><td>${fmt(d.bc_recv)}</td><td>${fmt(d.bc_exp)}</td><td>${fmt(d.bc_close)}</td></tr>
+            <tr><td style="text-align:left;">OTHERS</td><td>${fmt(d.oth_open)}</td><td>${fmt(d.oth_recv)}</td><td>${fmt(d.oth_exp)}</td><td>${fmt(d.oth_close)}</td></tr>
             <tr style="background:#f1f5f9; font-weight:800;">
               <td style="text-align:left;">TOTAL</td>
               <td>${fOpenTotal.toFixed(2)}</td>
