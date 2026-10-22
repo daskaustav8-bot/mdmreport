@@ -9,6 +9,8 @@ const {
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
+let cachedRefreshToken = null;
+let cachedRefreshTokenExpiresAt = 0;
 
 /**
  * Reset cached token (used in tests or key rotation)
@@ -16,14 +18,16 @@ let tokenExpiresAt = 0;
 function resetGoogleTokenCache() {
   cachedToken = null;
   tokenExpiresAt = 0;
+  cachedRefreshToken = null;
+  cachedRefreshTokenExpiresAt = 0;
 }
 
 /**
  * Obtain Google OAuth2 Access Token
  * Supports:
- * 1. Supabase-Stored Encrypted Refresh Token (AES-256-GCM) with client credentials
- * 2. Safe one-time migration fallback from GOOGLE_REFRESH_TOKEN env
- * 3. Google Service Account (for Google Workspace Shared Drives or standalone service testing)
+ * 1. Supabase-Stored Encrypted Refresh Token (AES-256-GCM) with client credentials (Primary for personal Drive storage quota)
+ * 2. In-memory caching for both access token and refresh token to eliminate database latency
+ * 3. Google Service Account Fallback (for Google Workspace Shared Drives)
  */
 async function getGoogleAccessToken() {
   const now = Date.now();
@@ -31,40 +35,50 @@ async function getGoogleAccessToken() {
     return cachedToken;
   }
 
-  // 1. Supabase Encrypted OAuth2 Refresh Token (Primary source of truth)
+  // 1. Supabase Encrypted OAuth2 Refresh Token (Primary for Google Drive personal storage quota)
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (clientId && clientSecret) {
-    let tokenData = null;
-    try {
-      tokenData = await getDecryptedRefreshToken();
+    let refreshToken = cachedRefreshToken;
 
-      // Check for safe one-time migration if Supabase table is empty
-      if (!tokenData) {
-        const migrationRes = await migrateFromEnvIfEmpty();
-        if (migrationRes && migrationRes.migrated) {
-          tokenData = await getDecryptedRefreshToken();
+    if (!refreshToken || cachedRefreshTokenExpiresAt <= now) {
+      try {
+        let tokenData = await getDecryptedRefreshToken();
+
+        // Check for safe one-time migration if Supabase table is empty
+        if (!tokenData) {
+          const migrationRes = await migrateFromEnvIfEmpty();
+          if (migrationRes && migrationRes.migrated) {
+            tokenData = await getDecryptedRefreshToken();
+          }
         }
+
+        if (tokenData && tokenData.refreshToken) {
+          refreshToken = tokenData.refreshToken;
+          cachedRefreshToken = refreshToken;
+          cachedRefreshTokenExpiresAt = now + (15 * 60 * 1000); // In-memory cache for 15 minutes
+        }
+      } catch (dbErr) {
+        console.warn('Could not retrieve OAuth token from Supabase:', dbErr.message);
       }
-    } catch (dbErr) {
-      console.warn('Could not retrieve OAuth token from Supabase:', dbErr.message);
     }
 
-    if (tokenData && tokenData.refreshToken) {
+    if (refreshToken) {
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           client_id: clientId,
           client_secret: clientSecret,
-          refresh_token: tokenData.refreshToken,
+          refresh_token: refreshToken,
           grant_type: 'refresh_token'
         })
       });
 
       const tokenDataJson = await tokenRes.json();
       if (!tokenRes.ok || !tokenDataJson.access_token) {
+        cachedRefreshToken = null;
         const errDesc = tokenDataJson.error_description || tokenDataJson.error || tokenRes.statusText;
         const isInvalidGrant = tokenDataJson.error === 'invalid_grant' || (errDesc && errDesc.includes('invalid_grant'));
         if (isInvalidGrant) {

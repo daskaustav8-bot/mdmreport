@@ -4436,8 +4436,8 @@
                     throw new Error('Invalid image dimensions');
                 }
 
-                // 2. Normalize resolution: cap max dimension at ~2000px while maintaining original aspect ratio
-                const maxDim = 2000;
+                // 2. Normalize resolution: cap max dimension at ~1600px for crisp readability & ultra-fast upload
+                const maxDim = 1600;
                 let scale = 1.0;
                 if (Math.max(origW, origH) > maxDim) {
                     scale = maxDim / Math.max(origW, origH);
@@ -4649,27 +4649,17 @@
 
                 sharpCtx.putImageData(sharpImgData, 0, 0);
 
-                // 8. Adaptive Compression Export (JPEG ~80-85%, targeting < 500KB-1MB while preserving legibility)
-                let exportQuality = 0.85;
-                let enhancedBlob = await new Promise((resolve) => {
+                // 8. Fast Compression Export (JPEG quality 0.80 targeting ~200-350KB for fast uploads)
+                const exportQuality = 0.80;
+                const enhancedBlob = await new Promise((resolve) => {
                     sharpCanvas.toBlob(b => resolve(b), 'image/jpeg', exportQuality);
                 });
-
-                if (enhancedBlob && enhancedBlob.size > 1024 * 1024) {
-                    exportQuality = 0.80;
-                    const compressedBlob = await new Promise((resolve) => {
-                        sharpCanvas.toBlob(b => resolve(b), 'image/jpeg', exportQuality);
-                    });
-                    if (compressedBlob && compressedBlob.size > 0) {
-                        enhancedBlob = compressedBlob;
-                    }
-                }
 
                 if (!enhancedBlob || enhancedBlob.size === 0) {
                     throw new Error('Canvas export resulted in an empty blob');
                 }
 
-                const enhancedDataUrl = sharpCanvas.toDataURL('image/jpeg', exportQuality);
+                const enhancedDataUrl = URL.createObjectURL(enhancedBlob);
                 const outFileName = getFormattedPassbookName(file.name || 'passbook.jpg', 'jpg');
                 const enhancedFile = new File([enhancedBlob], outFileName, { type: 'image/jpeg' });
                 enhancedFile._isOptimized = true;
@@ -4853,9 +4843,6 @@
                 $('#btnSave').prop('disabled', true);
                 $('#btnChoosePhoto').prop('disabled', true);
 
-                // Small tick to let browser paint DOM
-                await new Promise(r => setTimeout(r, 60));
-
                 let finalFile = originalFile;
                 let finalDataUrl = originalDataUrl;
                 let optDurationMs = 0;
@@ -4890,10 +4877,7 @@
                     $('#photoUploadProgressText').text('Uploading passbook photo...');
                 }
 
-                // Brief pause so user sees progress transition
-                await new Promise(r => setTimeout(r, 40));
-
-                // Proceed with existing upload flow
+                // Proceed with immediate upload flow
                 uploadPassbookPhotoToDrive(finalFile, finalDataUrl, udise, month, year, {
                     originalSize: originalFile.size,
                     optimizedSize: finalFile.size,
@@ -5064,19 +5048,6 @@
                             }
                             console.log('Total End-to-End Elapsed Time:', ((diag.optDurationMs || 0) + totalClientElapsed) + ' ms');
                             console.log('---------------------------------------------');
-
-                            // Clear success notification
-                            const Toast = Swal.mixin({
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 3500,
-                                timerProgressBar: true
-                            });
-                            Toast.fire({
-                                icon: 'success',
-                                title: 'Passbook photo saved directly to Google Drive!'
-                            });
                         } else {
                             const errMsg = (resp && resp.message) ? resp.message : 'Could not save passbook photo to Google Drive.';
                             if (lastPassbookUploadAttempt && lastPassbookUploadAttempt.localDataUrl) {
