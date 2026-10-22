@@ -1595,6 +1595,9 @@ async function handleUploadPassbookPhoto(req, res) {
     // 5. Direct Google Drive API Upload (No Google Script Required)
     let fileId = null;
     let fileUrl = null;
+    const tServerStart = Date.now();
+    let driveDuration = 0;
+    let dbDuration = 0;
 
     const normalizedExt = isPng ? 'png' : (isWebp ? 'webp' : 'jpg');
     // Save file as school name.format (e.g., "ABADPARA PRIMARY SCHOOL.jpg")
@@ -1616,6 +1619,7 @@ async function handleUploadPassbookPhoto(req, res) {
     if (hasServiceAccount || hasOAuth) {
       // Direct Google Drive API v3 (Official REST API with Service Account or OAuth2)
       try {
+        const tDriveStart = Date.now();
         const driveResult = await uploadToGoogleDriveDirect({
           buffer,
           mimeType: isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg'),
@@ -1623,6 +1627,7 @@ async function handleUploadPassbookPhoto(req, res) {
           folderId: process.env.GOOGLE_DRIVE_FOLDER_ID || '1-RN90axSxvIkYQMIrCp9BESAbw_ty2m6',
           description: `Bank Passbook Photo\nUDISE: ${udise}\nSchool: ${schoolName}\nPeriod: ${month} ${year}`
         });
+        driveDuration = Date.now() - tDriveStart;
         fileId = driveResult.fileId;
         fileUrl = driveResult.viewUrl || driveResult.fileUrl;
       } catch (driveErr) {
@@ -1647,11 +1652,13 @@ async function handleUploadPassbookPhoto(req, res) {
       };
 
       try {
+        const tDriveStart = Date.now();
         const driveRes = await fetch(gasUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(drivePayload)
         });
+        driveDuration = Date.now() - tDriveStart;
         const driveText = await driveRes.text();
         const driveJson = JSON.parse(driveText);
         if (!driveRes.ok || driveJson.status !== 'success') {
@@ -1678,6 +1685,7 @@ async function handleUploadPassbookPhoto(req, res) {
 
     // 6. Save Google Drive Photo Reference in Supabase PostgreSQL
     try {
+      const tDbStart = Date.now();
       const photoMetaObj = {
         file_id: fileId,
         file_url: fileUrl,
@@ -1746,9 +1754,12 @@ async function handleUploadPassbookPhoto(req, res) {
         updateMdmPromise,
         pool.query(trackerQuery, [udise, schoolName, fileId, driveFileName, fileUrl])
       ]);
+      dbDuration = Date.now() - tDbStart;
     } catch (dbErr) {
       console.error('Warning: could not update Supabase photo columns:', dbErr.message);
     }
+
+    const totalServerDuration = Date.now() - tServerStart;
 
     return res.json({
       status: 'success',
@@ -1757,7 +1768,12 @@ async function handleUploadPassbookPhoto(req, res) {
       fileUrl: fileUrl,
       fileName: driveFileName,
       submissionStatus: 'Submitted',
-      submittedAt: new Date().toISOString()
+      submittedAt: new Date().toISOString(),
+      timing: {
+        drive_ms: driveDuration,
+        db_ms: dbDuration,
+        total_server_ms: totalServerDuration
+      }
     });
 
   } catch (err) {

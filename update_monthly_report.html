@@ -3406,6 +3406,9 @@
                                 </div>
                             </div>
                             <div class="photo-actions">
+                                <button type="button" class="btn-photo-action" id="btnRetryPhoto" title="Retry Photo Upload" style="display:none; color:#c2410c; border-color:#fed7aa; background:#fff7ed;">
+                                    <i class="fa-solid fa-rotate-right"></i> <span class="photo-btn-text">Retry</span>
+                                </button>
                                 <button type="button" class="btn-photo-action" id="btnChangePhoto" title="Retake Photo with Camera">
                                     <i class="fa-solid fa-camera"></i> <span class="photo-btn-text">Retake</span>
                                 </button>
@@ -4348,6 +4351,7 @@
                     $('#photoEmptyState').show();
                     $('#photoStatusBadge').hide();
                     $('#photoSubmittedTime').hide();
+                    $('#btnRetryPhoto').hide();
                     return;
                 }
 
@@ -4369,8 +4373,15 @@
                     $('#photoStatusBadge')
                         .html('<i class="fa-solid fa-circle-check"></i> Submitted')
                         .attr('style', 'background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #bbf7d0; margin-left: 10px; display:inline-flex; align-items:center; gap:4px;');
+                    $('#btnRetryPhoto').hide();
+                } else if (fileData.status === 'Failed') {
+                    $('#photoStatusBadge')
+                        .html('<i class="fa-solid fa-triangle-exclamation"></i> Upload Failed')
+                        .attr('style', 'background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid #fecaca; margin-left: 10px; display:inline-flex; align-items:center; gap:4px;');
+                    $('#btnRetryPhoto').show();
                 } else {
                     $('#photoStatusBadge').hide();
+                    $('#btnRetryPhoto').hide();
                 }
 
                 if (fileData.submittedAt) {
@@ -4390,13 +4401,27 @@
             }
 
             // =========================================================
-            // AUTOMATIC BANK PASSBOOK PHOTO ENHANCEMENT ENGINE
+            // AUTOMATIC BANK PASSBOOK PHOTO ENHANCEMENT & OPTIMIZATION
             // (Client-side Canvas: Perspective, Deskew, Shadow Removal,
-            //  Auto-Levels, Readability Sharpening & Color Preservation)
+            //  Auto-Levels, Readability Sharpening, Resolution & Quality)
             // =========================================================
             let isPassbookProcessingOrUploading = false;
+            let lastPassbookUploadAttempt = null; // In-memory retry buffer
 
             async function enhancePassbookPhoto(file, dataUrl) {
+                // Skip if this file is already optimized to avoid redundant compression
+                if (file && file._isOptimized) {
+                    return {
+                        file: file,
+                        dataUrl: dataUrl,
+                        enhanced: true,
+                        alreadyOptimized: true,
+                        optDurationMs: 0
+                    };
+                }
+
+                const tStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
                 // Ensure browser canvas support
                 if (!window.HTMLCanvasElement) {
                     throw new Error('HTML5 Canvas is not supported in this browser');
@@ -4411,8 +4436,8 @@
                     throw new Error('Invalid image dimensions');
                 }
 
-                // 2. Normalize resolution: cap max dimension at 2048px for smooth processing & memory safety
-                const maxDim = 2048;
+                // 2. Normalize resolution: cap max dimension at ~2000px while maintaining original aspect ratio
+                const maxDim = 2000;
                 let scale = 1.0;
                 if (Math.max(origW, origH) > maxDim) {
                     scale = maxDim / Math.max(origW, origH);
@@ -4624,25 +4649,43 @@
 
                 sharpCtx.putImageData(sharpImgData, 0, 0);
 
-                // 8. Export to Blob and File
-                const enhancedBlob = await new Promise((resolve) => {
-                    sharpCanvas.toBlob(b => resolve(b), 'image/jpeg', 0.90);
+                // 8. Adaptive Compression Export (JPEG ~80-85%, targeting < 500KB-1MB while preserving legibility)
+                let exportQuality = 0.85;
+                let enhancedBlob = await new Promise((resolve) => {
+                    sharpCanvas.toBlob(b => resolve(b), 'image/jpeg', exportQuality);
                 });
+
+                if (enhancedBlob && enhancedBlob.size > 1024 * 1024) {
+                    exportQuality = 0.80;
+                    const compressedBlob = await new Promise((resolve) => {
+                        sharpCanvas.toBlob(b => resolve(b), 'image/jpeg', exportQuality);
+                    });
+                    if (compressedBlob && compressedBlob.size > 0) {
+                        enhancedBlob = compressedBlob;
+                    }
+                }
 
                 if (!enhancedBlob || enhancedBlob.size === 0) {
                     throw new Error('Canvas export resulted in an empty blob');
                 }
 
-                const enhancedDataUrl = sharpCanvas.toDataURL('image/jpeg', 0.90);
+                const enhancedDataUrl = sharpCanvas.toDataURL('image/jpeg', exportQuality);
                 const outFileName = getFormattedPassbookName(file.name || 'passbook.jpg', 'jpg');
                 const enhancedFile = new File([enhancedBlob], outFileName, { type: 'image/jpeg' });
+                enhancedFile._isOptimized = true;
+
+                const tEnd = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                const optDurationMs = Math.round(tEnd - tStart);
 
                 return {
                     file: enhancedFile,
                     dataUrl: enhancedDataUrl,
                     enhanced: true,
                     deskewAngle: deskewAngle,
-                    cropped: Boolean(cropBox)
+                    cropped: Boolean(cropBox),
+                    optDurationMs: optDurationMs,
+                    originalSize: file.size,
+                    optimizedSize: enhancedBlob.size
                 };
             }
 
@@ -4801,12 +4844,12 @@
                 if (isPassbookProcessingOrUploading) return;
                 isPassbookProcessingOrUploading = true;
 
-                // 1. Small, unobtrusive status indicator: "Enhancing photo..."
+                // 1. Small, unobtrusive status indicator: "Optimizing photo..."
                 $('#passbookPhotoContainer').removeClass('photo-error');
                 $('#photoEmptyState').hide();
                 $('#photoPreviewCard').hide();
                 $('#photoUploadingState').css('display', 'flex');
-                $('#photoUploadProgressText').text('Enhancing photo...');
+                $('#photoUploadProgressText').text(originalFile._isOptimized ? 'Uploading passbook photo...' : 'Optimizing photo...');
                 $('#btnSave').prop('disabled', true);
                 $('#btnChoosePhoto').prop('disabled', true);
 
@@ -4815,40 +4858,47 @@
 
                 let finalFile = originalFile;
                 let finalDataUrl = originalDataUrl;
+                let optDurationMs = 0;
 
                 try {
-                    // Timeout wrapper: 6 seconds max
+                    // Timeout wrapper: 6 seconds max for browser-side optimization
                     const enhancePromise = enhancePassbookPhoto(originalFile, originalDataUrl);
                     const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Enhancement timed out')), 6000)
+                        setTimeout(() => reject(new Error('Optimization timed out')), 6000)
                     );
                     const enhanced = await Promise.race([enhancePromise, timeoutPromise]);
 
                     if (enhanced && enhanced.file && enhanced.dataUrl) {
                         finalFile = enhanced.file;
                         finalDataUrl = enhanced.dataUrl;
-                        console.log('Bank passbook photo auto-enhanced successfully:', {
-                            originalSize: originalFile.size,
-                            enhancedSize: finalFile.size,
+                        optDurationMs = enhanced.optDurationMs || 0;
+                        console.log('Bank passbook photo auto-optimized successfully:', {
+                            originalSize: (originalFile.size / 1024).toFixed(1) + ' KB',
+                            optimizedSize: (finalFile.size / 1024).toFixed(1) + ' KB',
+                            optimizationMs: optDurationMs,
                             deskewAngle: enhanced.deskewAngle,
                             cropped: enhanced.cropped
                         });
-                        $('#photoUploadProgressText').text('Uploading enhanced photo...');
+                        $('#photoUploadProgressText').text('Uploading passbook photo...');
                     } else {
-                        $('#photoUploadProgressText').text('Uploading photo...');
+                        $('#photoUploadProgressText').text('Uploading passbook photo...');
                     }
                 } catch (err) {
-                    console.warn('Auto-enhancement failed or timed out, falling back to original captured photo:', err);
+                    console.warn('Auto-enhancement/optimization failed or timed out, falling back to original captured photo:', err);
                     finalFile = originalFile;
                     finalDataUrl = originalDataUrl;
-                    $('#photoUploadProgressText').text('Uploading photo...');
+                    $('#photoUploadProgressText').text('Uploading passbook photo...');
                 }
 
                 // Brief pause so user sees progress transition
                 await new Promise(r => setTimeout(r, 40));
 
                 // Proceed with existing upload flow
-                uploadPassbookPhotoToDrive(finalFile, finalDataUrl, udise, month, year);
+                uploadPassbookPhotoToDrive(finalFile, finalDataUrl, udise, month, year, {
+                    originalSize: originalFile.size,
+                    optimizedSize: finalFile.size,
+                    optDurationMs: optDurationMs
+                });
             }
 
             async function handleFileSelect(file) {
@@ -4917,18 +4967,26 @@
                 reader.readAsDataURL(file);
             }
 
-            function uploadPassbookPhotoToDrive(file, localDataUrl, udise, month, year) {
+            function uploadPassbookPhotoToDrive(file, localDataUrl, udise, month, year, diagnostics) {
                 const school = schools.find(s => s.id === udise);
                 const schoolName = school ? (school.schoolNameOnly || school.text) : ('School (' + udise + ')');
                 const formattedName = getFormattedPassbookName(file.name);
+
+                // Keep in temporary memory so user can retry immediately on failure without re-selecting
+                lastPassbookUploadAttempt = {
+                    file: file,
+                    localDataUrl: localDataUrl,
+                    udise: udise,
+                    month: month,
+                    year: year,
+                    diagnostics: diagnostics || {}
+                };
 
                 // Prevent duplicate submissions while upload is processing
                 $('#photoEmptyState').hide();
                 $('#photoPreviewCard').hide();
                 $('#photoUploadingState').css('display', 'flex');
-                if (!$('#photoUploadProgressText').text().startsWith('Uploading')) {
-                    $('#photoUploadProgressText').text('Uploading photo...');
-                }
+                $('#photoUploadProgressText').text('Uploading passbook photo...');
                 $('#btnSave').prop('disabled', true);
                 $('#btnChoosePhoto').prop('disabled', true);
 
@@ -4939,6 +4997,9 @@
                 formData.append('year', year);
                 formData.append('school_name', schoolName);
 
+                const tNetStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                let netUploadDurationMs = 0;
+
                 $.ajax({
                     url: '/api/monthly-report/upload-passbook',
                     type: 'POST',
@@ -4946,6 +5007,23 @@
                     processData: false,
                     contentType: false,
                     dataType: 'json',
+                    xhr: function () {
+                        const xhr = new window.XMLHttpRequest();
+                        if (xhr.upload) {
+                            xhr.upload.addEventListener('progress', function (evt) {
+                                if (evt.lengthComputable && evt.total > 0) {
+                                    const percent = Math.min(99, Math.round((evt.loaded / evt.total) * 100));
+                                    $('#photoUploadProgressText').text('Uploading passbook photo (' + percent + '%)...');
+                                }
+                            }, false);
+                            xhr.upload.addEventListener('load', function () {
+                                const tNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                                netUploadDurationMs = Math.round(tNow - tNetStart);
+                                $('#photoUploadProgressText').text('Saving to Google Drive & database...');
+                            }, false);
+                        }
+                        return xhr;
+                    },
                     success: function (resp) {
                         isPassbookProcessingOrUploading = false;
                         $('#photoUploadingState').hide();
@@ -4967,14 +5045,64 @@
                             // Update to standard Submitted state
                             setPhotoUI(currentPassbookFile);
                             PassbookStore.save(udise, month, year, currentPassbookFile);
+
+                            // Clear retry buffer upon confirmed success
+                            lastPassbookUploadAttempt = null;
+
+                            // 4-Stage Diagnostic Bottleneck Logging
+                            const diag = diagnostics || {};
+                            const tEndSuccess = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                            const totalClientElapsed = Math.round(tEndSuccess - tNetStart);
+                            console.log('--- Bank Passbook Photo Bottleneck Timings ---');
+                            console.log('Stage 1 [Browser Optimization]:', (diag.optDurationMs || 0) + ' ms' +
+                                (diag.originalSize ? ` (${(diag.originalSize / 1024).toFixed(1)} KB -> ${(file.size / 1024).toFixed(1)} KB)` : ''));
+                            console.log('Stage 2 [Client -> Server Network Upload]:', (netUploadDurationMs || totalClientElapsed) + ' ms');
+                            if (resp && resp.timing) {
+                                console.log('Stage 3 [Server -> Google Drive Upload]:', (resp.timing.drive_ms || 0) + ' ms');
+                                console.log('Stage 4 [Supabase PostgreSQL Save]:', (resp.timing.db_ms || 0) + ' ms');
+                                console.log('Total Server Processing Duration:', (resp.timing.total_server_ms || 0) + ' ms');
+                            }
+                            console.log('Total End-to-End Elapsed Time:', ((diag.optDurationMs || 0) + totalClientElapsed) + ' ms');
+                            console.log('---------------------------------------------');
+
+                            // Clear success notification
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Passbook photo saved directly to Google Drive!'
+                            });
                         } else {
-                            currentPassbookFile = null;
-                            setPhotoUI(null);
+                            const errMsg = (resp && resp.message) ? resp.message : 'Could not save passbook photo to Google Drive.';
+                            if (lastPassbookUploadAttempt && lastPassbookUploadAttempt.localDataUrl) {
+                                setPhotoUI({
+                                    dataUrl: lastPassbookUploadAttempt.localDataUrl,
+                                    name: lastPassbookUploadAttempt.file.name,
+                                    size: lastPassbookUploadAttempt.file.size,
+                                    status: 'Failed'
+                                });
+                            } else {
+                                currentPassbookFile = null;
+                                setPhotoUI(null);
+                            }
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Google Drive Upload Failed',
-                                text: (resp && resp.message) ? resp.message : 'Could not save passbook photo to Google Drive.',
-                                confirmButtonColor: '#0d9488'
+                                text: errMsg + ' You can retry uploading without reselecting the photo.',
+                                showCancelButton: true,
+                                confirmButtonColor: '#0d9488',
+                                cancelButtonColor: '#6b7280',
+                                confirmButtonText: '<i class="fa-solid fa-rotate-right"></i> Retry Upload',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    retryLastPassbookUpload();
+                                }
                             });
                         }
                     },
@@ -4983,8 +5111,6 @@
                         $('#photoUploadingState').hide();
                         $('#btnSave').prop('disabled', false);
                         $('#btnChoosePhoto').prop('disabled', false);
-                        currentPassbookFile = null;
-                        setPhotoUI(null);
 
                         let errMsg = 'Failed to communicate with the upload server.';
                         try {
@@ -4992,15 +5118,55 @@
                             if (errObj && errObj.message) errMsg = errObj.message;
                         } catch (e) {}
 
+                        if (lastPassbookUploadAttempt && lastPassbookUploadAttempt.localDataUrl) {
+                            setPhotoUI({
+                                dataUrl: lastPassbookUploadAttempt.localDataUrl,
+                                name: lastPassbookUploadAttempt.file.name,
+                                size: lastPassbookUploadAttempt.file.size,
+                                status: 'Failed'
+                            });
+                        } else {
+                            currentPassbookFile = null;
+                            setPhotoUI(null);
+                        }
+
                         Swal.fire({
                             icon: 'error',
                             title: 'Upload Failed',
-                            text: errMsg,
-                            confirmButtonColor: '#0d9488'
+                            text: errMsg + ' You can retry uploading without reselecting or capturing again.',
+                            showCancelButton: true,
+                            confirmButtonColor: '#0d9488',
+                            cancelButtonColor: '#6b7280',
+                            confirmButtonText: '<i class="fa-solid fa-rotate-right"></i> Retry Upload',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                retryLastPassbookUpload();
+                            }
                         });
                     }
                 });
             }
+
+            // Retry upload without reselecting the photo
+            function retryLastPassbookUpload() {
+                if (!lastPassbookUploadAttempt) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Photo to Retry',
+                        text: 'Please capture or select a passbook photo to upload.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                    return;
+                }
+                const { file, localDataUrl, udise, month, year, diagnostics } = lastPassbookUploadAttempt;
+                uploadPassbookPhotoToDrive(file, localDataUrl, udise, month, year, diagnostics);
+            }
+
+            $(document).on('click', '#btnRetryPhoto', function (e) {
+                e.preventDefault();
+                retryLastPassbookUpload();
+            });
 
             // =========================================
             // DIRECT CAMERA INTEGRATION FOR BANK PASSBOOK
@@ -5447,6 +5613,7 @@
                         if (udise && month && year) {
                             PassbookStore.delete(udise, month, year);
                         }
+                        lastPassbookUploadAttempt = null;
                         setPhotoUI(null);
                     }
                 });
