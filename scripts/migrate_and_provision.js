@@ -8,7 +8,7 @@ const PG_CONFIG = {
   user: process.env.SUPABASE_DB_USER,
   password: process.env.SUPABASE_DB_PASSWORD,
   database: process.env.SUPABASE_DB_NAME,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false, servername: process.env.SUPABASE_DB_HOST }
 };
 
 async function migrateAndProvision() {

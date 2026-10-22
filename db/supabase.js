@@ -2,68 +2,160 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-// Resolve Supabase database connection details with IPv4 pooler support for Vercel/serverless
-let dbHost = process.env.SUPABASE_DB_HOST || 'aws-0-ap-southeast-1.pooler.supabase.com';
-let dbPort = parseInt(process.env.SUPABASE_DB_PORT || '6543', 10);
-let dbUser = process.env.SUPABASE_DB_USER || 'postgres.vaaukirzwhufortgafmn';
-let dbPass = process.env.SUPABASE_DB_PASSWORD;
-let dbName = process.env.SUPABASE_DB_NAME || 'postgres';
+// Determine runtime environment
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
-// If configured host is an IPv6-only direct host (db.<project-ref>.supabase.co),
-// automatically map to the IPv4-compatible Supabase connection pooler to prevent ENOTFOUND on serverless
-if (dbHost && dbHost.startsWith('db.') && dbHost.endsWith('.supabase.co')) {
-  const projectRef = dbHost.replace(/^db\./, '').replace(/\.supabase\.co$/, '');
-  dbHost = 'aws-0-ap-southeast-1.pooler.supabase.com';
-  if (dbPort === 5432) {
-    dbPort = 6543; // Transaction mode for serverless pooler
-  }
-  if (!dbUser.includes('.')) {
-    dbUser = `${dbUser}.${projectRef}`;
-  }
-}
+// Known Supabase project connection endpoints
+const projectRef = 'vaaukirzwhufortgafmn';
+const directHost = (process.env.SUPABASE_DB_HOST && process.env.SUPABASE_DB_HOST.startsWith('db.'))
+  ? process.env.SUPABASE_DB_HOST.trim()
+  : `db.${projectRef}.supabase.co`;
+const poolerHost = (process.env.SUPABASE_POOLER_HOST || 'aws-0-ap-southeast-1.pooler.supabase.com').trim();
 
-// High-performance connection pool with TCP keep-alive and persistent warm connections
-const pool = new Pool({
-  host: dbHost,
-  port: dbPort,
-  user: dbUser,
+const dbPass = process.env.SUPABASE_DB_PASSWORD;
+const dbName = process.env.SUPABASE_DB_NAME || 'postgres';
+
+// Target 1: Direct PostgreSQL endpoint (Ideal for local development & non-serverless)
+const directConfig = {
+  host: directHost,
+  port: parseInt(process.env.SUPABASE_DB_PORT || '5432', 10),
+  user: (process.env.SUPABASE_DB_USER && !process.env.SUPABASE_DB_USER.includes('.'))
+    ? process.env.SUPABASE_DB_USER.trim()
+    : 'postgres',
   password: dbPass,
   database: dbName,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: false, servername: directHost }
+};
+
+// Target 2: IPv4 Supabase Connection Pooler (Ideal for serverless Lambdas/Vercel without IPv6)
+const poolerConfig = {
+  host: poolerHost,
+  port: 6543,
+  user: (process.env.SUPABASE_DB_USER && process.env.SUPABASE_DB_USER.includes('.'))
+    ? process.env.SUPABASE_DB_USER.trim()
+    : `postgres.${projectRef}`,
+  password: dbPass,
+  database: dbName,
+  ssl: { rejectUnauthorized: false, servername: poolerHost }
+};
+
+// Select primary and fallback targets:
+// Serverless prefers IPv4 pooler; Local development prefers Direct connection
+const configuredHost = (process.env.SUPABASE_DB_HOST || '').trim();
+const wantsPoolerExplicitly = configuredHost === poolerHost ||
+  (process.env.SUPABASE_DB_USER && process.env.SUPABASE_DB_USER.includes('.'));
+
+let primaryConfig;
+let fallbackConfig;
+
+if (isServerless || wantsPoolerExplicitly) {
+  primaryConfig = poolerConfig;
+  fallbackConfig = directConfig;
+} else {
+  primaryConfig = directConfig;
+  fallbackConfig = poolerConfig;
+}
+
+const poolOptions = {
   max: 10,
   min: 0,
-  idleTimeoutMillis: 15000, // 15 seconds to prevent stale sockets with Supavisor pooler
-  connectionTimeoutMillis: 30000, // 30 seconds for reliable cloud connections
+  idleTimeoutMillis: 15000,
+  connectionTimeoutMillis: 15000,
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000
-});
+};
 
-// Wrap pool.query to transparently retry once on cloud pooler socket disconnects
-const _rawQuery = pool.query.bind(pool);
-pool.query = async function(...args) {
+const primaryPool = new Pool({ ...primaryConfig, ...poolOptions });
+let fallbackPool = null;
+
+function getFallbackPool() {
+  if (!fallbackPool) {
+    fallbackPool = new Pool({ ...fallbackConfig, ...poolOptions });
+    fallbackPool.on('error', (err) => {
+      // Suppress idle client error events on secondary pool
+    });
+  }
+  return fallbackPool;
+}
+
+function isConnectionError(err) {
+  if (!err) return false;
+  const code = err.code;
+  const msg = (err.message || '').toLowerCase();
+  return (
+    code === 'ECONNRESET' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ENOTFOUND' ||
+    code === 'ETIMEDOUT' ||
+    code === 'EPIPE' ||
+    code === 'EHOSTUNREACH' ||
+    code === 'EADDRNOTAVAIL' ||
+    msg.includes('socket disconnected') ||
+    msg.includes('connection terminated') ||
+    msg.includes('closed unexpectedly') ||
+    msg.includes('timeout') ||
+    msg.includes('handshake')
+  );
+}
+
+let activePool = primaryPool;
+let activeHost = primaryConfig.host;
+let fallbackHost = fallbackConfig.host;
+
+async function executeQuery(...args) {
   try {
-    return await _rawQuery(...args);
+    return await activePool.query(...args);
   } catch (err) {
-    const isConnErr = err.code === 'ECONNRESET' ||
-      err.code === 'EPIPE' ||
-      (err.message && (
-        err.message.includes('socket disconnected') ||
-        err.message.includes('Connection terminated') ||
-        err.message.includes('closed unexpectedly')
-      ));
-    if (isConnErr) {
-      await new Promise(r => setTimeout(r, 250));
-      return await _rawQuery(...args);
+    if (isConnectionError(err)) {
+      const altPool = (activePool === primaryPool) ? getFallbackPool() : primaryPool;
+      const targetHost = (activePool === primaryPool) ? fallbackHost : primaryConfig.host;
+      try {
+        const res = await altPool.query(...args);
+        console.warn(`[Supabase DB] Active host (${activeHost}) encountered connection notice (${err.message}). Switched to ${targetHost}.`);
+        activePool = altPool;
+        activeHost = targetHost;
+        return res;
+      } catch (fallbackErr) {
+        throw fallbackErr;
+      }
     }
     throw err;
   }
+}
+
+// Resilient pool interface with seamless failover
+const pool = {
+  query: executeQuery,
+  on: (event, handler) => primaryPool.on(event, handler),
+  connect: async () => {
+    try {
+      return await activePool.connect();
+    } catch (err) {
+      if (isConnectionError(err)) {
+        const altPool = (activePool === primaryPool) ? getFallbackPool() : primaryPool;
+        activePool = altPool;
+        return await altPool.connect();
+      }
+      throw err;
+    }
+  },
+  end: async () => {
+    const promises = [primaryPool.end()];
+    if (fallbackPool) {
+      promises.push(fallbackPool.end());
+    }
+    await Promise.all(promises);
+  },
+  get totalCount() { return activePool.totalCount; },
+  get idleCount() { return activePool.idleCount; },
+  get waitingCount() { return activePool.waitingCount; }
 };
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle Supabase database client:', err.message);
+primaryPool.on('error', (err) => {
+  console.error('Notice on idle database client:', err.message);
 });
 
-// Periodic pool heartbeat to prevent cloud firewall/Supavisor dropping idle sockets
+// Periodic pool heartbeat to prevent cloud firewall dropping idle sockets
 const heartbeatInterval = setInterval(async () => {
   try {
     await pool.query('SELECT 1');
