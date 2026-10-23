@@ -2,11 +2,14 @@ const assert = require('assert');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const app = require('../server');
 const { pool } = require('../db/supabase');
 
-const BASE_URL = 'http://localhost:3000';
+let testPort = 3000;
+let serverInstance;
 
 function makeRequest(options, postData) {
+  options.port = testPort;
   return new Promise((resolve, reject) => {
     const req = http.request(options, (res) => {
       let data = '';
@@ -49,6 +52,12 @@ async function loginAdmin() {
 }
 
 async function runTests() {
+  testPort = await new Promise((resolve) => {
+    serverInstance = app.listen(0, () => {
+      resolve(serverInstance.address().port);
+    });
+  });
+
   console.log('================================================================');
   console.log('  TEST SUITE: MONTHLY REPORT MEAL AVAILED STATUS FIELD LOCKS');
   console.log('================================================================\n');
@@ -96,6 +105,7 @@ async function runTests() {
   assert(uploadHtml.includes('3. FUND DETAILS (IN Rs)'), 'Must contain 3. FUND DETAILS (IN Rs) box header');
   assert(uploadHtml.includes('MATERIAL COST BAL VATIKA'), 'Must contain MATERIAL COST BAL VATIKA row');
   assert(uploadHtml.includes('MATERIAL COST PRIMARY'), 'Must contain MATERIAL COST PRIMARY row');
+  assert(uploadHtml.includes('COOK CUM HELPER'), 'Must contain COOK CUM HELPER row');
   assert(uploadHtml.includes('BANK INTEREST'), 'Must contain BANK INTEREST row');
   assert(uploadHtml.includes('LPG SUBSIDY'), 'Must contain LPG SUBSIDY row');
   assert(uploadHtml.includes('SUPPLEMENTARY / EXTRA NUTRITION'), 'Must contain SUPPLEMENTARY / EXTRA NUTRITION row');
@@ -110,6 +120,8 @@ async function runTests() {
   const expectedFundControls = [
     'ctrl_pri_cc_bv_open', 'ctrl_pri_cc_bv_recv', 'ctrl_pri_cc_bv_exp',
     'ctrl_pri_cc_p_open', 'ctrl_pri_cc_p_recv', 'ctrl_pri_cc_p_exp',
+    'ctrl_pri_cch_open', 'ctrl_pri_cch_recv', 'ctrl_pri_cch_exp',
+    'ctrl_upr_cch_open', 'ctrl_upr_cch_recv', 'ctrl_upr_cch_exp',
     'ctrl_pri_bi_open', 'ctrl_pri_bi_recv', 'ctrl_pri_bi_exp',
     'ctrl_pri_lpg_open', 'ctrl_pri_lpg_recv', 'ctrl_pri_lpg_exp',
     'ctrl_pri_nutri_open', 'ctrl_pri_nutri_recv', 'ctrl_pri_nutri_exp',
@@ -311,6 +323,50 @@ async function runTests() {
   assert.strictEqual(Number(fundCheckRows[0].bi_recv), 150.00, 'Locked fund field bi_recv must preserve existing value (150.00) rather than 999.00');
   console.log('✅ PASS: Server-side enforcement successfully protects locked Fund Details fields.');
 
+  // Also test locking Cook Cum Helper fund field: pri_cch_recv
+  const cchLockRes = await makeRequest({
+    hostname: 'localhost',
+    port: 3000,
+    path: '/api/monthly-report/lock-config',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': adminCookie
+    }
+  }, {
+    config: {
+      pri_cch_recv: true
+    }
+  });
+  assert.strictEqual(cchLockRes.statusCode, 200);
+
+  // Set existing Cook Cum Helper in database
+  await pool.query(
+    'UPDATE public.mdm_monthly_report SET cch_recv = 5000.00 WHERE u_dise = $1 AND month_name = $2 AND year = $3',
+    [testUdise, testMonth, testYear]
+  );
+
+  // Attempt to save report with cch_recv = 8888.00 while pri_cch_recv is locked
+  await makeRequest({
+    hostname: 'localhost',
+    port: 3000,
+    path: '/api/monthly-report/save',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }, {
+    u_dise: testUdise,
+    month_name: testMonth,
+    year: testYear,
+    cch_recv: 8888.00
+  });
+
+  const { rows: cchCheckRows } = await pool.query(
+    'SELECT cch_recv FROM public.mdm_monthly_report WHERE u_dise = $1 AND month_name = $2 AND year = $3',
+    [testUdise, testMonth, testYear]
+  );
+  assert.strictEqual(Number(cchCheckRows[0].cch_recv), 5000.00, 'Locked Cook Cum Helper field cch_recv must preserve existing value (5000.00) rather than 8888.00');
+  console.log('✅ PASS: Server-side enforcement successfully protects locked Cook Cum Helper fields.');
+
   // Test locking a rice field: pri_rice_bv_open
   const riceLockRes = await makeRequest({
     hostname: 'localhost',
@@ -373,6 +429,7 @@ async function runTests() {
       pri_bv_days: false,
       pri_bv_actual: false,
       pri_bi_recv: false,
+      pri_cch_recv: false,
       pri_rice_bv_open: false
     }
   });
@@ -382,6 +439,7 @@ async function runTests() {
   console.log('🎉 ALL MONTHLY REPORT FIELD LOCK TESTS PASSED SUCCESSFULLY!');
   console.log('================================================================\n');
 
+  if (serverInstance) serverInstance.close();
   await pool.end();
   process.exit(0);
 }

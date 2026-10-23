@@ -3033,12 +3033,19 @@
 
                 <!-- Hidden Year select (maintained in DOM for backward-compatibility) -->
                 <select id="selectYear" style="display:none;">
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
                     <option value="2026" selected>2026</option>
-                    <option value="2027">2027</option>
-                    <option value="2028">2028</option>
                 </select>
+                <script>
+                    (function() {
+                        try {
+                            var curYear = String(new Date().getFullYear());
+                            var el = document.getElementById('selectYear');
+                            if (el) {
+                                el.innerHTML = '<option value="' + curYear + '" selected>' + curYear + '</option>';
+                            }
+                        } catch(e) {}
+                    })();
+                </script>
 
                 <div class="form-group">
                     <label for="selectSchool">
@@ -3229,10 +3236,32 @@
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="cc_p_close" name="cc_p_close" value="0"></td>
                             </tr>
 
-                            <!-- 3. MATERIAL COST UPPER PRIMARY -->
+                            <!-- 3. COOK CUM HELPER -->
+                            <tr id="fund_row_cch">
+                                <td>
+                                    <span class="fund-row-num">3. </span>COOK CUM HELPER
+                                </td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cch" id="cch_open" name="cch_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cch" id="cch_recv" name="cch_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cch" id="cch_exp" name="cch_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="cch_close" name="cch_close" value="0"></td>
+                            </tr>
+
+                            <!-- 4. SCHOOL EXPENSES (MME) -->
+                            <tr id="fund_row_mme">
+                                <td>
+                                    <span class="fund-row-num">4. </span>SCHOOL EXPENSES (MME)
+                                </td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_open" name="mme_open" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_recv" name="mme_recv" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_exp" name="mme_exp" value="0"></td>
+                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="mme_close" name="mme_close" value="0"></td>
+                            </tr>
+
+                            <!-- 5. MATERIAL COST UPPER PRIMARY -->
                             <tr id="fund_row_up">
                                 <td>
-                                    <span class="fund-row-num">3. </span>MATERIAL COST UPPER PRIMARY <span class="col-badge col-badge-upp" style="font-size:10px;">VI-VIII</span>
+                                    <span class="fund-row-num">5. </span>MATERIAL COST UPPER PRIMARY <span class="col-badge col-badge-upp" style="font-size:10px;">VI-VIII</span>
                                     <span class="row-na-badge" id="badge_fund_up" style="display:none;">Not Applicable</span>
                                 </td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="cc_up" id="cc_up_open" name="cc_up_open" value="0"></td>
@@ -3241,45 +3270,36 @@
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="cc_up_close" name="cc_up_close" value="0"></td>
                             </tr>
 
-                            <!-- 4. BANK INTEREST -->
+                            <!-- 6. BANK INTEREST -->
                             <tr>
-                                <td><span class="fund-row-num">4. </span>BANK INTEREST</td>
+                                <td><span class="fund-row-num">6. </span>BANK INTEREST</td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bi" id="bi_open" name="bi_open" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bi" id="bi_recv" name="bi_recv" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="bi" id="bi_exp" name="bi_exp" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="bi_close" name="bi_close" value="0"></td>
                             </tr>
 
-                            <!-- 5. LPG SUBSIDY -->
+                            <!-- 7. LPG SUBSIDY -->
                             <tr>
-                                <td><span class="fund-row-num">5. </span>LPG SUBSIDY</td>
+                                <td><span class="fund-row-num">7. </span>LPG SUBSIDY</td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="lpg" id="lpg_open" name="lpg_open" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="lpg" id="lpg_recv" name="lpg_recv" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="lpg" id="lpg_exp" name="lpg_exp" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="lpg_close" name="lpg_close" value="0"></td>
                             </tr>
 
-                            <!-- 6. SUPPLEMENTARY / EXTRA NUTRITION -->
+                            <!-- 8. SUPPLEMENTARY / EXTRA NUTRITION -->
                             <tr>
-                                <td><span class="fund-row-num">6. </span>SUPPLEMENTARY / EXTRA NUTRITION</td>
+                                <td><span class="fund-row-num">8. </span>SUPPLEMENTARY / EXTRA NUTRITION</td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="nutri" id="nutri_open" name="nutri_open" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="nutri" id="nutri_recv" name="nutri_recv" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="nutri" id="nutri_exp" name="nutri_exp" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="nutri_close" name="nutri_close" value="0"></td>
                             </tr>
 
-                            <!-- 7. SCHOOL EXPENSES (MME) -->
+                            <!-- 9. KITCHEN DEVICES -->
                             <tr>
-                                <td><span class="fund-row-num">7. </span>SCHOOL EXPENSES (MME)</td>
-                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_open" name="mme_open" value="0"></td>
-                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_recv" name="mme_recv" value="0"></td>
-                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="mme" id="mme_exp" name="mme_exp" value="0"></td>
-                                <td><input type="number" step="0.01" inputmode="decimal" class="num-input closing-field fund-close" id="mme_close" name="mme_close" value="0"></td>
-                            </tr>
-
-                            <!-- 8. KITCHEN DEVICES -->
-                            <tr>
-                                <td><span class="fund-row-num">8. </span>KITCHEN DEVICES</td>
+                                <td><span class="fund-row-num">9. </span>KITCHEN DEVICES</td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="kd" id="kd_open" name="kd_open" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="kd" id="kd_recv" name="kd_recv" value="0"></td>
                                 <td><input type="number" step="0.01" inputmode="decimal" class="num-input calc-fund" data-group="kd" id="kd_exp" name="kd_exp" value="0"></td>
@@ -3815,21 +3835,16 @@
                 });
                 populateSchoolSelect();
 
-                // Lock Reporting Month strictly to current month (no other month permitted)
+                // Lock Reporting Month and Year strictly to current month and current year (no other month or year permitted)
                 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                 const currentMonth = monthNames[new Date().getMonth()];
                 const currentYear = String(new Date().getFullYear());
                 $('#selectMonth').html('<option value="' + currentMonth + '" selected>' + currentMonth + '</option>');
+                $('#selectYear').html('<option value="' + currentYear + '" selected>' + currentYear + '</option>').val(currentYear);
 
                 // Check URL parameters for direct linking (school selection)
                 const urlParams = new URLSearchParams(window.location.search);
                 const initialUdise = urlParams.get('u_dise') || urlParams.get('udise');
-                const initialYear = urlParams.get('year');
-                if (initialYear && $('#selectYear option[value="' + initialYear + '"]').length) {
-                    $('#selectYear').val(initialYear);
-                } else {
-                    $('#selectYear').val(currentYear);
-                }
                 if (initialUdise && schools.some(s => s.id === initialUdise)) {
                     $('#selectSchool').val(initialUdise).trigger('change');
                 }
@@ -3868,16 +3883,13 @@
                 }
             } catch (e) {}
 
-            // Ensure Reporting Month is always locked to current month only
+            // Ensure Reporting Month and Year are always locked to current month and current year only
             try {
                 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                 const curMonth = monthNames[new Date().getMonth()];
                 const curYear = String(new Date().getFullYear());
                 $('#selectMonth').html('<option value="' + curMonth + '" selected>' + curMonth + '</option>');
-                if (!$('#selectYear option[value="' + curYear + '"]').length) {
-                    $('#selectYear').append($('<option>', { value: curYear, text: curYear }));
-                }
-                $('#selectYear').val(curYear);
+                $('#selectYear').html('<option value="' + curYear + '" selected>' + curYear + '</option>').val(curYear);
             } catch (e) {}
 
             // Initialize Select2 with placeholder
@@ -5614,7 +5626,7 @@
                         $('#lockBadgeRice, #lockBannerRice').remove();
 
                         const prefix = isPrimary ? 'pri_' : 'upr_';
-                        const fundFieldGroups = ['cc_bv', 'cc_p', 'cc_up', 'bi', 'lpg', 'nutri', 'mme', 'kd', 'ks', 'ng', 'bc', 'oth'];
+                        const fundFieldGroups = ['cc_bv', 'cc_p', 'cch', 'mme', 'cc_up', 'bi', 'lpg', 'nutri', 'kd', 'ks', 'ng', 'bc', 'oth'];
                         const fundSubTypes = ['open', 'recv', 'exp'];
 
                         fundFieldGroups.forEach(grp => {
@@ -5935,6 +5947,10 @@
                                 $('#cc_p_recv').val(getVal('cc_p_recv', 'material_cost_p', 'recv'));
                                 $('#cc_p_exp').val(getVal('cc_p_exp', 'material_cost_p', 'exp'));
 
+                                $('#cch_open').val(getVal('cch_open', 'cook_cum_helper', 'open'));
+                                $('#cch_recv').val(getVal('cch_recv', 'cook_cum_helper', 'recv'));
+                                $('#cch_exp').val(getVal('cch_exp', 'cook_cum_helper', 'exp'));
+
                                 $('#bi_open').val(getVal('bi_open', 'bank_interest', 'open'));
                                 $('#bi_recv').val(getVal('bi_recv', 'bank_interest', 'recv'));
                                 $('#bi_exp').val(getVal('bi_exp', 'bank_interest', 'exp'));
@@ -6243,6 +6259,11 @@
                             cc_p_recv: $('#cc_p_recv').val() || 0,
                             cc_p_exp: $('#cc_p_exp').val() || 0,
                             cc_p_close: $('#cc_p_close').val() || 0,
+
+                            cch_open: $('#cch_open').val() || 0,
+                            cch_recv: $('#cch_recv').val() || 0,
+                            cch_exp: $('#cch_exp').val() || 0,
+                            cch_close: $('#cch_close').val() || 0,
 
                             cc_up_open: $('#cc_up_open').val() || 0,
                             cc_up_recv: $('#cc_up_recv').val() || 0,

@@ -255,7 +255,7 @@
             if (data.status === 'success' && data.data) {
                 const d = data.data;
                 document.getElementById('repSchoolName').textContent = d.school_name;
-                document.getElementById('repMeta').textContent = `Monthly Report - ${d.month_name} ${d.year || 2025}`;
+                document.getElementById('repMeta').textContent = `Monthly Report - ${d.month_name} ${d.year || new Date().getFullYear()}`;
 
                 document.getElementById('mBvDays').textContent = d.bv_days || 0;
                 document.getElementById('mPDays').textContent = d.p_days || 0;

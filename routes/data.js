@@ -307,18 +307,57 @@ async function handleSaveMonthlyReportLockConfig(req, res) {
       incomingConfig = map;
     }
 
+    const keys = Object.keys(incomingConfig || {});
+    if (keys.length === 0) {
+      return res.json({
+        status: 'success',
+        message: 'Monthly report lock settings updated successfully!',
+        config: {}
+      });
+    }
+
     const updatedConfig = {};
-    for (const key of Object.keys(incomingConfig)) {
+    const keyArray = [];
+    const lockArray = [];
+    const categoryArray = [];
+    const fieldNameArray = [];
+
+    for (const key of keys) {
       const val = incomingConfig[key];
       const isLocked = val === true || val === 'true' || val === 1 || val === '1' || val === 'on';
       updatedConfig[key] = isLocked;
 
-      await pool.query(`
-        UPDATE public.monthly_report_field_config
-        SET is_locked = $1, updated_at = NOW()
-        WHERE key = $2
-      `, [isLocked, key]);
+      const isPri = key.startsWith('pri_');
+      const category = isPri ? 'primary' : 'upper_primary';
+      const field_name = key.replace(/^(pri_|upr_)/, '');
+
+      keyArray.push(key);
+      lockArray.push(isLocked);
+      categoryArray.push(category);
+      fieldNameArray.push(field_name);
     }
+
+    // High-performance single-query bulk upsert using PostgreSQL UNNEST
+    await pool.query(`
+      INSERT INTO public.monthly_report_field_config (key, category, field_name, label, is_locked, updated_at)
+      SELECT 
+        v.k,
+        v.cat,
+        v.fn,
+        v.k,
+        v.locked,
+        NOW()
+      FROM (
+        SELECT 
+          UNNEST($1::text[]) AS k,
+          UNNEST($2::text[]) AS cat,
+          UNNEST($3::text[]) AS fn,
+          UNNEST($4::boolean[]) AS locked
+      ) AS v
+      ON CONFLICT (key) DO UPDATE SET 
+        is_locked = EXCLUDED.is_locked, 
+        updated_at = NOW()
+    `, [keyArray, categoryArray, fieldNameArray, lockArray]);
 
     return res.json({
       status: 'success',
@@ -1319,6 +1358,7 @@ async function handleSaveMonthlyReport(req, res) {
     const fundDetailsObj = {
       material_cost_bv: { open: toFloat(b.cc_bv_open), recv: toFloat(b.cc_bv_recv), exp: toFloat(b.cc_bv_exp), close: toFloat(b.cc_bv_close) },
       material_cost_p: { open: toFloat(b.cc_p_open), recv: toFloat(b.cc_p_recv), exp: toFloat(b.cc_p_exp), close: toFloat(b.cc_p_close) },
+      cook_cum_helper: { open: toFloat(b.cch_open), recv: toFloat(b.cch_recv), exp: toFloat(b.cch_exp), close: toFloat(b.cch_close) },
       material_cost_up: { open: toFloat(b.cc_up_open), recv: toFloat(b.cc_up_recv), exp: toFloat(b.cc_up_exp), close: toFloat(b.cc_up_close) },
       bank_interest: { open: toFloat(b.bi_open), recv: toFloat(b.bi_recv), exp: toFloat(b.bi_exp), close: toFloat(b.bi_close) },
       lpg_subsidy: { open: toFloat(b.lpg_open), recv: toFloat(b.lpg_recv), exp: toFloat(b.lpg_exp), close: toFloat(b.lpg_close) },
@@ -2029,21 +2069,19 @@ router.get(['/monthly-report/passbook-tracker/excel', '/api/monthly-report/passb
   }
 });
 
-// Download Monthly Template CSV (All 246 schools from Supabase)
+// Download Monthly Template CSV (Supports All 246 schools, Primary 194 schools, Upper Primary 52 schools, or Blank)
 async function handleDownloadTemplate(req, res) {
-  const type = req.query?.type || 'all';
-  const month = req.query?.month || new Date().toLocaleString('en-US', { month: 'long' });
-  const year = req.query?.year || String(new Date().getFullYear());
+  const type = (req.query?.type || 'all').toLowerCase();
+  const category = (req.query?.category || req.query?.school_type || '').toLowerCase();
+  const month = (req.query?.month || new Date().toLocaleString('en-US', { month: 'long' })).trim();
+  const year = (req.query?.year || String(new Date().getFullYear())).trim();
 
-  const headers = [
-    // 1. School Information
-    'u_dise', 'school_name', 'category', 'circle_name', 'gp_name', 'month_name', 'year',
-    // 2. Meal Availed Status (9 columns)
-    'bv_days', 'p_days', 'up_days', 'bv_actual', 'p_actual', 'up_actual', 'bv_meals', 'p_meals', 'up_meals',
-    // 3. Fund Details (All 11 MDCF Components - 44 columns)
-    'cc_bv_open', 'cc_bv_recv', 'cc_bv_exp', 'cc_bv_close',
-    'cc_p_open', 'cc_p_recv', 'cc_p_exp', 'cc_p_close',
-    'cc_up_open', 'cc_up_recv', 'cc_up_exp', 'cc_up_close',
+  const isPrimary = (category === 'primary' || type === 'primary');
+  const isUpper = (category === 'upper' || category === 'upper_primary' || type === 'upper' || type === 'upper_primary');
+  const isBlank = (type === 'blank');
+
+  // Common MDCF components present in all school categories (32 columns)
+  const commonFundHeaders = [
     'bi_open', 'bi_recv', 'bi_exp', 'bi_close',
     'lpg_open', 'lpg_recv', 'lpg_exp', 'lpg_close',
     'nutri_open', 'nutri_recv', 'nutri_exp', 'nutri_close',
@@ -2051,41 +2089,118 @@ async function handleDownloadTemplate(req, res) {
     'kd_open', 'kd_recv', 'kd_exp', 'kd_close',
     'ks_open', 'ks_recv', 'ks_exp', 'ks_close',
     'ng_open', 'ng_recv', 'ng_exp', 'ng_close',
-    'bc_open', 'bc_recv', 'bc_exp', 'bc_close',
-    // Bank Details (3 columns)
-    'bank_passbook_balance', 'bank_balance_date', 'bank_match',
-    // 4. Food Grains Details - Rice (12 columns)
-    'rice_bv_open', 'rice_bv_recv', 'rice_bv_cons', 'rice_bv_close',
-    'rice_p_open', 'rice_p_recv', 'rice_p_cons', 'rice_p_close',
-    'rice_up_open', 'rice_up_recv', 'rice_up_cons', 'rice_up_close',
-    // 6. Children Health Status (4 columns)
+    'bc_open', 'bc_recv', 'bc_exp', 'bc_close'
+  ];
+
+  // Common school info, bank, health, inspection columns
+  const schoolInfoHeaders = ['u_dise', 'school_name', 'category', 'circle_name', 'gp_name', 'month_name', 'year'];
+  const bankHeaders = ['bank_passbook_balance', 'bank_balance_date', 'bank_match'];
+  const healthAndInspHeaders = [
     'ifa_boys', 'ifa_girls', 'rbsk_screened', 'rbsk_referred',
-    // 7. School Inspection & Untoward Incidents (6 columns)
     'inspection_done', 'insp_task_force', 'insp_district_officials', 'insp_block_officials', 'insp_smc_members',
     'untoward_incidents'
   ];
 
-  const filename = type === 'blank' ? 'monthly_report_template_blank.csv' : 'monthly_report_template_' + month.toLowerCase() + '_' + year + '.csv';
+  // Primary Schools (194 schools): ONLY Primary fields (Bal Vatika PP & Primary I-V) - 74 columns
+  const primaryHeaders = [
+    ...schoolInfoHeaders,
+    'bv_days', 'p_days', 'bv_actual', 'p_actual', 'bv_meals', 'p_meals',
+    'cc_bv_open', 'cc_bv_recv', 'cc_bv_exp', 'cc_bv_close',
+    'cc_p_open', 'cc_p_recv', 'cc_p_exp', 'cc_p_close',
+    ...commonFundHeaders,
+    ...bankHeaders,
+    'rice_bv_open', 'rice_bv_recv', 'rice_bv_cons', 'rice_bv_close',
+    'rice_p_open', 'rice_p_recv', 'rice_p_cons', 'rice_p_close',
+    ...healthAndInspHeaders
+  ];
+
+  // Upper Primary Schools (52 schools): ONLY Upper Primary fields (VI-VIII) - 63 columns
+  const upperHeaders = [
+    ...schoolInfoHeaders,
+    'up_days', 'up_actual', 'up_meals',
+    'cc_up_open', 'cc_up_recv', 'cc_up_exp', 'cc_up_close',
+    ...commonFundHeaders,
+    ...bankHeaders,
+    'rice_up_open', 'rice_up_recv', 'rice_up_cons', 'rice_up_close',
+    ...healthAndInspHeaders
+  ];
+
+  // Master All Schools template - 85 columns
+  const allHeaders = [
+    ...schoolInfoHeaders,
+    'bv_days', 'p_days', 'up_days', 'bv_actual', 'p_actual', 'up_actual', 'bv_meals', 'p_meals', 'up_meals',
+    'cc_bv_open', 'cc_bv_recv', 'cc_bv_exp', 'cc_bv_close',
+    'cc_p_open', 'cc_p_recv', 'cc_p_exp', 'cc_p_close',
+    'cc_up_open', 'cc_up_recv', 'cc_up_exp', 'cc_up_close',
+    ...commonFundHeaders,
+    ...bankHeaders,
+    'rice_bv_open', 'rice_bv_recv', 'rice_bv_cons', 'rice_bv_close',
+    'rice_p_open', 'rice_p_recv', 'rice_p_cons', 'rice_p_close',
+    'rice_up_open', 'rice_up_recv', 'rice_up_cons', 'rice_up_close',
+    ...healthAndInspHeaders
+  ];
+
+  const headers = isPrimary ? primaryHeaders : (isUpper ? upperHeaders : allHeaders);
+
+  let filename = '';
+  if (isBlank) {
+    if (isPrimary) filename = 'monthly_report_template_primary_blank.csv';
+    else if (isUpper) filename = 'monthly_report_template_upper_blank.csv';
+    else filename = 'monthly_report_template_blank.csv';
+  } else {
+    if (isPrimary) filename = 'monthly_report_template_primary_' + month.toLowerCase() + '_' + year + '.csv';
+    else if (isUpper) filename = 'monthly_report_template_upper_' + month.toLowerCase() + '_' + year + '.csv';
+    else filename = 'monthly_report_template_' + month.toLowerCase() + '_' + year + '.csv';
+  }
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
 
   let csvContent = '\uFEFF' + headers.join(',') + '\n';
 
-  if (type === 'blank') {
-    csvContent += '19120502701,"CHOWBERA PRIMARY SCHOOL (19120502701)","PRIMARY ONLY","BOINCHEE","BANTIKA BOINCHI",' +
-      '"' + month + '","' + year + '",10,10,0,10,10,0,25,20,0,' +
-      '2000.00,2000.00,5000.00,-1000.00,2000.00,2000.00,1000000.00,-9996000.00,0.00,0.00,0.00,0.00,' +
-      '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' +
-      '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' +
-      '0.00,' + new Date().toISOString().slice(0, 10) + ',YES,' +
-      '100.00,2000.00,500.00,1600.00,1222.00,2000.00,2200.00,1022.00,0.00,0.00,0.00,0.00,' +
-      '15,18,40,2,Yes,1,0,1,2,0\n';
+  if (isBlank) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (isUpper) {
+      // 63 columns with strictly Upper Primary (VI-VIII) fields only
+      csvContent += '19120512203,"AINCHGARH JR. HIGH SCHOOL (19120512203)","UPPER PRIMARY ONLY","BOINCHEE","BANTIKA BOINCHI",' +
+        '"' + month + '","' + year + '",' +
+        '15,15,30,' + // up_days, up_actual, up_meals
+        '3000.00,3000.00,6000.00,0.00,' + // cc_up_open, cc_up_recv, cc_up_exp, cc_up_close
+        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes
+        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes (total 32 common funds)
+        '0.00,' + today + ',YES,' + // bank details
+        '1500.00,2500.00,2800.00,1200.00,' + // rice_up_open, rice_up_recv, rice_up_cons, rice_up_close
+        '0,0,40,2,Yes,1,0,1,2,0\n'; // health & inspection
+    } else {
+      // 74 columns with strictly Primary fields only (Bal Vatika PP & Primary I-V)
+      csvContent += '19120502701,"CHOWBERA PRIMARY SCHOOL (19120502701)","PRIMARY ONLY","BOINCHEE","BANTIKA BOINCHI",' +
+        '"' + month + '","' + year + '",' +
+        '10,10,10,10,25,20,' + // bv_days, p_days, bv_actual, p_actual, bv_meals, p_meals
+        '2000.00,2000.00,5000.00,-1000.00,2000.00,2000.00,1000000.00,-9996000.00,' + // cc_bv_*, cc_p_*
+        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes
+        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes (total 32 common funds)
+        '0.00,' + today + ',YES,' + // bank details
+        '100.00,2000.00,500.00,1600.00,1222.00,2000.00,2200.00,1022.00,' + // rice_bv_*, rice_p_*
+        '15,18,40,2,Yes,1,0,1,2,0\n'; // health & inspection
+    }
     return res.send(csvContent);
   }
 
   try {
-    const schools = await getSchools();
+    const allSchools = await getSchools();
+    let schools = allSchools;
+
+    if (isPrimary) {
+      schools = allSchools.filter(s => {
+        const cat = (s.category || '').toUpperCase();
+        return !cat.includes('UPPER') && !cat.includes('HIGH');
+      });
+    } else if (isUpper) {
+      schools = allSchools.filter(s => {
+        const cat = (s.category || '').toUpperCase();
+        return cat.includes('UPPER') || cat.includes('HIGH');
+      });
+    }
 
     // Query existing saved monthly reports from update_monthly_report.html
     const { rows: savedReports } = await pool.query(
@@ -2111,28 +2226,7 @@ async function handleDownloadTemplate(req, res) {
 
     for (const s of schools) {
       const rep = reportMap.get(String(s.udise).trim()) || {};
-      const row = [
-        s.udise,
-        '"' + (s.school_name || '').replace(/"/g, '""') + '"',
-        '"' + (s.category || '').replace(/"/g, '""') + '"',
-        '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
-        '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
-        '"' + month + '"',
-        '"' + year + '"',
-        // Meals (9 columns)
-        fmtNum(rep.bv_days, false),
-        fmtNum(rep.p_days, false),
-        fmtNum(rep.up_days, false),
-        fmtNum(rep.bv_actual, false),
-        fmtNum(rep.p_actual, false),
-        fmtNum(rep.up_actual, false),
-        fmtNum(rep.bv_meals, false),
-        fmtNum(rep.p_meals, false),
-        fmtNum(rep.up_meals, false),
-        // Funds (11 components * 4 = 44 columns)
-        fmtNum(rep.cc_bv_open), fmtNum(rep.cc_bv_recv), fmtNum(rep.cc_bv_exp), fmtNum(rep.cc_bv_close),
-        fmtNum(rep.cc_p_open), fmtNum(rep.cc_p_recv), fmtNum(rep.cc_p_exp), fmtNum(rep.cc_p_close),
-        fmtNum(rep.cc_up_open), fmtNum(rep.cc_up_recv), fmtNum(rep.cc_up_exp), fmtNum(rep.cc_up_close),
+      const commonFundVals = [
         fmtNum(rep.bi_open), fmtNum(rep.bi_recv), fmtNum(rep.bi_exp), fmtNum(rep.bi_close),
         fmtNum(rep.lpg_open), fmtNum(rep.lpg_recv), fmtNum(rep.lpg_exp), fmtNum(rep.lpg_close),
         fmtNum(rep.nutri_open), fmtNum(rep.nutri_recv), fmtNum(rep.nutri_exp), fmtNum(rep.nutri_close),
@@ -2140,29 +2234,102 @@ async function handleDownloadTemplate(req, res) {
         fmtNum(rep.kd_open), fmtNum(rep.kd_recv), fmtNum(rep.kd_exp), fmtNum(rep.kd_close),
         fmtNum(rep.ks_open), fmtNum(rep.ks_recv), fmtNum(rep.ks_exp), fmtNum(rep.ks_close),
         fmtNum(rep.ng_open), fmtNum(rep.ng_recv), fmtNum(rep.ng_exp), fmtNum(rep.ng_close),
-        fmtNum(rep.bc_open), fmtNum(rep.bc_recv), fmtNum(rep.bc_exp), fmtNum(rep.bc_close),
-        // Bank details (3 columns)
+        fmtNum(rep.bc_open), fmtNum(rep.bc_recv), fmtNum(rep.bc_exp), fmtNum(rep.bc_close)
+      ];
+
+      const bankVals = [
         fmtNum(rep.bank_passbook_balance),
         rep.bank_balance_date || new Date().toISOString().slice(0, 10),
-        rep.bank_match || 'YES',
-        // Rice (12 columns)
-        fmtNum(rep.rice_bv_open), fmtNum(rep.rice_bv_recv), fmtNum(rep.rice_bv_cons), fmtNum(rep.rice_bv_close),
-        fmtNum(rep.rice_p_open), fmtNum(rep.rice_p_recv), fmtNum(rep.rice_p_cons), fmtNum(rep.rice_p_close),
-        fmtNum(rep.rice_up_open), fmtNum(rep.rice_up_recv), fmtNum(rep.rice_up_cons), fmtNum(rep.rice_up_close),
-        // Children Health Status (4 columns)
+        rep.bank_match || 'YES'
+      ];
+
+      const healthAndInspVals = [
         fmtNum(rep.ifa_boys, false),
         fmtNum(rep.ifa_girls, false),
         fmtNum(rep.rbsk_screened, false),
         fmtNum(rep.rbsk_referred, false),
-        // School Inspection (5 columns)
         rep.inspection_done || 'No',
         fmtNum(rep.insp_task_force, false),
         fmtNum(rep.insp_district_officials, false),
         fmtNum(rep.insp_block_officials, false),
         fmtNum(rep.insp_smc_members, false),
-        // Untoward Incidents (1 column)
         fmtNum(rep.untoward_incidents, false)
       ];
+
+      let row = [];
+      if (isPrimary) {
+        // Strictly Primary fields (Bal Vatika PP & Primary I-V) - 74 columns
+        row = [
+          s.udise,
+          '"' + (s.school_name || '').replace(/"/g, '""') + '"',
+          '"' + (s.category || '').replace(/"/g, '""') + '"',
+          '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
+          '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
+          '"' + month + '"',
+          '"' + year + '"',
+          fmtNum(rep.bv_days, false),
+          fmtNum(rep.p_days, false),
+          fmtNum(rep.bv_actual, false),
+          fmtNum(rep.p_actual, false),
+          fmtNum(rep.bv_meals, false),
+          fmtNum(rep.p_meals, false),
+          fmtNum(rep.cc_bv_open), fmtNum(rep.cc_bv_recv), fmtNum(rep.cc_bv_exp), fmtNum(rep.cc_bv_close),
+          fmtNum(rep.cc_p_open), fmtNum(rep.cc_p_recv), fmtNum(rep.cc_p_exp), fmtNum(rep.cc_p_close),
+          ...commonFundVals,
+          ...bankVals,
+          fmtNum(rep.rice_bv_open), fmtNum(rep.rice_bv_recv), fmtNum(rep.rice_bv_cons), fmtNum(rep.rice_bv_close),
+          fmtNum(rep.rice_p_open), fmtNum(rep.rice_p_recv), fmtNum(rep.rice_p_cons), fmtNum(rep.rice_p_close),
+          ...healthAndInspVals
+        ];
+      } else if (isUpper) {
+        // Strictly Upper Primary fields (VI-VIII) - 63 columns
+        row = [
+          s.udise,
+          '"' + (s.school_name || '').replace(/"/g, '""') + '"',
+          '"' + (s.category || '').replace(/"/g, '""') + '"',
+          '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
+          '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
+          '"' + month + '"',
+          '"' + year + '"',
+          fmtNum(rep.up_days, false),
+          fmtNum(rep.up_actual, false),
+          fmtNum(rep.up_meals, false),
+          fmtNum(rep.cc_up_open), fmtNum(rep.cc_up_recv), fmtNum(rep.cc_up_exp), fmtNum(rep.cc_up_close),
+          ...commonFundVals,
+          ...bankVals,
+          fmtNum(rep.rice_up_open), fmtNum(rep.rice_up_recv), fmtNum(rep.rice_up_cons), fmtNum(rep.rice_up_close),
+          ...healthAndInspVals
+        ];
+      } else {
+        // Master all 85 columns
+        row = [
+          s.udise,
+          '"' + (s.school_name || '').replace(/"/g, '""') + '"',
+          '"' + (s.category || '').replace(/"/g, '""') + '"',
+          '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
+          '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
+          '"' + month + '"',
+          '"' + year + '"',
+          fmtNum(rep.bv_days, false),
+          fmtNum(rep.p_days, false),
+          fmtNum(rep.up_days, false),
+          fmtNum(rep.bv_actual, false),
+          fmtNum(rep.p_actual, false),
+          fmtNum(rep.up_actual, false),
+          fmtNum(rep.bv_meals, false),
+          fmtNum(rep.p_meals, false),
+          fmtNum(rep.up_meals, false),
+          fmtNum(rep.cc_bv_open), fmtNum(rep.cc_bv_recv), fmtNum(rep.cc_bv_exp), fmtNum(rep.cc_bv_close),
+          fmtNum(rep.cc_p_open), fmtNum(rep.cc_p_recv), fmtNum(rep.cc_p_exp), fmtNum(rep.cc_p_close),
+          fmtNum(rep.cc_up_open), fmtNum(rep.cc_up_recv), fmtNum(rep.cc_up_exp), fmtNum(rep.cc_up_close),
+          ...commonFundVals,
+          ...bankVals,
+          fmtNum(rep.rice_bv_open), fmtNum(rep.rice_bv_recv), fmtNum(rep.rice_bv_cons), fmtNum(rep.rice_bv_close),
+          fmtNum(rep.rice_p_open), fmtNum(rep.rice_p_recv), fmtNum(rep.rice_p_cons), fmtNum(rep.rice_p_close),
+          fmtNum(rep.rice_up_open), fmtNum(rep.rice_up_recv), fmtNum(rep.rice_up_cons), fmtNum(rep.rice_up_close),
+          ...healthAndInspVals
+        ];
+      }
       csvContent += row.join(',') + '\n';
     }
     res.send(csvContent);
@@ -2613,177 +2780,383 @@ async function handleSaveLegacyMdcfData(req, res) {
 
 router.post(['/save_data.php', '/save-data', '/api/save-data', '/api/mdcf/save'], upload.none(), handleSaveLegacyMdcfData);
 
-// Full MDCF monthly CSV upload endpoint
-router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv', '/monthly-report/upload-full-csv'], requireAuth('main'), upload.single('csv_file'), async (req, res) => {
-  const fileObj = req.file;
+// Full MDCF monthly CSV upload endpoint (supports separate Primary and Upper Primary files or single file)
+const uploadMonthlyFullMulter = upload.fields([
+  { name: 'csv_file', maxCount: 1 },
+  { name: 'file_primary', maxCount: 1 },
+  { name: 'primary_csv', maxCount: 1 },
+  { name: 'file_upper', maxCount: 1 },
+  { name: 'upper_csv', maxCount: 1 }
+]);
+
+async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, schoolMap) {
+  if (!rows || rows.length < 2) return 0;
+  const header = rows[0];
+  const colIndex = {};
+  header.forEach((col, idx) => {
+    const cleanKey = String(col).toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_').trim();
+    colIndex[cleanKey] = idx;
+  });
+
+  const isMdcfTemplate = (
+    colIndex['bi_open'] !== undefined ||
+    colIndex['month_name'] !== undefined ||
+    header.length >= 50
+  );
+
+  const isPrimary = (type === 'primary');
+  let processed = 0;
+  const dataRows = rows.slice(1);
+
+  const getUdiseFromRow = (r) => {
+    if (colIndex['u_dise'] !== undefined && r[colIndex['u_dise']]) {
+      const u = extractUdise(r[colIndex['u_dise']]);
+      if (u) return u;
+    }
+    if (colIndex['udise'] !== undefined && r[colIndex['udise']]) {
+      const u = extractUdise(r[colIndex['udise']]);
+      if (u) return u;
+    }
+    if (colIndex['udise_code'] !== undefined && r[colIndex['udise_code']]) {
+      const u = extractUdise(r[colIndex['udise_code']]);
+      if (u) return u;
+    }
+    return extractUdise(r[1]) || extractUdise(r[0]);
+  };
+
+  for (const r of dataRows) {
+    if (!r || r.length < 2) continue;
+    const udise = getUdiseFromRow(r);
+    if (!udise) continue;
+
+    const master = schoolMap[udise] || {};
+    let schoolName = master.school_name || '';
+    let circleName = master.circle_name || 'N/A';
+    let gpName = master.gp_name || 'N/A';
+    let rowMonth = defaultMonth;
+    let rowYear = defaultYear;
+
+    let bvDays = 0, pDays = 0, upDays = 0;
+    let bvAct = 0, pAct = 0, upAct = 0;
+    let bvMeals = 0, pMeals = 0, upMeals = 0;
+    let ccBvOpen = 0, ccBvRecv = 0, ccBvExp = 0, ccBvClose = 0;
+    let ccPOpen = 0, ccPRecv = 0, ccPExp = 0, ccPClose = 0;
+    let ccUpOpen = 0, ccUpRecv = 0, ccUpExp = 0, ccUpClose = 0;
+    let cchOpen = 0, cchRecv = 0, cchExp = 0, cchClose = 0;
+    let mmeOpen = 0, mmeRecv = 0, mmeExp = 0, mmeClose = 0;
+    let biOpen = 0, biRecv = 0, biExp = 0, biClose = 0;
+    let lpgOpen = 0, lpgRecv = 0, lpgExp = 0, lpgClose = 0;
+    let nutriOpen = 0, nutriRecv = 0, nutriExp = 0, nutriClose = 0;
+    let kdOpen = 0, kdRecv = 0, kdExp = 0, kdClose = 0;
+    let ksOpen = 0, ksRecv = 0, ksExp = 0, ksClose = 0;
+    let ngOpen = 0, ngRecv = 0, ngExp = 0, ngClose = 0;
+    let bcOpen = 0, bcRecv = 0, bcExp = 0, bcClose = 0;
+    let bankMatch = 'YES', bankPassbookBal = 0, bankBalDate = new Date().toISOString().slice(0, 10);
+    let rBvOpen = 0, rBvRecv = 0, rBvCons = 0, rBvClose = 0;
+    let rPOpen = 0, rPRecv = 0, rPCons = 0, rPClose = 0;
+    let rUpOpen = 0, rUpRecv = 0, rUpCons = 0, rUpClose = 0;
+    let ifaBoys = 0, ifaGirls = 0, rbskScreened = 0, rbskReferred = 0;
+    let inspDone = 'No', inspTf = 0, inspDist = 0, inspBlock = 0, inspSmc = 0, untoward = 0;
+
+    const getVal = (key, fallbackIdx) => {
+      if (colIndex[key] !== undefined && r[colIndex[key]] !== undefined) {
+        return r[colIndex[key]];
+      }
+      return fallbackIdx !== undefined && r[fallbackIdx] !== undefined ? r[fallbackIdx] : '';
+    };
+
+    if (isMdcfTemplate) {
+      if (!schoolName) schoolName = getVal('school_name', 1) || `School (${udise})`;
+      if (circleName === 'N/A') circleName = getVal('circle_name', 3) || 'N/A';
+      if (gpName === 'N/A') gpName = getVal('gp_name', 4) || 'N/A';
+      if (colIndex['month_name'] !== undefined && r[colIndex['month_name']]) {
+        rowMonth = String(r[colIndex['month_name']]).trim() || defaultMonth;
+      }
+      if (colIndex['year'] !== undefined && r[colIndex['year']]) {
+        rowYear = String(r[colIndex['year']]).trim() || defaultYear;
+      }
+
+      bvDays = toInt(getVal('bv_days')); pDays = toInt(getVal('p_days')); upDays = toInt(getVal('up_days'));
+      bvAct = toInt(getVal('bv_actual')); pAct = toInt(getVal('p_actual')); upAct = toInt(getVal('up_actual'));
+      bvMeals = toInt(getVal('bv_meals')); pMeals = toInt(getVal('p_meals')); upMeals = toInt(getVal('up_meals'));
+
+      ccBvOpen = toFloat(getVal('cc_bv_open')); ccBvRecv = toFloat(getVal('cc_bv_recv')); ccBvExp = toFloat(getVal('cc_bv_exp')); ccBvClose = toFloat(getVal('cc_bv_close'));
+      ccPOpen = toFloat(getVal('cc_p_open')); ccPRecv = toFloat(getVal('cc_p_recv')); ccPExp = toFloat(getVal('cc_p_exp')); ccPClose = toFloat(getVal('cc_p_close'));
+      ccUpOpen = toFloat(getVal('cc_up_open')); ccUpRecv = toFloat(getVal('cc_up_recv')); ccUpExp = toFloat(getVal('cc_up_exp')); ccUpClose = toFloat(getVal('cc_up_close'));
+      cchOpen = toFloat(getVal('cch_open')); cchRecv = toFloat(getVal('cch_recv')); cchExp = toFloat(getVal('cch_exp')); cchClose = toFloat(getVal('cch_close'));
+      mmeOpen = toFloat(getVal('mme_open')); mmeRecv = toFloat(getVal('mme_recv')); mmeExp = toFloat(getVal('mme_exp')); mmeClose = toFloat(getVal('mme_close'));
+      biOpen = toFloat(getVal('bi_open')); biRecv = toFloat(getVal('bi_recv')); biExp = toFloat(getVal('bi_exp')); biClose = toFloat(getVal('bi_close'));
+      lpgOpen = toFloat(getVal('lpg_open')); lpgRecv = toFloat(getVal('lpg_recv')); lpgExp = toFloat(getVal('lpg_exp')); lpgClose = toFloat(getVal('lpg_close'));
+      nutriOpen = toFloat(getVal('nutri_open')); nutriRecv = toFloat(getVal('nutri_recv')); nutriExp = toFloat(getVal('nutri_exp')); nutriClose = toFloat(getVal('nutri_close'));
+      kdOpen = toFloat(getVal('kd_open')); kdRecv = toFloat(getVal('kd_recv')); kdExp = toFloat(getVal('kd_exp')); kdClose = toFloat(getVal('kd_close'));
+      ksOpen = toFloat(getVal('ks_open')); ksRecv = toFloat(getVal('ks_recv')); ksExp = toFloat(getVal('ks_exp')); ksClose = toFloat(getVal('ks_close'));
+      ngOpen = toFloat(getVal('ng_open')); ngRecv = toFloat(getVal('ng_recv')); ngExp = toFloat(getVal('ng_exp')); ngClose = toFloat(getVal('ng_close'));
+      bcOpen = toFloat(getVal('bc_open')); bcRecv = toFloat(getVal('bc_recv')); bcExp = toFloat(getVal('bc_exp')); bcClose = toFloat(getVal('bc_close'));
+      bankMatch = getVal('bank_match') || 'YES';
+      bankPassbookBal = toFloat(getVal('bank_passbook_balance'));
+      bankBalDate = getVal('bank_balance_date') || new Date().toISOString().slice(0, 10);
+      rBvOpen = toFloat(getVal('rice_bv_open')); rBvRecv = toFloat(getVal('rice_bv_recv')); rBvCons = toFloat(getVal('rice_bv_cons')); rBvClose = toFloat(getVal('rice_bv_close'));
+      rPOpen = toFloat(getVal('rice_p_open')); rPRecv = toFloat(getVal('rice_p_recv')); rPCons = toFloat(getVal('rice_p_cons')); rPClose = toFloat(getVal('rice_p_close'));
+      rUpOpen = toFloat(getVal('rice_up_open')); rUpRecv = toFloat(getVal('rice_up_recv')); rUpCons = toFloat(getVal('rice_up_cons')); rUpClose = toFloat(getVal('rice_up_close'));
+      ifaBoys = toInt(getVal('ifa_boys')); ifaGirls = toInt(getVal('ifa_girls'));
+      rbskScreened = toInt(getVal('rbsk_screened')); rbskReferred = toInt(getVal('rbsk_referred'));
+      inspDone = getVal('inspection_done') || 'No';
+      inspTf = toInt(getVal('insp_task_force')); inspDist = toInt(getVal('insp_district_officials'));
+      inspBlock = toInt(getVal('insp_block_officials')); inspSmc = toInt(getVal('insp_smc_members'));
+      untoward = toInt(getVal('untoward_incidents'));
+    } else {
+      // 35-column portal format
+      if (!schoolName) schoolName = r[2] || `School (${udise})`;
+      if (circleName === 'N/A') circleName = r[3] || 'N/A';
+      if (gpName === 'N/A') gpName = r[4] || 'N/A';
+
+      if (isPrimary) {
+        bvDays = toInt(r[5]); pDays = toInt(r[6]);
+        bvAct = toInt(r[7]); pAct = toInt(r[8]);
+        bvMeals = toInt(r[9]); pMeals = toInt(r[10]);
+        ccBvOpen = toFloat(r[11]); ccBvRecv = toFloat(r[12]); ccBvExp = toFloat(r[13]); ccBvClose = toFloat(r[14]);
+        ccPOpen = toFloat(r[15]); ccPRecv = toFloat(r[16]); ccPExp = toFloat(r[17]); ccPClose = toFloat(r[18]);
+        cchOpen = toFloat(r[19]); cchRecv = toFloat(r[20]); cchExp = toFloat(r[21]); cchClose = toFloat(r[22]);
+        mmeOpen = toFloat(r[23]); mmeRecv = toFloat(r[24]); mmeExp = toFloat(r[25]); mmeClose = toFloat(r[26]);
+        rBvOpen = toFloat(r[27]); rBvRecv = toFloat(r[28]); rBvCons = toFloat(r[29]); rBvClose = toFloat(r[30]);
+        rPOpen = toFloat(r[31]); rPRecv = toFloat(r[32]); rPCons = toFloat(r[33]); rPClose = toFloat(r[34]);
+      } else {
+        pDays = toInt(r[5]); upDays = toInt(r[6]);
+        pAct = toInt(r[7]); upAct = toInt(r[8]);
+        pMeals = toInt(r[9]); upMeals = toInt(r[10]);
+        ccPOpen = toFloat(r[11]); ccPRecv = toFloat(r[12]); ccPExp = toFloat(r[13]); ccPClose = toFloat(r[14]);
+        ccUpOpen = toFloat(r[15]); ccUpRecv = toFloat(r[16]); ccUpExp = toFloat(r[17]); ccUpClose = toFloat(r[18]);
+        cchOpen = toFloat(r[19]); cchRecv = toFloat(r[20]); cchExp = toFloat(r[21]); cchClose = toFloat(r[22]);
+        mmeOpen = toFloat(r[23]); mmeRecv = toFloat(r[24]); mmeExp = toFloat(r[25]); mmeClose = toFloat(r[26]);
+        rPOpen = toFloat(r[27]); rPRecv = toFloat(r[28]); rPCons = toFloat(r[29]); rPClose = toFloat(r[30]);
+        rUpOpen = toFloat(r[31]); rUpRecv = toFloat(r[32]); rUpCons = toFloat(r[33]); rUpClose = toFloat(r[34]);
+      }
+    }
+
+    const q = `
+      INSERT INTO public.mdm_monthly_report (
+        month_name, year, u_dise, school_name, circle_name, gp_name,
+        bv_days, p_days, up_days, bv_actual, p_actual, up_actual, bv_meals, p_meals, up_meals,
+        cc_bv_open, cc_bv_recv, cc_bv_exp, cc_bv_close,
+        cc_p_open, cc_p_recv, cc_p_exp, cc_p_close,
+        cc_up_open, cc_up_recv, cc_up_exp, cc_up_close,
+        cch_open, cch_recv, cch_exp, cch_close,
+        mme_open, mme_recv, mme_exp, mme_close,
+        bi_open, bi_recv, bi_exp, bi_close,
+        lpg_open, lpg_recv, lpg_exp, lpg_close,
+        nutri_open, nutri_recv, nutri_exp, nutri_close,
+        kd_open, kd_recv, kd_exp, kd_close,
+        ks_open, ks_recv, ks_exp, ks_close,
+        ng_open, ng_recv, ng_exp, ng_close,
+        bc_open, bc_recv, bc_exp, bc_close,
+        bank_match, bank_passbook_balance, bank_balance_date,
+        rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
+        rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
+        rice_up_open, rice_up_recv, rice_up_cons, rice_up_close,
+        ifa_boys, ifa_girls, rbsk_screened, rbsk_referred,
+        inspection_done, insp_task_force, insp_district_officials, insp_block_officials, insp_smc_members,
+        untoward_incidents
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11, $12, $13, $14, $15,
+        $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
+        $28, $29, $30, $31, $32, $33, $34, $35,
+        $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47,
+        $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59,
+        $60, $61, $62,
+        $63, $64, $65, $66,
+        $67, $68, $69, $70, $71, $72, $73, $74, $75, $76, $77, $78,
+        $79, $80, $81, $82,
+        $83, $84, $85, $86, $87,
+        $88
+      )
+      ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
+        ${type === 'primary' ? `
+        school_name = EXCLUDED.school_name, circle_name = EXCLUDED.circle_name, gp_name = EXCLUDED.gp_name,
+        bv_days = EXCLUDED.bv_days, p_days = EXCLUDED.p_days,
+        bv_actual = EXCLUDED.bv_actual, p_actual = EXCLUDED.p_actual,
+        bv_meals = EXCLUDED.bv_meals, p_meals = EXCLUDED.p_meals,
+        cc_bv_open = EXCLUDED.cc_bv_open, cc_bv_recv = EXCLUDED.cc_bv_recv, cc_bv_exp = EXCLUDED.cc_bv_exp, cc_bv_close = EXCLUDED.cc_bv_close,
+        cc_p_open = EXCLUDED.cc_p_open, cc_p_recv = EXCLUDED.cc_p_recv, cc_p_exp = EXCLUDED.cc_p_exp, cc_p_close = EXCLUDED.cc_p_close,
+        cch_open = EXCLUDED.cch_open, cch_recv = EXCLUDED.cch_recv, cch_exp = EXCLUDED.cch_exp, cch_close = EXCLUDED.cch_close,
+        mme_open = EXCLUDED.mme_open, mme_recv = EXCLUDED.mme_recv, mme_exp = EXCLUDED.mme_exp, mme_close = EXCLUDED.mme_close,
+        bi_open = EXCLUDED.bi_open, bi_recv = EXCLUDED.bi_recv, bi_exp = EXCLUDED.bi_exp, bi_close = EXCLUDED.bi_close,
+        lpg_open = EXCLUDED.lpg_open, lpg_recv = EXCLUDED.lpg_recv, lpg_exp = EXCLUDED.lpg_exp, lpg_close = EXCLUDED.lpg_close,
+        nutri_open = EXCLUDED.nutri_open, nutri_recv = EXCLUDED.nutri_recv, nutri_exp = EXCLUDED.nutri_exp, nutri_close = EXCLUDED.nutri_close,
+        kd_open = EXCLUDED.kd_open, kd_recv = EXCLUDED.kd_recv, kd_exp = EXCLUDED.kd_exp, kd_close = EXCLUDED.kd_close,
+        ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
+        ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
+        bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
+        rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
+        rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
+        ifa_boys = EXCLUDED.ifa_boys, ifa_girls = EXCLUDED.ifa_girls,
+        rbsk_screened = EXCLUDED.rbsk_screened, rbsk_referred = EXCLUDED.rbsk_referred,
+        inspection_done = EXCLUDED.inspection_done, insp_task_force = EXCLUDED.insp_task_force,
+        insp_district_officials = EXCLUDED.insp_district_officials, insp_block_officials = EXCLUDED.insp_block_officials,
+        insp_smc_members = EXCLUDED.insp_smc_members, untoward_incidents = EXCLUDED.untoward_incidents
+        ` : (type === 'upper' ? `
+        school_name = EXCLUDED.school_name, circle_name = EXCLUDED.circle_name, gp_name = EXCLUDED.gp_name,
+        up_days = EXCLUDED.up_days, up_actual = EXCLUDED.up_actual, up_meals = EXCLUDED.up_meals,
+        cc_up_open = EXCLUDED.cc_up_open, cc_up_recv = EXCLUDED.cc_up_recv, cc_up_exp = EXCLUDED.cc_up_exp, cc_up_close = EXCLUDED.cc_up_close,
+        cch_open = EXCLUDED.cch_open, cch_recv = EXCLUDED.cch_recv, cch_exp = EXCLUDED.cch_exp, cch_close = EXCLUDED.cch_close,
+        mme_open = EXCLUDED.mme_open, mme_recv = EXCLUDED.mme_recv, mme_exp = EXCLUDED.mme_exp, mme_close = EXCLUDED.mme_close,
+        bi_open = EXCLUDED.bi_open, bi_recv = EXCLUDED.bi_recv, bi_exp = EXCLUDED.bi_exp, bi_close = EXCLUDED.bi_close,
+        lpg_open = EXCLUDED.lpg_open, lpg_recv = EXCLUDED.lpg_recv, lpg_exp = EXCLUDED.lpg_exp, lpg_close = EXCLUDED.lpg_close,
+        nutri_open = EXCLUDED.nutri_open, nutri_recv = EXCLUDED.nutri_recv, nutri_exp = EXCLUDED.nutri_exp, nutri_close = EXCLUDED.nutri_close,
+        kd_open = EXCLUDED.kd_open, kd_recv = EXCLUDED.kd_recv, kd_exp = EXCLUDED.kd_exp, kd_close = EXCLUDED.kd_close,
+        ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
+        ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
+        bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
+        rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close,
+        ifa_boys = EXCLUDED.ifa_boys, ifa_girls = EXCLUDED.ifa_girls,
+        rbsk_screened = EXCLUDED.rbsk_screened, rbsk_referred = EXCLUDED.rbsk_referred,
+        inspection_done = EXCLUDED.inspection_done, insp_task_force = EXCLUDED.insp_task_force,
+        insp_district_officials = EXCLUDED.insp_district_officials, insp_block_officials = EXCLUDED.insp_block_officials,
+        insp_smc_members = EXCLUDED.insp_smc_members, untoward_incidents = EXCLUDED.untoward_incidents
+        ` : `
+        school_name = EXCLUDED.school_name, circle_name = EXCLUDED.circle_name, gp_name = EXCLUDED.gp_name,
+        bv_days = EXCLUDED.bv_days, p_days = EXCLUDED.p_days, up_days = EXCLUDED.up_days,
+        bv_actual = EXCLUDED.bv_actual, p_actual = EXCLUDED.p_actual, up_actual = EXCLUDED.up_actual,
+        bv_meals = EXCLUDED.bv_meals, p_meals = EXCLUDED.p_meals, up_meals = EXCLUDED.up_meals,
+        cc_bv_open = EXCLUDED.cc_bv_open, cc_bv_recv = EXCLUDED.cc_bv_recv, cc_bv_exp = EXCLUDED.cc_bv_exp, cc_bv_close = EXCLUDED.cc_bv_close,
+        cc_p_open = EXCLUDED.cc_p_open, cc_p_recv = EXCLUDED.cc_p_recv, cc_p_exp = EXCLUDED.cc_p_exp, cc_p_close = EXCLUDED.cc_p_close,
+        cc_up_open = EXCLUDED.cc_up_open, cc_up_recv = EXCLUDED.cc_up_recv, cc_up_exp = EXCLUDED.cc_up_exp, cc_up_close = EXCLUDED.cc_up_close,
+        cch_open = EXCLUDED.cch_open, cch_recv = EXCLUDED.cch_recv, cch_exp = EXCLUDED.cch_exp, cch_close = EXCLUDED.cch_close,
+        mme_open = EXCLUDED.mme_open, mme_recv = EXCLUDED.mme_recv, mme_exp = EXCLUDED.mme_exp, mme_close = EXCLUDED.mme_close,
+        bi_open = EXCLUDED.bi_open, bi_recv = EXCLUDED.bi_recv, bi_exp = EXCLUDED.bi_exp, bi_close = EXCLUDED.bi_close,
+        lpg_open = EXCLUDED.lpg_open, lpg_recv = EXCLUDED.lpg_recv, lpg_exp = EXCLUDED.lpg_exp, lpg_close = EXCLUDED.lpg_close,
+        nutri_open = EXCLUDED.nutri_open, nutri_recv = EXCLUDED.nutri_recv, nutri_exp = EXCLUDED.nutri_exp, nutri_close = EXCLUDED.nutri_close,
+        kd_open = EXCLUDED.kd_open, kd_recv = EXCLUDED.kd_recv, kd_exp = EXCLUDED.kd_exp, kd_close = EXCLUDED.kd_close,
+        ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
+        ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
+        bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
+        rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
+        rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
+        rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close,
+        ifa_boys = EXCLUDED.ifa_boys, ifa_girls = EXCLUDED.ifa_girls,
+        rbsk_screened = EXCLUDED.rbsk_screened, rbsk_referred = EXCLUDED.rbsk_referred,
+        inspection_done = EXCLUDED.inspection_done, insp_task_force = EXCLUDED.insp_task_force,
+        insp_district_officials = EXCLUDED.insp_district_officials, insp_block_officials = EXCLUDED.insp_block_officials,
+        insp_smc_members = EXCLUDED.insp_smc_members, untoward_incidents = EXCLUDED.untoward_incidents
+        `)};
+    `;
+
+    const vals = [
+      rowMonth, rowYear, udise, schoolName, circleName, gpName,
+      bvDays, pDays, upDays,
+      bvAct, pAct, upAct,
+      bvMeals, pMeals, upMeals,
+      ccBvOpen, ccBvRecv, ccBvExp, ccBvClose,
+      ccPOpen, ccPRecv, ccPExp, ccPClose,
+      ccUpOpen, ccUpRecv, ccUpExp, ccUpClose,
+      cchOpen, cchRecv, cchExp, cchClose,
+      mmeOpen, mmeRecv, mmeExp, mmeClose,
+      biOpen, biRecv, biExp, biClose,
+      lpgOpen, lpgRecv, lpgExp, lpgClose,
+      nutriOpen, nutriRecv, nutriExp, nutriClose,
+      kdOpen, kdRecv, kdExp, kdClose,
+      ksOpen, ksRecv, ksExp, ksClose,
+      ngOpen, ngRecv, ngExp, ngClose,
+      bcOpen, bcRecv, bcExp, bcClose,
+      bankMatch, bankPassbookBal, bankBalDate,
+      rBvOpen, rBvRecv, rBvCons, rBvClose,
+      rPOpen, rPRecv, rPCons, rPClose,
+      rUpOpen, rUpRecv, rUpCons, rUpClose,
+      ifaBoys, ifaGirls, rbskScreened, rbskReferred,
+      inspDone, inspTf, inspDist, inspBlock, inspSmc,
+      untoward
+    ];
+
+    try {
+      await pool.query(q, vals);
+    } catch (upsertErr) {
+      console.error("upsertErr in processMonthlyCsvRows:", upsertErr.message);
+      await pool.query(
+        'UPDATE public.mdm_monthly_report SET school_name = $1, p_days = $2, p_actual = $3, p_meals = $4, rice_p_close = $5 WHERE u_dise = $6 AND month_name = $7 AND year = $8',
+        [schoolName, pDays, pAct, pMeals, rPClose, udise, rowMonth, rowYear]
+      );
+    }
+    processed++;
+  }
+  return processed;
+}
+
+router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv', '/monthly-report/upload-full-csv'], requireAuth('main'), uploadMonthlyFullMulter, async (req, res) => {
+  const primaryFile = req.files?.file_primary?.[0] || req.files?.primary_csv?.[0];
+  const upperFile = req.files?.file_upper?.[0] || req.files?.upper_csv?.[0];
+  const singleFile = req.files?.csv_file?.[0] || req.file;
+
   const month = (req.body?.month || new Date().toLocaleString('en-US', { month: 'long' })).trim();
   const year = (req.body?.year || String(new Date().getFullYear())).trim();
   const isAjax = req.headers.accept?.includes('application/json') || req.body?.ajax === '1';
 
-  const sendResp = (status, msg, inserted = 0, updated = 0) => {
+  const sendResp = (status, msg, inserted = 0, updated = 0, extra = {}) => {
     if (isAjax) {
-      return res.json({ status, message: msg, inserted, updated });
+      return res.json({ status, message: msg, inserted, updated, ...extra });
     }
     const param = status === 'success' ? 'msg' : 'err';
     return res.redirect(`/upload_monthly_report?${param}=${encodeURIComponent(msg)}&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`);
   };
 
-  if (!fileObj || !fileObj.buffer) {
-    return sendResp('error', 'No file was uploaded.');
+  if (!primaryFile && !upperFile && !singleFile) {
+    return sendResp('error', 'Please select at least one CSV file to upload.');
   }
 
   try {
-    const text = fileObj.buffer.toString('utf8');
-    const rows = parseCSV(text);
-    if (rows.length < 2) {
-      return sendResp('error', 'CSV file is empty or missing data rows.');
-    }
-
     const schoolMap = await getSchoolsMap();
-    const header = rows[0];
-    const colIndex = {};
-    header.forEach((col, idx) => {
-      const cleanKey = col.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_').trim();
-      colIndex[cleanKey] = idx;
-    });
+    let primaryProcessed = 0;
+    let upperProcessed = 0;
+    let singleProcessed = 0;
 
-    const getVal = (row, key, fallbackIdx) => {
-      if (colIndex[key] !== undefined && row[colIndex[key]] !== undefined) {
-        return row[colIndex[key]];
+    if (primaryFile && primaryFile.buffer) {
+      const text = primaryFile.buffer.toString('utf8');
+      const rows = parseCSV(text);
+      if (rows.length >= 2) {
+        primaryProcessed = await processMonthlyCsvRows(rows, 'primary', month, year, schoolMap);
       }
-      return fallbackIdx !== undefined && row[fallbackIdx] !== undefined ? row[fallbackIdx] : '';
-    };
-
-    let processed = 0;
-    const dataRows = rows.slice(1);
-    for (const r of dataRows) {
-      const udise = extractUdise(getVal(r, 'u_dise', 0) || getVal(r, 'udise_code', 0) || getVal(r, 'udise', 0));
-      if (!udise) continue;
-
-      const master = schoolMap[udise] || {};
-      const schoolName = master.school_name || getVal(r, 'school_name', 1) || `School (${udise})`;
-      const circleName = master.circle_name || getVal(r, 'circle_name', 3) || 'N/A';
-      const gpName = master.gp_name || getVal(r, 'gp_name', 4) || 'N/A';
-      const rowMonth = getVal(r, 'month_name', 5) || month;
-      const rowYear = getVal(r, 'year', 6) || year;
-
-      const q = `
-        INSERT INTO public.mdm_monthly_report (
-          month_name, year, u_dise, school_name, circle_name, gp_name,
-          bv_days, p_days, up_days, bv_actual, p_actual, up_actual, bv_meals, p_meals, up_meals,
-          cc_bv_open, cc_bv_recv, cc_bv_exp, cc_bv_close,
-          cc_p_open, cc_p_recv, cc_p_exp, cc_p_close,
-          cc_up_open, cc_up_recv, cc_up_exp, cc_up_close,
-          cch_open, cch_recv, cch_exp, cch_close,
-          mme_open, mme_recv, mme_exp, mme_close,
-          bi_open, bi_recv, bi_exp, bi_close,
-          lpg_open, lpg_recv, lpg_exp, lpg_close,
-          nutri_open, nutri_recv, nutri_exp, nutri_close,
-          kd_open, kd_recv, kd_exp, kd_close,
-          ks_open, ks_recv, ks_exp, ks_close,
-          ng_open, ng_recv, ng_exp, ng_close,
-          bc_open, bc_recv, bc_exp, bc_close,
-          bank_match, bank_passbook_balance, bank_balance_date,
-          rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
-          rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
-          rice_up_open, rice_up_recv, rice_up_cons, rice_up_close,
-          ifa_boys, ifa_girls, rbsk_screened, rbsk_referred,
-          inspection_done, insp_task_force, insp_district_officials, insp_block_officials, insp_smc_members,
-          untoward_incidents
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6,
-          $7, $8, $9, $10, $11, $12, $13, $14, $15,
-          $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
-          $28, $29, $30, $31, $32, $33, $34, $35,
-          $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47,
-          $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59,
-          $60, $61, $62,
-          $63, $64, $65, $66,
-          $67, $68, $69, $70, $71, $72, $73, $74, $75, $76, $77, $78,
-          $79, $80, $81, $82,
-          $83, $84, $85, $86, $87,
-          $88
-        )
-        ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
-          school_name = EXCLUDED.school_name, circle_name = EXCLUDED.circle_name, gp_name = EXCLUDED.gp_name,
-          bv_days = EXCLUDED.bv_days, p_days = EXCLUDED.p_days, up_days = EXCLUDED.up_days,
-          bv_actual = EXCLUDED.bv_actual, p_actual = EXCLUDED.p_actual, up_actual = EXCLUDED.up_actual,
-          bv_meals = EXCLUDED.bv_meals, p_meals = EXCLUDED.p_meals, up_meals = EXCLUDED.up_meals,
-          cc_bv_open = EXCLUDED.cc_bv_open, cc_bv_recv = EXCLUDED.cc_bv_recv, cc_bv_exp = EXCLUDED.cc_bv_exp, cc_bv_close = EXCLUDED.cc_bv_close,
-          cc_p_open = EXCLUDED.cc_p_open, cc_p_recv = EXCLUDED.cc_p_recv, cc_p_exp = EXCLUDED.cc_p_exp, cc_p_close = EXCLUDED.cc_p_close,
-          cc_up_open = EXCLUDED.cc_up_open, cc_up_recv = EXCLUDED.cc_up_recv, cc_up_exp = EXCLUDED.cc_up_exp, cc_up_close = EXCLUDED.cc_up_close,
-          cch_open = EXCLUDED.cch_open, cch_recv = EXCLUDED.cch_recv, cch_exp = EXCLUDED.cch_exp, cch_close = EXCLUDED.cch_close,
-          mme_open = EXCLUDED.mme_open, mme_recv = EXCLUDED.mme_recv, mme_exp = EXCLUDED.mme_exp, mme_close = EXCLUDED.mme_close,
-          bi_open = EXCLUDED.bi_open, bi_recv = EXCLUDED.bi_recv, bi_exp = EXCLUDED.bi_exp, bi_close = EXCLUDED.bi_close,
-          lpg_open = EXCLUDED.lpg_open, lpg_recv = EXCLUDED.lpg_recv, lpg_exp = EXCLUDED.lpg_exp, lpg_close = EXCLUDED.lpg_close,
-          nutri_open = EXCLUDED.nutri_open, nutri_recv = EXCLUDED.nutri_recv, nutri_exp = EXCLUDED.nutri_exp, nutri_close = EXCLUDED.nutri_close,
-          kd_open = EXCLUDED.kd_open, kd_recv = EXCLUDED.kd_recv, kd_exp = EXCLUDED.kd_exp, kd_close = EXCLUDED.kd_close,
-          ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
-          ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
-          bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
-          bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
-          rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
-          rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
-          rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close,
-          ifa_boys = EXCLUDED.ifa_boys,
-          ifa_girls = EXCLUDED.ifa_girls,
-          rbsk_screened = EXCLUDED.rbsk_screened,
-          rbsk_referred = EXCLUDED.rbsk_referred,
-          inspection_done = EXCLUDED.inspection_done,
-          insp_task_force = EXCLUDED.insp_task_force,
-          insp_district_officials = EXCLUDED.insp_district_officials,
-          insp_block_officials = EXCLUDED.insp_block_officials,
-          insp_smc_members = EXCLUDED.insp_smc_members,
-          untoward_incidents = EXCLUDED.untoward_incidents;
-      `;
-
-      const vals = [
-        rowMonth, rowYear, udise, schoolName, circleName, gpName,
-        toInt(getVal(r, 'bv_days', 7)), toInt(getVal(r, 'p_days', 8)), toInt(getVal(r, 'up_days', 9)),
-        toInt(getVal(r, 'bv_actual', 10)), toInt(getVal(r, 'p_actual', 11)), toInt(getVal(r, 'up_actual', 12)),
-        toInt(getVal(r, 'bv_meals', 13)), toInt(getVal(r, 'p_meals', 14)), toInt(getVal(r, 'up_meals', 15)),
-        toFloat(getVal(r, 'cc_bv_open', 16)), toFloat(getVal(r, 'cc_bv_recv', 17)), toFloat(getVal(r, 'cc_bv_exp', 18)), toFloat(getVal(r, 'cc_bv_close', 19)),
-        toFloat(getVal(r, 'cc_p_open', 20)), toFloat(getVal(r, 'cc_p_recv', 21)), toFloat(getVal(r, 'cc_p_exp', 22)), toFloat(getVal(r, 'cc_p_close', 23)),
-        toFloat(getVal(r, 'cc_up_open', 24)), toFloat(getVal(r, 'cc_up_recv', 25)), toFloat(getVal(r, 'cc_up_exp', 26)), toFloat(getVal(r, 'cc_up_close', 27)),
-        toFloat(getVal(r, 'cch_open')), toFloat(getVal(r, 'cch_recv')), toFloat(getVal(r, 'cch_exp')), toFloat(getVal(r, 'cch_close')),
-        toFloat(getVal(r, 'mme_open', 40)), toFloat(getVal(r, 'mme_recv', 41)), toFloat(getVal(r, 'mme_exp', 42)), toFloat(getVal(r, 'mme_close', 43)),
-        toFloat(getVal(r, 'bi_open', 28)), toFloat(getVal(r, 'bi_recv', 29)), toFloat(getVal(r, 'bi_exp', 30)), toFloat(getVal(r, 'bi_close', 31)),
-        toFloat(getVal(r, 'lpg_open', 32)), toFloat(getVal(r, 'lpg_recv', 33)), toFloat(getVal(r, 'lpg_exp', 34)), toFloat(getVal(r, 'lpg_close', 35)),
-        toFloat(getVal(r, 'nutri_open', 36)), toFloat(getVal(r, 'nutri_recv', 37)), toFloat(getVal(r, 'nutri_exp', 38)), toFloat(getVal(r, 'nutri_close', 39)),
-        toFloat(getVal(r, 'kd_open', 44)), toFloat(getVal(r, 'kd_recv', 45)), toFloat(getVal(r, 'kd_exp', 46)), toFloat(getVal(r, 'kd_close', 47)),
-        toFloat(getVal(r, 'ks_open', 48)), toFloat(getVal(r, 'ks_recv', 49)), toFloat(getVal(r, 'ks_exp', 50)), toFloat(getVal(r, 'ks_close', 51)),
-        toFloat(getVal(r, 'ng_open', 52)), toFloat(getVal(r, 'ng_recv', 53)), toFloat(getVal(r, 'ng_exp', 54)), toFloat(getVal(r, 'ng_close', 55)),
-        toFloat(getVal(r, 'bc_open', 56)), toFloat(getVal(r, 'bc_recv', 57)), toFloat(getVal(r, 'bc_exp', 58)), toFloat(getVal(r, 'bc_close', 59)),
-        getVal(r, 'bank_match', 62) || 'YES', toFloat(getVal(r, 'bank_passbook_balance', 60)), getVal(r, 'bank_balance_date', 61) || new Date().toISOString().slice(0, 10),
-        toFloat(getVal(r, 'rice_bv_open', 63)), toFloat(getVal(r, 'rice_bv_recv', 64)), toFloat(getVal(r, 'rice_bv_cons', 65)), toFloat(getVal(r, 'rice_bv_close', 66)),
-        toFloat(getVal(r, 'rice_p_open', 67)), toFloat(getVal(r, 'rice_p_recv', 68)), toFloat(getVal(r, 'rice_p_cons', 69)), toFloat(getVal(r, 'rice_p_close', 70)),
-        toFloat(getVal(r, 'rice_up_open', 71)), toFloat(getVal(r, 'rice_up_recv', 72)), toFloat(getVal(r, 'rice_up_cons', 73)), toFloat(getVal(r, 'rice_up_close', 74)),
-        toInt(getVal(r, 'ifa_boys', 75)),
-        toInt(getVal(r, 'ifa_girls', 76)),
-        toInt(getVal(r, 'rbsk_screened', 77)),
-        toInt(getVal(r, 'rbsk_referred', 78)),
-        getVal(r, 'inspection_done', 79) || 'No',
-        toInt(getVal(r, 'insp_task_force', 80)),
-        toInt(getVal(r, 'insp_district_officials', 81)),
-        toInt(getVal(r, 'insp_block_officials', 82)),
-        toInt(getVal(r, 'insp_smc_members', 83)),
-        toInt(getVal(r, 'untoward_incidents', 84))
-      ];
-
-      try {
-        await pool.query(q, vals);
-      } catch (upsertErr) {
-        console.error("upsertErr in upload-full-csv line 2709:", upsertErr.message);
-        // Fallback update
-        await pool.query(
-          'UPDATE public.mdm_monthly_report SET school_name = $1, p_days = $2, p_actual = $3, p_meals = $4, rice_p_close = $5 WHERE u_dise = $6 AND month_name = $7 AND year = $8',
-          [schoolName, toInt(getVal(r, 'p_days')), toInt(getVal(r, 'p_actual')), toInt(getVal(r, 'p_meals')), toFloat(getVal(r, 'rice_p_close')), udise, rowMonth, rowYear]
-        );
-      }
-      processed++;
     }
 
-    return sendResp('success', `Successfully processed ${processed} school records.`, processed);
+    if (upperFile && upperFile.buffer) {
+      const text = upperFile.buffer.toString('utf8');
+      const rows = parseCSV(text);
+      if (rows.length >= 2) {
+        upperProcessed = await processMonthlyCsvRows(rows, 'upper', month, year, schoolMap);
+      }
+    }
+
+    if (singleFile && singleFile.buffer && !primaryFile && !upperFile) {
+      const text = singleFile.buffer.toString('utf8');
+      const rows = parseCSV(text);
+      if (rows.length >= 2) {
+        const fileType = req.body?.upload_type || req.body?.type || 'all';
+        singleProcessed = await processMonthlyCsvRows(rows, fileType, month, year, schoolMap);
+      }
+    }
+
+    const totalProcessed = primaryProcessed + upperProcessed + singleProcessed;
+    if (totalProcessed === 0) {
+      return sendResp('error', 'CSV file(s) are empty or contained no valid school records.');
+    }
+
+    let successMsg = '';
+    if (primaryProcessed > 0 && upperProcessed > 0) {
+      successMsg = `Successfully processed ${primaryProcessed} Primary and ${upperProcessed} Upper Primary school records.`;
+    } else if (primaryProcessed > 0) {
+      successMsg = `Successfully processed ${primaryProcessed} Primary school records.`;
+    } else if (upperProcessed > 0) {
+      successMsg = `Successfully processed ${upperProcessed} Upper Primary school records.`;
+    } else {
+      successMsg = `Successfully processed ${singleProcessed} school records.`;
+    }
+
+    return sendResp('success', successMsg, totalProcessed, 0, {
+      total: totalProcessed,
+      primaryCount: primaryProcessed,
+      upperCount: upperProcessed
+    });
   } catch (err) {
     console.error('Error handling monthly report CSV upload:', err.message);
     return sendResp('error', 'Error processing CSV: ' + err.message);

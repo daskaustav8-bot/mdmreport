@@ -318,7 +318,7 @@
                 if (data.status === 'success' && data.data) {
                     const r = data.data;
                     document.getElementById('reportTitle').textContent = r.school_name || 'School Report';
-                    document.getElementById('reportSubtitle').textContent = `Monthly Report - ${month} ${r.year || 2025}`;
+                    document.getElementById('reportSubtitle').textContent = `Monthly Report - ${month} ${r.year || new Date().getFullYear()}`;
 
                     document.getElementById('cellSchoolDays').textContent = r.p_days || r.bv_days || r.up_days || '23';
                     document.getElementById('cellServedDays').textContent = r.p_actual || r.bv_actual || r.up_actual || '23';

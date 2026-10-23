@@ -1,7 +1,27 @@
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Allow direct access to existing files (prevent infinite loops)
-RewriteCond %{REQUEST_FILENAME} -f
+# Set directory index to index.html
+DirectoryIndex index.html
+
+# 1. Allow direct access to existing physical files and directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
+
+# 2. Redirect legacy .php page requests to clean extensionless URLs (HTTP 308 Permanent Redirect)
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+?)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=308,L]
+
+# 3. Clean URLs: internally rewrite extensionless requests to matching .html files
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^([^/]+)/?$ $1.html [L]
+
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
 </IfModule>

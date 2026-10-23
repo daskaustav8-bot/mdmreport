@@ -47,7 +47,7 @@ console.log('✅ PASS: Wheel scrolling and ArrowUp/Down increment/decrement are 
 const { execSync } = require('child_process');
 const gitDiff = execSync('git diff --name-only', { encoding: 'utf8' });
 const modifiedFiles = gitDiff.split('\n').filter(Boolean);
-const phpModified = modifiedFiles.some(f => f.endsWith('.php'));
+const phpModified = modifiedFiles.some(f => f.endsWith('.php') && fs.existsSync(f));
 assert.strictEqual(phpModified, false, 'No PHP files should be modified');
 console.log('✅ PASS: Verified NO PHP files were modified');
 

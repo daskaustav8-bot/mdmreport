@@ -119,10 +119,14 @@
 
     </div>
     <div class="footer">
-        <p style="margin: 0;">© 2025 MDM Infrastructure Management System</p>
+        <p style="margin: 0;">© <span id="current-year"></span> MDM Infrastructure Management System</p>
     </div>
 
     <script>
+        // Set dynamic current year in footer
+        const curYearEl = document.getElementById('current-year');
+        if (curYearEl) curYearEl.textContent = new Date().getFullYear();
+
         // Check login
         if (sessionStorage.getItem('admin_logged_in') !== 'true') {
             window.location.href = '/admin_login';

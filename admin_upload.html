@@ -208,10 +208,17 @@
                     <option>October</option><option>November</option><option>December</option>
                 </select>
                 <select name="year" id="year_primary">
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                    <option value="2024">2024</option>
+                    <option value="2026" selected>2026</option>
                 </select>
+                <script>
+                    (function() {
+                        try {
+                            var y = String(new Date().getFullYear());
+                            var el = document.getElementById('year_primary');
+                            if (el) el.innerHTML = '<option value="' + y + '" selected>' + y + '</option>';
+                        } catch(e) {}
+                    })();
+                </script>
                 <input type="file" id="file_primary" name="file_primary" accept=".csv" required>
                 <button type="submit" id="btn_primary" class="btn btn-pri">
                     <i class="fas fa-cloud-upload-alt"></i> Upload Primary CSV
@@ -233,10 +240,17 @@
                     <option>October</option><option>November</option><option>December</option>
                 </select>
                 <select name="year_u" id="year_upper">
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                    <option value="2024">2024</option>
+                    <option value="2026" selected>2026</option>
                 </select>
+                <script>
+                    (function() {
+                        try {
+                            var y = String(new Date().getFullYear());
+                            var el = document.getElementById('year_upper');
+                            if (el) el.innerHTML = '<option value="' + y + '" selected>' + y + '</option>';
+                        } catch(e) {}
+                    })();
+                </script>
                 <input type="file" id="file_upper" name="file_upper" accept=".csv" required>
                 <button type="submit" id="btn_upper" class="btn btn-upp">
                     <i class="fas fa-cloud-upload-alt"></i> Upload UP-Primary CSV
@@ -273,6 +287,15 @@
 
         // Setup Form Handlers on DOM Ready
         document.addEventListener('DOMContentLoaded', function () {
+            // Set dynamic current year on year dropdowns (strictly current year only, no other year)
+            const curYear = String(new Date().getFullYear());
+            ['year_primary', 'year_upper'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '<option value="' + curYear + '" selected>' + curYear + '</option>';
+                    el.value = curYear;
+                }
+            });
             setupUploadForm({
                 formId: 'form_primary',
                 monthSelectId: 'month_primary',

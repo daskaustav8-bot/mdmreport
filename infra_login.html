@@ -184,9 +184,7 @@
                 credentials: 'same-origin'
             })
                 .then(function (response) {
-                    if (response.status === 404) {
-                        return fetch('infra_session_check.php').then(r => r.json());
-                    }
+                    
                     if (response.ok) {
                         return response.json();
                     }
@@ -287,20 +285,7 @@
                 credentials: 'same-origin'
             })
             .then(function (response) {
-                if (response.status === 404 && window.location.protocol !== 'file:') {
-                    return fetch('infra_login_handler.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    }).then(function (phpRes) {
-                        return phpRes.json().then(function (d) {
-                            return { status: phpRes.status, ok: phpRes.ok, data: d };
-                        });
-                    });
-                }
+                
                 return response.json().then(function (data) {
                     return { status: response.status, ok: response.ok, data: data };
                 }).catch(function () {

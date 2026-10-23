@@ -94,6 +94,257 @@
         .dropzone:hover { border-color: var(--primary); background: #f0fdf4; }
         .dropzone i { font-size: 40px; color: #94a3b8; margin-bottom: 12px; }
 
+        /* Dual CSV Upload Styling (Primary vs Upper Primary) */
+        .upload-type-tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+        .upload-tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .upload-tab-btn:hover {
+            color: var(--text-dark);
+            background: rgba(255,255,255,0.6);
+        }
+        .upload-tab-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .upload-tab-btn.active.tab-upp {
+            color: #4f46e5;
+        }
+
+        .upload-fields-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .upload-field-card {
+            border-radius: 14px;
+            padding: 16px;
+            border: 1.5px solid var(--border);
+            background: #ffffff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .upload-field-card.card-primary {
+            border-color: #a7f3d0;
+            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 45%);
+        }
+        .upload-field-card.card-primary:hover {
+            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.08);
+        }
+        .upload-field-card.card-upper {
+            border-color: #c7d2fe;
+            background: linear-gradient(180deg, #eef2ff 0%, #ffffff 45%);
+        }
+        .upload-field-card.card-upper:hover {
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.08);
+        }
+
+        .field-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .field-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .field-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+        .field-icon-pri {
+            background: #dcfce7;
+            color: #0d9488;
+        }
+        .field-icon-upp {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+        .field-card-title h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .field-card-title span {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .badge-type-pill {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .badge-type-pri {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .badge-type-upp {
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+        }
+
+        .dropzone-field {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            margin-bottom: 10px;
+        }
+        .dropzone-field:hover, .dropzone-field.dragover {
+            border-color: var(--primary);
+            background: #f0fdf4;
+            transform: scale(1.005);
+        }
+        .dropzone-upper:hover, .dropzone-upper.dragover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+        .dropzone-field i {
+            font-size: 28px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .dropzone-field p {
+            margin: 0 0 4px 0;
+            font-weight: 700;
+            font-size: 13px;
+            color: #334155;
+        }
+        .dropzone-field span {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .file-info-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .file-info-pri {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .file-info-upp {
+            background: #eef2ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+        }
+        .file-info-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .btn-remove-file {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+        .btn-remove-file:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .btn-field-action {
+            width: 100%;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn-pri-action {
+            background: #0d9488;
+            color: #ffffff;
+        }
+        .btn-pri-action:hover {
+            background: #0f766e;
+        }
+        .btn-upp-action {
+            background: #4f46e5;
+            color: #ffffff;
+        }
+        .btn-upp-action:hover {
+            background: #4338ca;
+        }
+        .btn-blank-pri {
+            background: #f0fdf4;
+            color: #0d9488;
+            border: 1.5px solid #a7f3d0 !important;
+            transition: all 0.2s ease;
+        }
+        .btn-blank-pri:hover {
+            background: #dcfce7;
+            border-color: #6ee7b7 !important;
+            color: #0f766e;
+        }
+        .btn-blank-upp {
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1.5px solid #c7d2fe !important;
+            transition: all 0.2s ease;
+        }
+        .btn-blank-upp:hover {
+            background: #e0e7ff;
+            border-color: #a5b4fc !important;
+            color: #4338ca;
+        }
+
         .select-row { display: flex; gap: 10px; margin-bottom: 15px; }
         select { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; }
 
@@ -125,11 +376,36 @@
             background: #334155; color: #ffffff;
         }
 
+        /* Save Changes Button Styling */
+        .btn-save-locks {
+            background: var(--primary) !important;
+            color: #ffffff !important;
+            border: 1px solid var(--primary-dark) !important;
+            font-weight: 700 !important;
+            box-shadow: 0 1px 3px rgba(13, 148, 136, 0.25);
+            transition: all 0.2s ease;
+        }
+        .btn-save-locks:hover {
+            background: var(--primary-dark) !important;
+            border-color: #115e59 !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 6px rgba(13, 148, 136, 0.35);
+        }
+        .btn-save-locks.is-saved {
+            background: #059669 !important;
+            border-color: #047857 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+        }
+
         .tracker-metrics {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
         }
         @media (max-width: 768px) {
             .tracker-metrics { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .blank-sample-actions { grid-template-columns: 1fr !important; }
         }
 
         .metric-box {
@@ -905,10 +1181,11 @@
         // Fund Details - Primary
         pri_cc_bv_open: false, pri_cc_bv_recv: false, pri_cc_bv_exp: false,
         pri_cc_p_open: false, pri_cc_p_recv: false, pri_cc_p_exp: false,
+        pri_cch_open: false, pri_cch_recv: false, pri_cch_exp: false,
+        pri_mme_open: false, pri_mme_recv: false, pri_mme_exp: false,
         pri_bi_open: false, pri_bi_recv: false, pri_bi_exp: false,
         pri_lpg_open: false, pri_lpg_recv: false, pri_lpg_exp: false,
         pri_nutri_open: false, pri_nutri_recv: false, pri_nutri_exp: false,
-        pri_mme_open: false, pri_mme_recv: false, pri_mme_exp: false,
         pri_kd_open: false, pri_kd_recv: false, pri_kd_exp: false,
         pri_ks_open: false, pri_ks_recv: false, pri_ks_exp: false,
         pri_ng_open: false, pri_ng_recv: false, pri_ng_exp: false,
@@ -917,11 +1194,12 @@
 
         // Fund Details - Upper Primary
         upr_cc_p_open: false, upr_cc_p_recv: false, upr_cc_p_exp: false,
+        upr_cch_open: false, upr_cch_recv: false, upr_cch_exp: false,
+        upr_mme_open: false, upr_mme_recv: false, upr_mme_exp: false,
         upr_cc_up_open: false, upr_cc_up_recv: false, upr_cc_up_exp: false,
         upr_bi_open: false, upr_bi_recv: false, upr_bi_exp: false,
         upr_lpg_open: false, upr_lpg_recv: false, upr_lpg_exp: false,
         upr_nutri_open: false, upr_nutri_recv: false, upr_nutri_exp: false,
-        upr_mme_open: false, upr_mme_recv: false, upr_mme_exp: false,
         upr_kd_open: false, upr_kd_recv: false, upr_kd_exp: false,
         upr_ks_open: false, upr_ks_recv: false, upr_ks_exp: false,
         upr_ng_open: false, upr_ng_recv: false, upr_ng_exp: false,
@@ -980,7 +1258,13 @@
         upr_rice_up_recv: 'Rice Upper Primary (VI-VIII) Received (KG)',
         upr_rice_up_cons: 'Rice Upper Primary (VI-VIII) Consumption (KG)',
 
-        // Fund Details - Others
+        // Fund Details - Cook Cum Helper & Others
+        pri_cch_open: 'Cook Cum Helper Primary Opening Balance (₹)',
+        pri_cch_recv: 'Cook Cum Helper Primary Received (₹)',
+        pri_cch_exp: 'Cook Cum Helper Primary Expenditure (₹)',
+        upr_cch_open: 'Cook Cum Helper Upper Primary Opening Balance (₹)',
+        upr_cch_recv: 'Cook Cum Helper Upper Primary Received (₹)',
+        upr_cch_exp: 'Cook Cum Helper Upper Primary Expenditure (₹)',
         pri_oth_open: 'Others Primary Opening Balance (₹)',
         pri_oth_recv: 'Others Primary Received (₹)',
         pri_oth_exp: 'Others Primary Expenditure (₹)',
@@ -1173,7 +1457,8 @@
 
     async function saveCurrentCategoryLocks() {
         const btn = document.getElementById('btnSaveCategoryLocks');
-        const origHtml = btn.innerHTML;
+        if (!btn) return;
+        const origHtml = '<i class="fas fa-save"></i> <span>Save Changes</span>';
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
@@ -1185,16 +1470,24 @@
             });
             const data = await res.json();
             if (data.status === 'success') {
-                showLockToast('success', 'All lock configurations saved to Supabase successfully!');
+                btn.classList.add('is-saved');
+                btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+                showLockToast('success', 'Lock settings saved instantly to database!');
+                setTimeout(() => {
+                    btn.classList.remove('is-saved');
+                    btn.innerHTML = origHtml;
+                    btn.disabled = false;
+                }, 1200);
+                return;
             } else {
                 showLockToast('error', data.message || 'Failed to save settings.');
             }
         } catch (err) {
             showLockToast('error', 'Network error while saving lock settings.');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = origHtml;
         }
+        btn.classList.remove('is-saved');
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
     }
 
     function showLockToast(type, message) {
@@ -1327,6 +1620,214 @@
         </div>
     </div>
 
+    <!-- 1. Download Templates & 2. Upload Monthly CSV -->
+    <div class="grid-2">
+        <!-- Card 1: Download Templates -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0;"><i class="fas fa-download" style="color:var(--blue);"></i> 1. Download Templates</h3>
+            </div>
+            <p style="color:var(--text-muted); font-size:13.5px; margin-top:0; margin-bottom:15px;">
+                Download pre-populated CSV templates with only Primary (PP-V) fields for Primary schools and only Upper Primary (VI-VIII) fields for Upper Primary schools.
+            </p>
+
+            <div class="select-row">
+                <select id="tmplMonth">
+                    <option>January</option><option>February</option><option>March</option>
+                    <option>April</option><option>May</option><option>June</option>
+                    <option>July</option><option>August</option><option>September</option>
+                    <option>October</option><option>November</option><option>December</option>
+                </select>
+                <select id="tmplYear">
+                    <option selected>2026</option>
+                </select>
+                <script>
+                    (function() {
+                        try {
+                            var y = String(new Date().getFullYear());
+                            var el = document.getElementById('tmplYear');
+                            if (el) el.innerHTML = '<option value="' + y + '" selected>' + y + '</option>';
+                        } catch(e) {}
+                    })();
+                </script>
+            </div>
+
+            <div class="upload-fields-container">
+                <!-- Primary Schools Template Box -->
+                <div class="upload-field-card card-primary">
+                    <div class="field-card-header">
+                        <div class="field-card-title">
+                            <div class="field-icon field-icon-pri"><i class="fas fa-school"></i></div>
+                            <div>
+                                <h4>Primary Schools Template</h4>
+                                <span>Pre-Primary &amp; Primary (PP - V)</span>
+                            </div>
+                        </div>
+                        <span class="badge-type-pill badge-type-pri">194 Schools</span>
+                    </div>
+                    <p style="font-size:12px; color:var(--text-muted); margin:0 0 12px 0;">
+                        Pre-filled with saved monthly update report data for all 194 Primary schools (Primary PP-V fields only).
+                    </p>
+                    <a id="btnDownloadPrimary" class="btn-action btn-pri-action" style="margin-bottom:0;" onclick="downloadTemplate('primary')">
+                        <i class="fas fa-file-csv"></i> Download Primary Template (194 Schools)
+                    </a>
+                </div>
+
+                <!-- Upper Primary Schools Template Box -->
+                <div class="upload-field-card card-upper">
+                    <div class="field-card-header">
+                        <div class="field-card-title">
+                            <div class="field-icon field-icon-upp"><i class="fas fa-graduation-cap"></i></div>
+                            <div>
+                                <h4>Upper Primary Schools Template</h4>
+                                <span>Upper Primary &amp; Composite (VI - VIII)</span>
+                            </div>
+                        </div>
+                        <span class="badge-type-pill badge-type-upp">52 Schools</span>
+                    </div>
+                    <p style="font-size:12px; color:var(--text-muted); margin:0 0 12px 0;">
+                        Pre-filled with saved monthly update report data for all 52 Upper Primary schools (Upper Primary VI-VIII fields only).
+                    </p>
+                    <a id="btnDownloadUpper" class="btn-action btn-upp-action" style="margin-bottom:0;" onclick="downloadTemplate('upper')">
+                        <i class="fas fa-file-csv"></i> Download Upper Primary Template (52 Schools)
+                    </a>
+                </div>
+            </div>
+
+            <!-- Blank Sample Links Separated for Primary & Upper Primary -->
+            <div class="blank-sample-actions" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:14px;">
+                <a id="btnDownloadBlankPrimary" class="btn-action btn-blank-pri" style="margin-bottom:0; font-size:12.5px; padding:10px 12px;" onclick="downloadBlank('primary')">
+                    <i class="fas fa-file-alt"></i> Blank Primary Sample CSV
+                </a>
+                <a id="btnDownloadBlankUpper" class="btn-action btn-blank-upp" style="margin-bottom:0; font-size:12.5px; padding:10px 12px;" onclick="downloadBlank('upper')">
+                    <i class="fas fa-file-alt"></i> Blank Upper Sample CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Card 2: Upload CSV -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0;"><i class="fas fa-cloud-upload-alt" style="color:var(--primary);"></i> 2. Upload Monthly CSV</h3>
+            </div>
+            <p style="color:var(--text-muted); font-size:13.5px; margin-top:0; margin-bottom:15px;">
+                Upload monthly report CSVs with dedicated fields for Primary (PP-V) and Upper Primary (VI-VIII) schools.
+            </p>
+
+            <form action="/api/monthly-report/upload-full-csv" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <input type="hidden" name="action" value="upload_csv">
+                <input type="hidden" name="upload_target" id="uploadTarget" value="primary">
+                
+                <div class="select-row">
+                    <select name="month" id="uploadMonth" required>
+                        <option>January</option><option>February</option><option>March</option>
+                        <option>April</option><option>May</option><option>June</option>
+                        <option>July</option><option>August</option><option>September</option>
+                        <option>October</option><option>November</option><option>December</option>
+                    </select>
+                    <select name="year" id="uploadYear" required>
+                        <option selected>2026</option>
+                    </select>
+                    <script>
+                        (function() {
+                            try {
+                                var y = String(new Date().getFullYear());
+                                var el = document.getElementById('uploadYear');
+                                if (el) el.innerHTML = '<option value="' + y + '" selected>' + y + '</option>';
+                            } catch(e) {}
+                        })();
+                    </script>
+                </div>
+
+                <!-- Field Selection Tabs -->
+                <div class="upload-type-tabs" role="tablist">
+                    <button type="button" class="upload-tab-btn active" id="tabPrimary" onclick="switchUploadTab('primary')">
+                        <i class="fas fa-school"></i> Primary Schools
+                    </button>
+                    <button type="button" class="upload-tab-btn tab-upp" id="tabUpper" onclick="switchUploadTab('upper')">
+                        <i class="fas fa-graduation-cap"></i> Upper Primary
+                    </button>
+                </div>
+
+                <div class="upload-fields-container">
+                    <!-- Primary School Upload Field -->
+                    <div class="upload-field-card card-primary" id="fieldBoxPrimary">
+                        <div class="field-card-header">
+                            <div class="field-card-title">
+                                <div class="field-icon field-icon-pri"><i class="fas fa-school"></i></div>
+                                <div>
+                                    <h4>Primary Schools CSV</h4>
+                                    <span>Pre-Primary &amp; Primary (PP - V)</span>
+                                </div>
+                            </div>
+                            <span class="badge-type-pill badge-type-pri">PP - V</span>
+                        </div>
+
+                        <div class="dropzone-field" id="dropzonePrimary" onclick="document.getElementById('primaryCsvInput').click()">
+                            <i class="fas fa-file-csv" style="color: #0d9488;"></i>
+                            <p id="primaryFileLabel">Click or Drag Primary CSV File</p>
+                            <span>Supports .csv (MDCF or Portal format)</span>
+                            <input type="file" id="primaryCsvInput" name="file_primary" accept=".csv" style="display:none;" onchange="handleFileSelected('primary', this)">
+                        </div>
+
+                        <div id="primaryFileInfo" class="file-info-pill file-info-pri" style="display:none;">
+                            <div class="file-info-left">
+                                <i class="fas fa-check-circle" style="color:#059669;"></i>
+                                <span id="primaryFileName"></span>
+                            </div>
+                            <button type="button" class="btn-remove-file" onclick="clearSelectedFile('primary', event)" title="Remove file">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <button type="button" class="btn-field-action btn-pri-action" id="btnUploadPrimary" onclick="uploadSpecificFile('primary')">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Primary CSV
+                        </button>
+                    </div>
+
+                    <!-- Upper Primary School Upload Field -->
+                    <div class="upload-field-card card-upper" id="fieldBoxUpper" style="display:none;">
+                        <div class="field-card-header">
+                            <div class="field-card-title">
+                                <div class="field-icon field-icon-upp"><i class="fas fa-graduation-cap"></i></div>
+                                <div>
+                                    <h4>Upper Primary Schools CSV</h4>
+                                    <span>Upper Primary &amp; Composite (VI - VIII)</span>
+                                </div>
+                            </div>
+                            <span class="badge-type-pill badge-type-upp">VI - VIII</span>
+                        </div>
+
+                        <div class="dropzone-field dropzone-upper" id="dropzoneUpper" onclick="document.getElementById('upperCsvInput').click()">
+                            <i class="fas fa-file-csv" style="color: #4f46e5;"></i>
+                            <p id="upperFileLabel">Click or Drag Upper Primary CSV File</p>
+                            <span>Supports .csv (MDCF or Portal format)</span>
+                            <input type="file" id="upperCsvInput" name="file_upper" accept=".csv" style="display:none;" onchange="handleFileSelected('upper', this)">
+                        </div>
+
+                        <div id="upperFileInfo" class="file-info-pill file-info-upp" style="display:none;">
+                            <div class="file-info-left">
+                                <i class="fas fa-check-circle" style="color:#4f46e5;"></i>
+                                <span id="upperFileName"></span>
+                            </div>
+                            <button type="button" class="btn-remove-file" onclick="clearSelectedFile('upper', event)" title="Remove file">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <button type="button" class="btn-field-action btn-upp-action" id="btnUploadUpper" onclick="uploadSpecificFile('upper')">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Upper Primary CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden fallback input for legacy compatibility -->
+                <input type="file" id="csvInput" name="csv_file" accept=".csv" style="display:none;" onchange="fileSelected(this)">
+                <span id="fileLabel" style="display:none;"></span>
+                <button type="submit" id="uploadBtn" style="display:none;"></button>
+            </form>
+        </div>
+    </div>
 
         <!-- Monthly Report Lock & Unlock Section -->
     <div class="card" id="monthlyLockSection" style="margin-bottom: 25px;">
@@ -1346,7 +1847,7 @@
                 <button type="button" class="btn-sm" style="background:#dcfce7; color:#15803d; border-color:#86efac;" onclick="toggleAllCategoryLocks(false)" title="Unlock all fields in currently active category">
                     <i class="fas fa-lock-open"></i> Unlock All
                 </button>
-                <button type="button" class="btn-sm" id="btnSaveCategoryLocks" style="background:var(--primary); color:#ffffff; border-color:var(--primary); font-weight:700;" onclick="saveCurrentCategoryLocks()" title="Save all lock settings to database">
+                <button type="button" class="btn-sm btn-save-locks" id="btnSaveCategoryLocks" onclick="saveCurrentCategoryLocks()" title="Save all lock settings to database">
                     <i class="fas fa-save"></i> <span>Save Changes</span>
                 </button>
             </div>
@@ -1641,171 +2142,53 @@
                             </td>
                         </tr>
 
-                        <!-- 3. MATERIAL COST UPPER PRIMARY (Upper Primary Only) -->
-                        <tr class="row-fund-upr" style="display:none;">
-                            <td class="desc-cell">
-                                MATERIAL COST UPPER PRIMARY <span class="badge-upp">VI-VIII</span>
-                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('cc_up')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
-                            </td>
-                            <td>
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cc_up_open" onclick="toggleFieldLock('upr_cc_up_open')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cc_up_recv" onclick="toggleFieldLock('upr_cc_up_recv')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cc_up_exp" onclick="toggleFieldLock('upr_cc_up_exp')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- 4. BANK INTEREST -->
+                        <!-- 3. COOK CUM HELPER -->
                         <tr>
                             <td class="desc-cell">
-                                BANK INTEREST
-                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('bi')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                                COOK CUM HELPER
+                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('cch')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
                             </td>
                             <!-- Primary Cells -->
                             <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_bi_open" onclick="toggleFieldLock('pri_bi_open')">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_cch_open" onclick="toggleFieldLock('pri_cch_open')">
                                     <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
                                     <div class="lock-switch-slider"><span class="slider-knob"></span></div>
                                 </div>
                             </td>
                             <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_bi_recv" onclick="toggleFieldLock('pri_bi_recv')">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_cch_recv" onclick="toggleFieldLock('pri_cch_recv')">
                                     <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
                                     <div class="lock-switch-slider"><span class="slider-knob"></span></div>
                                 </div>
                             </td>
                             <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_bi_exp" onclick="toggleFieldLock('pri_bi_exp')">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_cch_exp" onclick="toggleFieldLock('pri_cch_exp')">
                                     <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
                                     <div class="lock-switch-slider"><span class="slider-knob"></span></div>
                                 </div>
                             </td>
                             <!-- Upper Primary Cells -->
                             <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_bi_open" onclick="toggleFieldLock('upr_bi_open')">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cch_open" onclick="toggleFieldLock('upr_cch_open')">
                                     <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
                                     <div class="lock-switch-slider"><span class="slider-knob"></span></div>
                                 </div>
                             </td>
                             <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_bi_recv" onclick="toggleFieldLock('upr_bi_recv')">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cch_recv" onclick="toggleFieldLock('upr_cch_recv')">
                                     <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
                                     <div class="lock-switch-slider"><span class="slider-knob"></span></div>
                                 </div>
                             </td>
                             <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_bi_exp" onclick="toggleFieldLock('upr_bi_exp')">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cch_exp" onclick="toggleFieldLock('upr_cch_exp')">
                                     <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
                                     <div class="lock-switch-slider"><span class="slider-knob"></span></div>
                                 </div>
                             </td>
                         </tr>
 
-                        <!-- 5. LPG SUBSIDY -->
-                        <tr>
-                            <td class="desc-cell">
-                                LPG SUBSIDY
-                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('lpg')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
-                            </td>
-                            <!-- Primary Cells -->
-                            <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_lpg_open" onclick="toggleFieldLock('pri_lpg_open')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_lpg_recv" onclick="toggleFieldLock('pri_lpg_recv')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_lpg_exp" onclick="toggleFieldLock('pri_lpg_exp')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <!-- Upper Primary Cells -->
-                            <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_lpg_open" onclick="toggleFieldLock('upr_lpg_open')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_lpg_recv" onclick="toggleFieldLock('upr_lpg_recv')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_lpg_exp" onclick="toggleFieldLock('upr_lpg_exp')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- 6. SUPPLEMENTARY / EXTRA NUTRITION -->
-                        <tr>
-                            <td class="desc-cell">
-                                SUPPLEMENTARY / EXTRA NUTRITION
-                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('nutri')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
-                            </td>
-                            <!-- Primary Cells -->
-                            <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_nutri_open" onclick="toggleFieldLock('pri_nutri_open')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_nutri_recv" onclick="toggleFieldLock('pri_nutri_recv')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-pri">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_nutri_exp" onclick="toggleFieldLock('pri_nutri_exp')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <!-- Upper Primary Cells -->
-                            <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_nutri_open" onclick="toggleFieldLock('upr_nutri_open')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_nutri_recv" onclick="toggleFieldLock('upr_nutri_recv')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                            <td class="col-fund-upr" style="display:none;">
-                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_nutri_exp" onclick="toggleFieldLock('upr_nutri_exp')">
-                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
-                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- 7. SCHOOL EXPENSES (MME) -->
+                        <!-- 4. SCHOOL EXPENSES (MME) -->
                         <tr>
                             <td class="desc-cell">
                                 SCHOOL EXPENSES (MME)
@@ -1851,7 +2234,171 @@
                             </td>
                         </tr>
 
-                        <!-- 8. KITCHEN DEVICES -->
+                        <!-- 5. MATERIAL COST UPPER PRIMARY (Upper Primary Only) -->
+                        <tr class="row-fund-upr" style="display:none;">
+                            <td class="desc-cell">
+                                MATERIAL COST UPPER PRIMARY <span class="badge-upp">VI-VIII</span>
+                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('cc_up')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cc_up_open" onclick="toggleFieldLock('upr_cc_up_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cc_up_recv" onclick="toggleFieldLock('upr_cc_up_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_cc_up_exp" onclick="toggleFieldLock('upr_cc_up_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 6. BANK INTEREST -->
+                        <tr>
+                            <td class="desc-cell">
+                                BANK INTEREST
+                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('bi')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <!-- Primary Cells -->
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_bi_open" onclick="toggleFieldLock('pri_bi_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_bi_recv" onclick="toggleFieldLock('pri_bi_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_bi_exp" onclick="toggleFieldLock('pri_bi_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <!-- Upper Primary Cells -->
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_bi_open" onclick="toggleFieldLock('upr_bi_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_bi_recv" onclick="toggleFieldLock('upr_bi_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_bi_exp" onclick="toggleFieldLock('upr_bi_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 7. LPG SUBSIDY -->
+                        <tr>
+                            <td class="desc-cell">
+                                LPG SUBSIDY
+                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('lpg')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <!-- Primary Cells -->
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_lpg_open" onclick="toggleFieldLock('pri_lpg_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_lpg_recv" onclick="toggleFieldLock('pri_lpg_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_lpg_exp" onclick="toggleFieldLock('pri_lpg_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <!-- Upper Primary Cells -->
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_lpg_open" onclick="toggleFieldLock('upr_lpg_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_lpg_recv" onclick="toggleFieldLock('upr_lpg_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_lpg_exp" onclick="toggleFieldLock('upr_lpg_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 8. SUPPLEMENTARY / EXTRA NUTRITION -->
+                        <tr>
+                            <td class="desc-cell">
+                                SUPPLEMENTARY / EXTRA NUTRITION
+                                <span class="row-quick-toggle" onclick="toggleFundRowLocks('nutri')" title="Toggle lock for all 3 fields in this row"><i class="fas fa-lock"></i></span>
+                            </td>
+                            <!-- Primary Cells -->
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_nutri_open" onclick="toggleFieldLock('pri_nutri_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_nutri_recv" onclick="toggleFieldLock('pri_nutri_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-pri">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_pri_nutri_exp" onclick="toggleFieldLock('pri_nutri_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <!-- Upper Primary Cells -->
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_nutri_open" onclick="toggleFieldLock('upr_nutri_open')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_nutri_recv" onclick="toggleFieldLock('upr_nutri_recv')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                            <td class="col-fund-upr" style="display:none;">
+                                <div class="lock-control-cell is-unlocked" id="ctrl_upr_nutri_exp" onclick="toggleFieldLock('upr_nutri_exp')">
+                                    <div class="lock-toggle-pill"><i class="fas fa-lock-open lock-icon"></i><span class="lock-label">UNLOCKED</span></div>
+                                    <div class="lock-switch-slider"><span class="slider-knob"></span></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 9. KITCHEN DEVICES -->
                         <tr>
                             <td class="desc-cell">
                                 KITCHEN DEVICES
@@ -1897,7 +2444,7 @@
                             </td>
                         </tr>
 
-                        <!-- 9. KITCHEN SHED REPAIR -->
+                        <!-- 10. KITCHEN SHED REPAIR -->
                         <tr>
                             <td class="desc-cell">
                                 KITCHEN SHED REPAIR
@@ -1943,7 +2490,7 @@
                             </td>
                         </tr>
 
-                        <!-- 10. NUTRITION GARDEN -->
+                        <!-- 11. NUTRITION GARDEN -->
                         <tr>
                             <td class="desc-cell">
                                 NUTRITION GARDEN
@@ -1989,7 +2536,7 @@
                             </td>
                         </tr>
 
-                        <!-- 11. BANK CHARGES (SMS/CHEQUE BOOK) -->
+                        <!-- 12. BANK CHARGES (SMS/CHEQUE BOOK) -->
                         <tr>
                             <td class="desc-cell">
                                 BANK CHARGES (SMS/CHEQUE BOOK)
@@ -2035,7 +2582,7 @@
                             </td>
                         </tr>
 
-                        <!-- 12. OTHERS -->
+                        <!-- 13. OTHERS -->
                         <tr>
                             <td class="desc-cell">
                                 OTHERS
@@ -2278,84 +2825,184 @@
 
     <!-- Floating Feedback Toast -->
     <div id="lockToast" class="lock-toast"></div>
-
-    <div class="grid-2">
-        <!-- Card 1: Download Templates -->
-        <div class="card">
-            <h3><i class="fas fa-download" style="color:var(--blue);"></i> 1. Download Templates</h3>
-            <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
-                Download pre-populated 85-column CSV template with all 246 schools from Supabase master database, pre-filled with all saved data from monthly update reports.
-            </p>
-
-            <div class="select-row">
-                <select id="tmplMonth">
-                    <option>January</option><option>February</option><option>March</option>
-                    <option>April</option><option>May</option><option>June</option>
-                    <option>July</option><option>August</option><option>September</option>
-                    <option>October</option><option>November</option><option>December</option>
-                </select>
-                <select id="tmplYear">
-                    <option>2025</option><option>2026</option><option>2027</option>
-                </select>
-            </div>
-
-            <a id="btnDownloadPrefilled" class="btn-action btn-blue-action" onclick="downloadPrefilled()">
-                <i class="fas fa-file-csv"></i> Download Template with 246 Schools
-            </a>
-            <a id="btnDownloadBlank" class="btn-action" style="background:#e2e8f0; color:#334155;" onclick="downloadBlank()">
-                <i class="fas fa-file-alt"></i> Download Blank Sample CSV
-            </a>
-        </div>
-
-        <!-- Card 2: Upload CSV -->
-        <div class="card">
-            <h3><i class="fas fa-cloud-upload-alt" style="color:var(--primary);"></i> 2. Upload Monthly CSV</h3>
-            <form action="/api/monthly-report/upload-full-csv" method="POST" enctype="multipart/form-data" id="uploadForm">
-                <input type="hidden" name="action" value="upload_csv">
-                
-                <div class="select-row">
-                    <select name="month" id="uploadMonth" required>
-                        <option>January</option><option>February</option><option>March</option>
-                        <option>April</option><option>May</option><option>June</option>
-                        <option>July</option><option>August</option><option>September</option>
-                        <option>October</option><option>November</option><option>December</option>
-                    </select>
-                    <select name="year" id="uploadYear" required>
-                        <option>2025</option><option>2026</option><option>2027</option>
-                    </select>
-                </div>
-
-                <div class="dropzone" onclick="document.getElementById('csvInput').click()">
-                    <i class="fas fa-file-excel"></i>
-                    <p style="margin:0; font-weight:600; color:#334155;" id="fileLabel">Click to select CSV File</p>
-                    <span style="font-size:12px; color:#94a3b8;">Supports .csv files</span>
-                    <input type="file" id="csvInput" name="csv_file" accept=".csv" style="display:none;" onchange="fileSelected(this)">
-                </div>
-
-                <button type="submit" class="btn-action btn-primary-action" style="margin-top:15px;" id="uploadBtn">
-                    <i class="fas fa-upload"></i> Process and Save to Database
-                </button>
-            </form>
-        </div>
-    </div>
 </div>
 
 <script>
-    function downloadPrefilled() {
+    function downloadTemplate(category) {
         const m = document.getElementById('tmplMonth').value;
         const y = document.getElementById('tmplYear').value;
-        window.location.href = `/api/monthly-report/template?type=all&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}`;
+        const catParam = (category && category !== 'all') ? `&category=${encodeURIComponent(category)}` : '';
+        window.location.href = `/api/monthly-report/template?type=all&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}${catParam}`;
     }
 
-    function downloadBlank() {
+    function downloadPrefilled() {
+        downloadTemplate('all');
+    }
+
+    function downloadBlank(category) {
         const m = document.getElementById('tmplMonth').value;
         const y = document.getElementById('tmplYear').value;
-        window.location.href = `/api/monthly-report/template?type=blank&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}`;
+        const catParam = (category && category !== 'all') ? `&category=${encodeURIComponent(category)}` : '';
+        window.location.href = `/api/monthly-report/template?type=blank&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}${catParam}`;
+    }
+
+    function switchUploadTab(tab) {
+        const tabPri = document.getElementById('tabPrimary');
+        const tabUpp = document.getElementById('tabUpper');
+        const priBox = document.getElementById('fieldBoxPrimary');
+        const uppBox = document.getElementById('fieldBoxUpper');
+        const targetInput = document.getElementById('uploadTarget');
+
+        if (tabPri) tabPri.classList.toggle('active', tab === 'primary');
+        if (tabUpp) tabUpp.classList.toggle('active', tab === 'upper');
+
+        if (tab === 'primary') {
+            if (priBox) priBox.style.display = 'block';
+            if (uppBox) uppBox.style.display = 'none';
+            if (targetInput) targetInput.value = 'primary';
+        } else if (tab === 'upper') {
+            if (priBox) priBox.style.display = 'none';
+            if (uppBox) uppBox.style.display = 'block';
+            if (targetInput) targetInput.value = 'upper';
+        }
+    }
+
+    function formatFileSize(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+    }
+
+    function handleFileSelected(type, input) {
+        const isPri = (type === 'primary');
+        const infoPill = document.getElementById(isPri ? 'primaryFileInfo' : 'upperFileInfo');
+        const nameSpan = document.getElementById(isPri ? 'primaryFileName' : 'upperFileName');
+        const dropzone = document.getElementById(isPri ? 'dropzonePrimary' : 'dropzoneUpper');
+        const label = document.getElementById(isPri ? 'primaryFileLabel' : 'upperFileLabel');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (nameSpan) nameSpan.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+            if (infoPill) infoPill.style.display = 'flex';
+            if (label) label.textContent = 'Selected: ' + file.name;
+            if (dropzone) {
+                dropzone.style.borderColor = isPri ? '#0d9488' : '#4f46e5';
+                dropzone.style.background = isPri ? '#f0fdf4' : '#eef2ff';
+            }
+        }
+    }
+
+    function clearSelectedFile(type, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const isPri = (type === 'primary');
+        const input = document.getElementById(isPri ? 'primaryCsvInput' : 'upperCsvInput');
+        const infoPill = document.getElementById(isPri ? 'primaryFileInfo' : 'upperFileInfo');
+        const dropzone = document.getElementById(isPri ? 'dropzonePrimary' : 'dropzoneUpper');
+        const label = document.getElementById(isPri ? 'primaryFileLabel' : 'upperFileLabel');
+
+        if (input) input.value = '';
+        if (infoPill) infoPill.style.display = 'none';
+        if (label) label.textContent = isPri ? 'Click or Drag Primary CSV File' : 'Click or Drag Upper Primary CSV File';
+        if (dropzone) {
+            dropzone.style.borderColor = '#cbd5e1';
+            dropzone.style.background = '#ffffff';
+        }
+    }
+
+    function showStatusMessage(status, text) {
+        const container = document.getElementById('statusMessage');
+        if (!container) return;
+        container.className = 'msg-box ' + (status === 'success' ? 'msg-success' : 'msg-error');
+        container.textContent = text;
+        container.style.display = 'block';
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function uploadSpecificFile(type) {
+        const isPri = (type === 'primary');
+        const input = document.getElementById(isPri ? 'primaryCsvInput' : 'upperCsvInput');
+        const btn = document.getElementById(isPri ? 'btnUploadPrimary' : 'btnUploadUpper');
+        const month = document.getElementById('uploadMonth').value;
+        const year = document.getElementById('uploadYear').value;
+
+        if (!input || !input.files || !input.files[0]) {
+            alert('Please select a ' + (isPri ? 'Primary' : 'Upper Primary') + ' CSV file first.');
+            return;
+        }
+
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing ' + (isPri ? 'Primary' : 'Upper') + ' CSV...';
+
+        const formData = new FormData();
+        formData.append('action', 'upload_csv');
+        formData.append('month', month);
+        formData.append('year', year);
+        formData.append(isPri ? 'file_primary' : 'file_upper', input.files[0]);
+
+        try {
+            const res = await fetch('/api/monthly-report/upload-full-csv', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                showStatusMessage('success', data.message || (isPri ? 'Primary CSV uploaded successfully!' : 'Upper Primary CSV uploaded successfully!'));
+                clearSelectedFile(type);
+            } else {
+                showStatusMessage('error', data.message || 'Failed to upload CSV file.');
+            }
+        } catch (err) {
+            console.error('Upload error:', err);
+            showStatusMessage('error', 'Network or processing error: ' + (err.message || 'Failed to connect to server.'));
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+
+    function setupDragAndDrop(dropzoneId, inputId, type) {
+        const dropzone = document.getElementById(dropzoneId);
+        const input = document.getElementById(inputId);
+        if (!dropzone || !input) return;
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('dragover');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                input.files = files;
+                handleFileSelected(type, input);
+            }
+        }, false);
     }
 
     function fileSelected(input) {
         if (input.files && input.files[0]) {
-            document.getElementById('fileLabel').textContent = input.files[0].name;
+            const label = document.getElementById('fileLabel');
+            if (label) label.textContent = input.files[0].name;
         }
     }
 
@@ -2376,7 +3023,77 @@
         const curMonth = new Date().toLocaleString('en-US', { month: 'long' });
         document.getElementById('tmplMonth').value = curMonth;
         document.getElementById('uploadMonth').value = curMonth;
+
+        const curYear = String(new Date().getFullYear());
+        ['tmplYear', 'uploadYear'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = '<option value="' + curYear + '" selected>' + curYear + '</option>';
+                el.value = curYear;
+            }
+        });
         loadPassbookTracker();
+
+        setupDragAndDrop('dropzonePrimary', 'primaryCsvInput', 'primary');
+        setupDragAndDrop('dropzoneUpper', 'upperCsvInput', 'upper');
+        switchUploadTab('primary');
+
+        const uploadForm = document.getElementById('uploadForm');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const priInput = document.getElementById('primaryCsvInput');
+                const uppInput = document.getElementById('upperCsvInput');
+                const legacyInput = document.getElementById('csvInput');
+                const btn = document.getElementById('uploadBtn');
+                const month = document.getElementById('uploadMonth').value;
+                const year = document.getElementById('uploadYear').value;
+
+                const hasPri = priInput && priInput.files && priInput.files[0];
+                const hasUpp = uppInput && uppInput.files && uppInput.files[0];
+                const hasLegacy = legacyInput && legacyInput.files && legacyInput.files[0];
+
+                if (!hasPri && !hasUpp && !hasLegacy) {
+                    alert('Please select at least one CSV file (Primary or Upper Primary) to upload.');
+                    return;
+                }
+
+                const origHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing CSV(s) and saving to database...';
+
+                const formData = new FormData();
+                formData.append('action', 'upload_csv');
+                formData.append('month', month);
+                formData.append('year', year);
+                if (hasPri) formData.append('file_primary', priInput.files[0]);
+                if (hasUpp) formData.append('file_upper', uppInput.files[0]);
+                if (hasLegacy && !hasPri && !hasUpp) formData.append('csv_file', legacyInput.files[0]);
+
+                try {
+                    const res = await fetch('/api/monthly-report/upload-full-csv', {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'same-origin',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'success') {
+                        showStatusMessage('success', data.message || 'File(s) uploaded successfully!');
+                        if (hasPri) clearSelectedFile('primary');
+                        if (hasUpp) clearSelectedFile('upper');
+                    } else {
+                        showStatusMessage('error', data.message || 'Failed to process CSV file(s).');
+                    }
+                } catch (err) {
+                    console.error('Upload error:', err);
+                    showStatusMessage('error', 'Network or processing error: ' + (err.message || 'Failed to upload files.'));
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            });
+        }
     })();
 </script>
 </body>
