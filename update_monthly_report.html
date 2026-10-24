@@ -3740,11 +3740,15 @@
 
                 <!-- Signatures Footer -->
                 <div class="report-signatures-card">
-                    <div class="signature-column">
-                        
-                    <div class="signature-column">
+                    <div class="signature-column signature-col-left">
                         <div class="sig-dots">.........................................................................</div>
                         <div class="sig-title">Signature of Head Teacher</div>
+                    </div>
+                    <div class="signature-column signature-col-right">
+                        <button type="button" class="btn-download-pdf" id="btnDownloadPdf" title="Download Monthly Report as PDF">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Download Pdf</span>
+                        </button>
                     </div>
                 </div>
             </section>
@@ -3854,12 +3858,18 @@
         </div>
     </div>
 
-    <!-- Scripts: Supabase, jQuery, Select2, SweetAlert2 -->
+    <!-- Scripts: Supabase, jQuery, Select2, SweetAlert2, jsPDF -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-client.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="jspdf.umd.min.js"></script>
+    <script>
+        if (!window.jspdf) {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>');
+        }
+    </script>
 
     <script>
         let schools = [];
