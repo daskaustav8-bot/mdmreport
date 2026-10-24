@@ -517,6 +517,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const selectedMonth = urlParams.get('month');
             const selectedSchool = urlParams.get('school');
+            const selectedYear = urlParams.get('year') || '';
 
             const topNav = document.getElementById('topNav');
             const content = document.getElementById('contentSection');
@@ -613,7 +614,7 @@
                 topNav.innerHTML = '<a href="?month=' + encodeURIComponent(selectedMonth) + '" class="btn-back"><i class="fas fa-arrow-left"></i> Change School Name</a>';
                 content.innerHTML = '<div style="text-align:center; padding:50px; background:white; margin-top:20px; border-radius:10px;"><i class="fas fa-spinner fa-spin" style="font-size:30px; color:#7B68C8; margin-bottom:12px;"></i><p style="color:#64748b; font-weight:600;">Loading report...</p></div>';
 
-                fetch('/api/closingbalance?month=' + encodeURIComponent(selectedMonth) + '&school=' + encodeURIComponent(selectedSchool) + '&render=report_body')
+                let fetchUrl = '/api/closingbalance?month=' + encodeURIComponent(selectedMonth) + '&school=' + encodeURIComponent(selectedSchool) + '&render=report_body'; if (selectedYear) fetchUrl += '&year=' + encodeURIComponent(selectedYear); fetch(fetchUrl)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok');

@@ -21,34 +21,81 @@ const upload = multer({
   limits: { fileSize: 15 * 1024 * 1024 }
 });
 
-// Helper for CSV row parsing (handles quotes, commas, CRLF)
+// Helper for CSV row parsing (RFC 4180 compliant: handles quotes, commas, newlines within quotes, and CRLF)
 function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (!text) return [];
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
   const rows = [];
-  for (const line of lines) {
-    const row = [];
-    let insideQuotes = false;
-    let entry = '';
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        if (insideQuotes && line[i + 1] === '"') {
-          entry += '"';
-          i++;
-        } else {
-          insideQuotes = !insideQuotes;
-        }
-      } else if (char === ',' && !insideQuotes) {
-        row.push(entry.trim());
-        entry = '';
+  let currentRow = [];
+  let currentField = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        currentField += '"';
+        i++;
       } else {
-        entry += char;
+        insideQuotes = !insideQuotes;
       }
+    } else if (char === ',' && !insideQuotes) {
+      currentRow.push(currentField.trim());
+      currentField = '';
+    } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+      currentRow.push(currentField.trim());
+      if (currentRow.some(c => c.length > 0)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = '';
+    } else {
+      currentField += char;
     }
-    row.push(entry.trim());
-    rows.push(row);
+  }
+
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some(c => c.length > 0)) {
+      rows.push(currentRow);
+    }
+  }
+
+  return rows;
+}
+
+// Helper for HTML/XML XLS parsing (supports Excel files saved in HTML/XML format)
+function parseXlsHtml(html) {
+  const rows = [];
+  const trMatches = html.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) || [];
+  for (const tr of trMatches) {
+    const cells = [];
+    const cellMatches = tr.match(/<(th|td)[^>]*>([\s\S]*?)<\/(th|td)>/gi) || [];
+    for (const c of cellMatches) {
+      const text = c.replace(/<[^>]+>/g, '').trim();
+      cells.push(text);
+    }
+    if (cells.length > 0 && cells.some(c => c.length > 0)) {
+      rows.push(cells);
+    }
   }
   return rows;
+}
+
+function parseUploadedContent(bufferOrText) {
+  if (!bufferOrText) return [];
+  const text = Buffer.isBuffer(bufferOrText) ? bufferOrText.toString('utf8') : String(bufferOrText);
+  if (text.includes('<table') || text.includes('<html')) {
+    return parseXlsHtml(text);
+  }
+  return parseCSV(text);
 }
 
 function toInt(v) {
@@ -2069,121 +2116,105 @@ router.get(['/monthly-report/passbook-tracker/excel', '/api/monthly-report/passb
   }
 });
 
-// Download Monthly Template CSV (Supports All 246 schools, Primary 194 schools, Upper Primary 52 schools, or Blank)
+// Download Monthly Template CSV / Excel (Supports All 246 schools, Primary 194 schools, Upper Primary 52 schools, or Blank)
 async function handleDownloadTemplate(req, res) {
   const type = (req.query?.type || 'all').toLowerCase();
   const category = (req.query?.category || req.query?.school_type || '').toLowerCase();
   const month = (req.query?.month || new Date().toLocaleString('en-US', { month: 'long' })).trim();
   const year = (req.query?.year || String(new Date().getFullYear())).trim();
+  const format = (req.query?.format || '').toLowerCase();
+  const isExcel = (format === 'excel' || format === 'xls');
 
   const isPrimary = (category === 'primary' || type === 'primary');
   const isUpper = (category === 'upper' || category === 'upper_primary' || type === 'upper' || type === 'upper_primary');
   const isBlank = (type === 'blank');
 
-  // Common MDCF components present in all school categories (32 columns)
+  // Common MDCF components present in all school categories (32 columns) - Full Descriptive Names (matches monthly_report_template_blank (2).csv)
   const commonFundHeaders = [
-    'bi_open', 'bi_recv', 'bi_exp', 'bi_close',
-    'lpg_open', 'lpg_recv', 'lpg_exp', 'lpg_close',
-    'nutri_open', 'nutri_recv', 'nutri_exp', 'nutri_close',
-    'mme_open', 'mme_recv', 'mme_exp', 'mme_close',
-    'kd_open', 'kd_recv', 'kd_exp', 'kd_close',
-    'ks_open', 'ks_recv', 'ks_exp', 'ks_close',
-    'ng_open', 'ng_recv', 'ng_exp', 'ng_close',
-    'bc_open', 'bc_recv', 'bc_exp', 'bc_close'
+    'Bank Interest Opening Balance', 'Bank Interest Received', 'Bank Interest Expenditure', 'Bank Interest Closing Balance',
+    'LPG Subsidy Opening Balance', 'LPG Subsidy Received', 'LPG Subsidy Expenditure', 'LPG Subsidy Closing Balance',
+    'Supplementary Nutrition Opening Balance', 'Supplementary Nutrition Received', 'Supplementary Nutrition Expenditure', 'Supplementary Nutrition Closing Balance',
+    'School Expenses MME Opening Balance', 'School Expenses MME Received', 'School Expenses MME Expenditure', 'School Expenses MME Closing Balance',
+    'Kitchen Devices Opening Balance', 'Kitchen Devices Received', 'Kitchen Devices Expenditure', 'Kitchen Devices Closing Balance',
+    'Kitchen Shed Repair Opening Balance', 'Kitchen Shed Repair Received', 'Kitchen Shed Repair Expenditure', 'Kitchen Shed Repair Closing Balance',
+    'Nutrition Garden Opening Balance', 'Nutrition Garden Received', 'Nutrition Garden Expenditure', 'Nutrition Garden Closing Balance',
+    'Bank Charges Opening Balance', 'Bank Charges Received', 'Bank Charges Expenditure', 'Bank Charges Closing Balance'
   ];
 
-  // Common school info, bank, health, inspection columns
-  const schoolInfoHeaders = ['u_dise', 'school_name', 'category', 'circle_name', 'gp_name', 'month_name', 'year'];
-  const bankHeaders = ['bank_passbook_balance', 'bank_balance_date', 'bank_match'];
+  // Common school info, bank, health, inspection columns - Full Descriptive Names
+  const schoolInfoHeaders = [
+    'UDISE Code', 'School Name', 'Category', 'Circle Name', 'GP Name', 'Month Name', 'Year'
+  ];
+
+  const bankHeaders = [
+    'Bank Passbook Balance', 'Bank Balance Date', 'Bank Match Status'
+  ];
+
   const healthAndInspHeaders = [
-    'ifa_boys', 'ifa_girls', 'rbsk_screened', 'rbsk_referred',
-    'inspection_done', 'insp_task_force', 'insp_district_officials', 'insp_block_officials', 'insp_smc_members',
-    'untoward_incidents'
+    'IFA Tablets Received Boys', 'IFA Tablets Received Girls',
+    'RBSK Mobile Health Team Screened', 'RBSK Mobile Health Team Referred',
+    'School Inspection Done', 'Inspection by Members of Task Force',
+    'Inspection by District Officials', 'Inspection by Block Officials',
+    'Inspection by SMC Members', 'Untoward Incidents Occurred'
   ];
 
-  // Primary Schools (194 schools): ONLY Primary fields (Bal Vatika PP & Primary I-V) - 74 columns
+  // Primary Schools (194 schools): ONLY Primary fields (Bal Vatika PP & Primary I-V) - 74 columns (Matches monthly_report_template_blank (2).csv exactly)
   const primaryHeaders = [
     ...schoolInfoHeaders,
-    'bv_days', 'p_days', 'bv_actual', 'p_actual', 'bv_meals', 'p_meals',
-    'cc_bv_open', 'cc_bv_recv', 'cc_bv_exp', 'cc_bv_close',
-    'cc_p_open', 'cc_p_recv', 'cc_p_exp', 'cc_p_close',
+    'Bal Vatika School Days', 'Primary School Days',
+    'Bal Vatika MDM Served Days', 'Primary MDM Served Days',
+    'Bal Vatika Meals Served', 'Primary Meals Served',
+    'Material Cost Bal Vatika Opening Balance', 'Material Cost Bal Vatika Received', 'Material Cost Bal Vatika Expenditure', 'Material Cost Bal Vatika Closing Balance',
+    'Material Cost Primary Opening Balance', 'Material Cost Primary Received', 'Material Cost Primary Expenditure', 'Material Cost Primary Closing Balance',
     ...commonFundHeaders,
     ...bankHeaders,
-    'rice_bv_open', 'rice_bv_recv', 'rice_bv_cons', 'rice_bv_close',
-    'rice_p_open', 'rice_p_recv', 'rice_p_cons', 'rice_p_close',
+    'Rice Bal Vatika Opening Balance', 'Rice Bal Vatika Received', 'Rice Bal Vatika Consumption', 'Rice Bal Vatika Closing Balance',
+    'Rice Primary Opening Balance', 'Rice Primary Received', 'Rice Primary Consumption', 'Rice Primary Closing Balance',
     ...healthAndInspHeaders
   ];
 
-  // Upper Primary Schools (52 schools): ONLY Upper Primary fields (VI-VIII) - 63 columns
+  // Upper Primary Schools (52 schools): ONLY Upper Primary fields (VI-VIII) - 63 columns (Upper counterpart)
   const upperHeaders = [
     ...schoolInfoHeaders,
-    'up_days', 'up_actual', 'up_meals',
-    'cc_up_open', 'cc_up_recv', 'cc_up_exp', 'cc_up_close',
+    'Upper Primary School Days',
+    'Upper Primary MDM Served Days',
+    'Upper Primary Meals Served',
+    'Material Cost Upper Primary Opening Balance', 'Material Cost Upper Primary Received', 'Material Cost Upper Primary Expenditure', 'Material Cost Upper Primary Closing Balance',
     ...commonFundHeaders,
     ...bankHeaders,
-    'rice_up_open', 'rice_up_recv', 'rice_up_cons', 'rice_up_close',
+    'Rice Upper Primary Opening Balance', 'Rice Upper Primary Received', 'Rice Upper Primary Consumption', 'Rice Upper Primary Closing Balance',
     ...healthAndInspHeaders
   ];
 
   // Master All Schools template - 85 columns
   const allHeaders = [
     ...schoolInfoHeaders,
-    'bv_days', 'p_days', 'up_days', 'bv_actual', 'p_actual', 'up_actual', 'bv_meals', 'p_meals', 'up_meals',
-    'cc_bv_open', 'cc_bv_recv', 'cc_bv_exp', 'cc_bv_close',
-    'cc_p_open', 'cc_p_recv', 'cc_p_exp', 'cc_p_close',
-    'cc_up_open', 'cc_up_recv', 'cc_up_exp', 'cc_up_close',
+    'Bal Vatika School Days', 'Primary School Days', 'Upper Primary School Days',
+    'Bal Vatika MDM Served Days', 'Primary MDM Served Days', 'Upper Primary MDM Served Days',
+    'Bal Vatika Meals Served', 'Primary Meals Served', 'Upper Primary Meals Served',
+    'Material Cost Bal Vatika Opening Balance', 'Material Cost Bal Vatika Received', 'Material Cost Bal Vatika Expenditure', 'Material Cost Bal Vatika Closing Balance',
+    'Material Cost Primary Opening Balance', 'Material Cost Primary Received', 'Material Cost Primary Expenditure', 'Material Cost Primary Closing Balance',
+    'Material Cost Upper Primary Opening Balance', 'Material Cost Upper Primary Received', 'Material Cost Upper Primary Expenditure', 'Material Cost Upper Primary Closing Balance',
     ...commonFundHeaders,
     ...bankHeaders,
-    'rice_bv_open', 'rice_bv_recv', 'rice_bv_cons', 'rice_bv_close',
-    'rice_p_open', 'rice_p_recv', 'rice_p_cons', 'rice_p_close',
-    'rice_up_open', 'rice_up_recv', 'rice_up_cons', 'rice_up_close',
+    'Rice Bal Vatika Opening Balance', 'Rice Bal Vatika Received', 'Rice Bal Vatika Consumption', 'Rice Bal Vatika Closing Balance',
+    'Rice Primary Opening Balance', 'Rice Primary Received', 'Rice Primary Consumption', 'Rice Primary Closing Balance',
+    'Rice Upper Primary Opening Balance', 'Rice Upper Primary Received', 'Rice Upper Primary Consumption', 'Rice Upper Primary Closing Balance',
     ...healthAndInspHeaders
   ];
 
   const headers = isPrimary ? primaryHeaders : (isUpper ? upperHeaders : allHeaders);
 
+  const fileExt = isExcel ? '.xls' : '.csv';
   let filename = '';
   if (isBlank) {
-    if (isPrimary) filename = 'monthly_report_template_primary_blank.csv';
-    else if (isUpper) filename = 'monthly_report_template_upper_blank.csv';
-    else filename = 'monthly_report_template_blank.csv';
+    if (isPrimary) filename = 'monthly_report_template_primary_blank' + fileExt;
+    else if (isUpper) filename = 'monthly_report_template_upper_blank' + fileExt;
+    else filename = 'monthly_report_template_blank' + fileExt;
   } else {
-    if (isPrimary) filename = 'monthly_report_template_primary_' + month.toLowerCase() + '_' + year + '.csv';
-    else if (isUpper) filename = 'monthly_report_template_upper_' + month.toLowerCase() + '_' + year + '.csv';
-    else filename = 'monthly_report_template_' + month.toLowerCase() + '_' + year + '.csv';
-  }
-
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
-
-  let csvContent = '\uFEFF' + headers.join(',') + '\n';
-
-  if (isBlank) {
-    const today = new Date().toISOString().slice(0, 10);
-    if (isUpper) {
-      // 63 columns with strictly Upper Primary (VI-VIII) fields only
-      csvContent += '19120512203,"AINCHGARH JR. HIGH SCHOOL (19120512203)","UPPER PRIMARY ONLY","BOINCHEE","BANTIKA BOINCHI",' +
-        '"' + month + '","' + year + '",' +
-        '15,15,30,' + // up_days, up_actual, up_meals
-        '3000.00,3000.00,6000.00,0.00,' + // cc_up_open, cc_up_recv, cc_up_exp, cc_up_close
-        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes
-        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes (total 32 common funds)
-        '0.00,' + today + ',YES,' + // bank details
-        '1500.00,2500.00,2800.00,1200.00,' + // rice_up_open, rice_up_recv, rice_up_cons, rice_up_close
-        '0,0,40,2,Yes,1,0,1,2,0\n'; // health & inspection
-    } else {
-      // 74 columns with strictly Primary fields only (Bal Vatika PP & Primary I-V)
-      csvContent += '19120502701,"CHOWBERA PRIMARY SCHOOL (19120502701)","PRIMARY ONLY","BOINCHEE","BANTIKA BOINCHI",' +
-        '"' + month + '","' + year + '",' +
-        '10,10,10,10,25,20,' + // bv_days, p_days, bv_actual, p_actual, bv_meals, p_meals
-        '2000.00,2000.00,5000.00,-1000.00,2000.00,2000.00,1000000.00,-9996000.00,' + // cc_bv_*, cc_p_*
-        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes
-        '0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,' + // 16 zeroes (total 32 common funds)
-        '0.00,' + today + ',YES,' + // bank details
-        '100.00,2000.00,500.00,1600.00,1222.00,2000.00,2200.00,1022.00,' + // rice_bv_*, rice_p_*
-        '15,18,40,2,Yes,1,0,1,2,0\n'; // health & inspection
-    }
-    return res.send(csvContent);
+    if (isPrimary) filename = 'monthly_report_template_primary_' + month.toLowerCase() + '_' + year + fileExt;
+    else if (isUpper) filename = 'monthly_report_template_upper_' + month.toLowerCase() + '_' + year + fileExt;
+    else filename = 'monthly_report_template_' + month.toLowerCase() + '_' + year + fileExt;
   }
 
   try {
@@ -2203,10 +2234,14 @@ async function handleDownloadTemplate(req, res) {
     }
 
     // Query existing saved monthly reports from update_monthly_report.html
-    const { rows: savedReports } = await pool.query(
-      'SELECT * FROM public.mdm_monthly_report WHERE LOWER(month_name) = LOWER($1) AND year = $2',
-      [month, year]
-    );
+    let savedReports = [];
+    if (!isBlank) {
+      const { rows } = await pool.query(
+        'SELECT * FROM public.mdm_monthly_report WHERE LOWER(month_name) = LOWER($1) AND year = $2',
+        [month, year]
+      );
+      savedReports = rows;
+    }
 
     const reportMap = new Map();
     for (const r of savedReports) {
@@ -2215,126 +2250,203 @@ async function handleDownloadTemplate(req, res) {
       }
     }
 
-    const fmtNum = (val, isDecimal = true) => {
-      if (val === null || val === undefined || val === '') {
-        return isDecimal ? '0.00' : '0';
-      }
+    // Clean number formatting (matching monthly_report_template_blank (2).csv e.g. 0, 23, 42.5, 150)
+    const fmtCleanNum = (val) => {
+      if (val === null || val === undefined || val === '') return '0';
       const num = Number(val);
-      if (isNaN(num)) return isDecimal ? '0.00' : '0';
-      return isDecimal ? num.toFixed(2) : String(Math.round(num));
+      if (isNaN(num) || num === 0) return '0';
+      if (Number.isInteger(num)) return String(num);
+      return String(parseFloat(num.toFixed(2)));
     };
 
+    // Clean date formatting as DD-MM-YYYY (matching monthly_report_template_blank (2).csv)
+    const fmtDate = (dStr) => {
+      if (!dStr) {
+        const now = new Date();
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const y = now.getFullYear();
+        return `${d}-${m}-${y}`;
+      }
+      const s = String(dStr).trim();
+      if (/^\d{2}-\d{2}-\d{4}$/.test(s)) return s;
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        const parts = s.slice(0, 10).split('-');
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      return s;
+    };
+
+    const dataRows = [];
     for (const s of schools) {
       const rep = reportMap.get(String(s.udise).trim()) || {};
       const commonFundVals = [
-        fmtNum(rep.bi_open), fmtNum(rep.bi_recv), fmtNum(rep.bi_exp), fmtNum(rep.bi_close),
-        fmtNum(rep.lpg_open), fmtNum(rep.lpg_recv), fmtNum(rep.lpg_exp), fmtNum(rep.lpg_close),
-        fmtNum(rep.nutri_open), fmtNum(rep.nutri_recv), fmtNum(rep.nutri_exp), fmtNum(rep.nutri_close),
-        fmtNum(rep.mme_open), fmtNum(rep.mme_recv), fmtNum(rep.mme_exp), fmtNum(rep.mme_close),
-        fmtNum(rep.kd_open), fmtNum(rep.kd_recv), fmtNum(rep.kd_exp), fmtNum(rep.kd_close),
-        fmtNum(rep.ks_open), fmtNum(rep.ks_recv), fmtNum(rep.ks_exp), fmtNum(rep.ks_close),
-        fmtNum(rep.ng_open), fmtNum(rep.ng_recv), fmtNum(rep.ng_exp), fmtNum(rep.ng_close),
-        fmtNum(rep.bc_open), fmtNum(rep.bc_recv), fmtNum(rep.bc_exp), fmtNum(rep.bc_close)
+        fmtCleanNum(rep.bi_open), fmtCleanNum(rep.bi_recv), fmtCleanNum(rep.bi_exp), fmtCleanNum(rep.bi_close),
+        fmtCleanNum(rep.lpg_open), fmtCleanNum(rep.lpg_recv), fmtCleanNum(rep.lpg_exp), fmtCleanNum(rep.lpg_close),
+        fmtCleanNum(rep.nutri_open), fmtCleanNum(rep.nutri_recv), fmtCleanNum(rep.nutri_exp), fmtCleanNum(rep.nutri_close),
+        fmtCleanNum(rep.mme_open), fmtCleanNum(rep.mme_recv), fmtCleanNum(rep.mme_exp), fmtCleanNum(rep.mme_close),
+        fmtCleanNum(rep.kd_open), fmtCleanNum(rep.kd_recv), fmtCleanNum(rep.kd_exp), fmtCleanNum(rep.kd_close),
+        fmtCleanNum(rep.ks_open), fmtCleanNum(rep.ks_recv), fmtCleanNum(rep.ks_exp), fmtCleanNum(rep.ks_close),
+        fmtCleanNum(rep.ng_open), fmtCleanNum(rep.ng_recv), fmtCleanNum(rep.ng_exp), fmtCleanNum(rep.ng_close),
+        fmtCleanNum(rep.bc_open), fmtCleanNum(rep.bc_recv), fmtCleanNum(rep.bc_exp), fmtCleanNum(rep.bc_close)
       ];
 
       const bankVals = [
-        fmtNum(rep.bank_passbook_balance),
-        rep.bank_balance_date || new Date().toISOString().slice(0, 10),
+        fmtCleanNum(rep.bank_passbook_balance),
+        fmtDate(rep.bank_balance_date),
         rep.bank_match || 'YES'
       ];
 
       const healthAndInspVals = [
-        fmtNum(rep.ifa_boys, false),
-        fmtNum(rep.ifa_girls, false),
-        fmtNum(rep.rbsk_screened, false),
-        fmtNum(rep.rbsk_referred, false),
+        fmtCleanNum(rep.ifa_boys),
+        fmtCleanNum(rep.ifa_girls),
+        fmtCleanNum(rep.rbsk_screened),
+        fmtCleanNum(rep.rbsk_referred),
         rep.inspection_done || 'No',
-        fmtNum(rep.insp_task_force, false),
-        fmtNum(rep.insp_district_officials, false),
-        fmtNum(rep.insp_block_officials, false),
-        fmtNum(rep.insp_smc_members, false),
-        fmtNum(rep.untoward_incidents, false)
+        fmtCleanNum(rep.insp_task_force),
+        fmtCleanNum(rep.insp_district_officials),
+        fmtCleanNum(rep.insp_block_officials),
+        fmtCleanNum(rep.insp_smc_members),
+        fmtCleanNum(rep.untoward_incidents)
       ];
+
+      const schoolNameFormatted = s.school_name ? `${s.school_name} (${s.udise})` : String(s.udise);
+      const categoryFormatted = isPrimary ? 'PRIMARY ONLY' : (isUpper ? 'UPPER PRIMARY ONLY' : (s.category || ''));
 
       let row = [];
       if (isPrimary) {
-        // Strictly Primary fields (Bal Vatika PP & Primary I-V) - 74 columns
+        // Strictly Primary fields (Bal Vatika PP & Primary I-V) - 74 columns (Matches monthly_report_template_blank (2).csv exactly)
         row = [
           s.udise,
-          '"' + (s.school_name || '').replace(/"/g, '""') + '"',
-          '"' + (s.category || '').replace(/"/g, '""') + '"',
-          '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
-          '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
-          '"' + month + '"',
-          '"' + year + '"',
-          fmtNum(rep.bv_days, false),
-          fmtNum(rep.p_days, false),
-          fmtNum(rep.bv_actual, false),
-          fmtNum(rep.p_actual, false),
-          fmtNum(rep.bv_meals, false),
-          fmtNum(rep.p_meals, false),
-          fmtNum(rep.cc_bv_open), fmtNum(rep.cc_bv_recv), fmtNum(rep.cc_bv_exp), fmtNum(rep.cc_bv_close),
-          fmtNum(rep.cc_p_open), fmtNum(rep.cc_p_recv), fmtNum(rep.cc_p_exp), fmtNum(rep.cc_p_close),
+          schoolNameFormatted,
+          categoryFormatted,
+          s.circle_name || '',
+          s.gp_name || '',
+          month,
+          year,
+          fmtCleanNum(rep.bv_days),
+          fmtCleanNum(rep.p_days),
+          fmtCleanNum(rep.bv_actual),
+          fmtCleanNum(rep.p_actual),
+          fmtCleanNum(rep.bv_meals),
+          fmtCleanNum(rep.p_meals),
+          fmtCleanNum(rep.cc_bv_open), fmtCleanNum(rep.cc_bv_recv), fmtCleanNum(rep.cc_bv_exp), fmtCleanNum(rep.cc_bv_close),
+          fmtCleanNum(rep.cc_p_open), fmtCleanNum(rep.cc_p_recv), fmtCleanNum(rep.cc_p_exp), fmtCleanNum(rep.cc_p_close),
           ...commonFundVals,
           ...bankVals,
-          fmtNum(rep.rice_bv_open), fmtNum(rep.rice_bv_recv), fmtNum(rep.rice_bv_cons), fmtNum(rep.rice_bv_close),
-          fmtNum(rep.rice_p_open), fmtNum(rep.rice_p_recv), fmtNum(rep.rice_p_cons), fmtNum(rep.rice_p_close),
+          fmtCleanNum(rep.rice_bv_open), fmtCleanNum(rep.rice_bv_recv), fmtCleanNum(rep.rice_bv_cons), fmtCleanNum(rep.rice_bv_close),
+          fmtCleanNum(rep.rice_p_open), fmtCleanNum(rep.rice_p_recv), fmtCleanNum(rep.rice_p_cons), fmtCleanNum(rep.rice_p_close),
           ...healthAndInspVals
         ];
       } else if (isUpper) {
         // Strictly Upper Primary fields (VI-VIII) - 63 columns
         row = [
           s.udise,
-          '"' + (s.school_name || '').replace(/"/g, '""') + '"',
-          '"' + (s.category || '').replace(/"/g, '""') + '"',
-          '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
-          '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
-          '"' + month + '"',
-          '"' + year + '"',
-          fmtNum(rep.up_days, false),
-          fmtNum(rep.up_actual, false),
-          fmtNum(rep.up_meals, false),
-          fmtNum(rep.cc_up_open), fmtNum(rep.cc_up_recv), fmtNum(rep.cc_up_exp), fmtNum(rep.cc_up_close),
+          schoolNameFormatted,
+          categoryFormatted,
+          s.circle_name || '',
+          s.gp_name || '',
+          month,
+          year,
+          fmtCleanNum(rep.up_days),
+          fmtCleanNum(rep.up_actual),
+          fmtCleanNum(rep.up_meals),
+          fmtCleanNum(rep.cc_up_open), fmtCleanNum(rep.cc_up_recv), fmtCleanNum(rep.cc_up_exp), fmtCleanNum(rep.cc_up_close),
           ...commonFundVals,
           ...bankVals,
-          fmtNum(rep.rice_up_open), fmtNum(rep.rice_up_recv), fmtNum(rep.rice_up_cons), fmtNum(rep.rice_up_close),
+          fmtCleanNum(rep.rice_up_open), fmtCleanNum(rep.rice_up_recv), fmtCleanNum(rep.rice_up_cons), fmtCleanNum(rep.rice_up_close),
           ...healthAndInspVals
         ];
       } else {
         // Master all 85 columns
         row = [
           s.udise,
-          '"' + (s.school_name || '').replace(/"/g, '""') + '"',
-          '"' + (s.category || '').replace(/"/g, '""') + '"',
-          '"' + (s.circle_name || '').replace(/"/g, '""') + '"',
-          '"' + (s.gp_name || '').replace(/"/g, '""') + '"',
-          '"' + month + '"',
-          '"' + year + '"',
-          fmtNum(rep.bv_days, false),
-          fmtNum(rep.p_days, false),
-          fmtNum(rep.up_days, false),
-          fmtNum(rep.bv_actual, false),
-          fmtNum(rep.p_actual, false),
-          fmtNum(rep.up_actual, false),
-          fmtNum(rep.bv_meals, false),
-          fmtNum(rep.p_meals, false),
-          fmtNum(rep.up_meals, false),
-          fmtNum(rep.cc_bv_open), fmtNum(rep.cc_bv_recv), fmtNum(rep.cc_bv_exp), fmtNum(rep.cc_bv_close),
-          fmtNum(rep.cc_p_open), fmtNum(rep.cc_p_recv), fmtNum(rep.cc_p_exp), fmtNum(rep.cc_p_close),
-          fmtNum(rep.cc_up_open), fmtNum(rep.cc_up_recv), fmtNum(rep.cc_up_exp), fmtNum(rep.cc_up_close),
+          schoolNameFormatted,
+          s.category || '',
+          s.circle_name || '',
+          s.gp_name || '',
+          month,
+          year,
+          fmtCleanNum(rep.bv_days),
+          fmtCleanNum(rep.p_days),
+          fmtCleanNum(rep.up_days),
+          fmtCleanNum(rep.bv_actual),
+          fmtCleanNum(rep.p_actual),
+          fmtCleanNum(rep.up_actual),
+          fmtCleanNum(rep.bv_meals),
+          fmtCleanNum(rep.p_meals),
+          fmtCleanNum(rep.up_meals),
+          fmtCleanNum(rep.cc_bv_open), fmtCleanNum(rep.cc_bv_recv), fmtCleanNum(rep.cc_bv_exp), fmtCleanNum(rep.cc_bv_close),
+          fmtCleanNum(rep.cc_p_open), fmtCleanNum(rep.cc_p_recv), fmtCleanNum(rep.cc_p_exp), fmtCleanNum(rep.cc_p_close),
+          fmtCleanNum(rep.cc_up_open), fmtCleanNum(rep.cc_up_recv), fmtCleanNum(rep.cc_up_exp), fmtCleanNum(rep.cc_up_close),
           ...commonFundVals,
           ...bankVals,
-          fmtNum(rep.rice_bv_open), fmtNum(rep.rice_bv_recv), fmtNum(rep.rice_bv_cons), fmtNum(rep.rice_bv_close),
-          fmtNum(rep.rice_p_open), fmtNum(rep.rice_p_recv), fmtNum(rep.rice_p_cons), fmtNum(rep.rice_p_close),
-          fmtNum(rep.rice_up_open), fmtNum(rep.rice_up_recv), fmtNum(rep.rice_up_cons), fmtNum(rep.rice_up_close),
+          fmtCleanNum(rep.rice_bv_open), fmtCleanNum(rep.rice_bv_recv), fmtCleanNum(rep.rice_bv_cons), fmtCleanNum(rep.rice_bv_close),
+          fmtCleanNum(rep.rice_p_open), fmtCleanNum(rep.rice_p_recv), fmtCleanNum(rep.rice_p_cons), fmtCleanNum(rep.rice_p_close),
+          fmtCleanNum(rep.rice_up_open), fmtCleanNum(rep.rice_up_recv), fmtCleanNum(rep.rice_up_cons), fmtCleanNum(rep.rice_up_close),
           ...healthAndInspVals
         ];
       }
-      csvContent += row.join(',') + '\n';
+      dataRows.push(row);
     }
-    res.send(csvContent);
+
+    if (isExcel) {
+      // Excel XML/HTML with automatic Wrap Text, customized column widths, and proper row heights
+      res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+
+      let html = '\uFEFF<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+      html += '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+      html += '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>';
+      html += '<x:Name>' + (isPrimary ? 'Primary Monthly Report' : (isUpper ? 'Upper Primary Monthly Report' : 'Monthly Report')) + '</x:Name>';
+      html += '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>';
+      html += '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
+      html += '<style>';
+      html += 'table { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt; }';
+      html += 'th { background-color: #0d9488; color: #ffffff; font-weight: bold; text-align: center; vertical-align: middle; white-space: normal; mso-wrap-style: square; border: 1px solid #64748b; padding: 6px 8px; height: 42px; min-width: 110px; font-size: 10.5pt; }';
+      html += 'td { border: 1px solid #cbd5e1; padding: 5px 8px; vertical-align: middle; mso-number-format: "\\@"; font-size: 10.5pt; }';
+      html += '.num { text-align: right; }';
+      html += '.center { text-align: center; }';
+      html += '</style></head><body>';
+      html += '<table><thead><tr>';
+      for (const h of headers) {
+        html += '<th>' + String(h).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</th>';
+      }
+      html += '</tr></thead><tbody>';
+      for (const r of dataRows) {
+        html += '<tr>';
+        for (let idx = 0; idx < r.length; idx++) {
+          const val = r[idx];
+          const isNum = !isNaN(Number(val)) && val !== '' && idx >= 7;
+          const isCenter = idx === 0 || idx === 2 || idx === 5 || idx === 6 || val === 'YES' || val === 'No';
+          const cls = isNum ? ' class="num"' : (isCenter ? ' class="center"' : '');
+          html += '<td' + cls + '>' + String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></body></html>';
+      return res.send(html);
+    }
+
+    // Standard RFC 4180 CSV matching monthly_report_template_blank (2).csv exactly
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+
+    const escapeCsvCell = (val) => {
+      const str = String(val === null || val === undefined ? '' : val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+
+    let csvContent = '\uFEFF' + headers.map(escapeCsvCell).join(',') + '\r\n';
+    for (const r of dataRows) {
+      csvContent += r.map(escapeCsvCell).join(',') + '\r\n';
+    }
+    return res.send(csvContent);
   } catch (err) {
-    console.error('Error generating template CSV:', err.message);
+    console.error('Error generating template:', err.message);
     res.status(500).send('Error generating template: ' + err.message);
   }
 }
@@ -2364,14 +2476,25 @@ async function handleClosingBalance(req, res) {
 
   try {
     const udise = extractUdise(school);
+    const year = (req.query?.year || '').trim();
     let query;
     let params;
     if (udise && /^\d+$/.test(udise)) {
-      query = 'SELECT * FROM public.mdm_monthly_report WHERE u_dise = $1 AND LOWER(month_name) = LOWER($2) ORDER BY id DESC LIMIT 1';
-      params = [udise, month];
+      if (year) {
+        query = 'SELECT * FROM public.mdm_monthly_report WHERE u_dise = $1 AND LOWER(month_name) = LOWER($2) AND year = $3 ORDER BY id DESC LIMIT 1';
+        params = [udise, month, year];
+      } else {
+        query = 'SELECT * FROM public.mdm_monthly_report WHERE u_dise = $1 AND LOWER(month_name) = LOWER($2) ORDER BY id DESC LIMIT 1';
+        params = [udise, month];
+      }
     } else {
-      query = 'SELECT * FROM public.mdm_monthly_report WHERE (u_dise = $1 OR school_name LIKE $2) AND LOWER(month_name) = LOWER($3) ORDER BY id DESC LIMIT 1';
-      params = [udise, `%${udise}%`, month];
+      if (year) {
+        query = 'SELECT * FROM public.mdm_monthly_report WHERE (u_dise = $1 OR school_name LIKE $2) AND LOWER(month_name) = LOWER($3) AND year = $4 ORDER BY id DESC LIMIT 1';
+        params = [udise, `%${udise}%`, month, year];
+      } else {
+        query = 'SELECT * FROM public.mdm_monthly_report WHERE (u_dise = $1 OR school_name LIKE $2) AND LOWER(month_name) = LOWER($3) ORDER BY id DESC LIMIT 1';
+        params = [udise, `%${udise}%`, month];
+      }
     }
 
     const [schoolMap, { rows }] = await Promise.all([
@@ -2406,10 +2529,10 @@ async function handleClosingBalance(req, res) {
     const fmt = v => Number(toFloat(v)).toFixed(2);
     const showVal = (v, active) => active ? (v !== null && v !== '' ? v : 0) : '---';
 
-    const fOpenTotal = toFloat(d.cc_bv_open) + toFloat(d.cc_p_open) + toFloat(d.cc_up_open) + toFloat(d.bi_open) + toFloat(d.lpg_open) + toFloat(d.nutri_open) + toFloat(d.mme_open) + toFloat(d.kd_open) + toFloat(d.ks_open) + toFloat(d.ng_open) + toFloat(d.bc_open) + toFloat(d.oth_open);
-    const fRecvTotal = toFloat(d.cc_bv_recv) + toFloat(d.cc_p_recv) + toFloat(d.cc_up_recv) + toFloat(d.bi_recv) + toFloat(d.lpg_recv) + toFloat(d.nutri_recv) + toFloat(d.mme_recv) + toFloat(d.kd_recv) + toFloat(d.ks_recv) + toFloat(d.ng_recv) + toFloat(d.bc_recv) + toFloat(d.oth_recv);
-    const fExpTotal = toFloat(d.cc_bv_exp) + toFloat(d.cc_p_exp) + toFloat(d.cc_up_exp) + toFloat(d.bi_exp) + toFloat(d.lpg_exp) + toFloat(d.nutri_exp) + toFloat(d.mme_exp) + toFloat(d.kd_exp) + toFloat(d.ks_exp) + toFloat(d.ng_exp) + toFloat(d.bc_exp) + toFloat(d.oth_exp);
-    const fCloseTotal = toFloat(d.cc_bv_close) + toFloat(d.cc_p_close) + toFloat(d.cc_up_close) + toFloat(d.bi_close) + toFloat(d.lpg_close) + toFloat(d.nutri_close) + toFloat(d.mme_close) + toFloat(d.kd_close) + toFloat(d.ks_close) + toFloat(d.ng_close) + toFloat(d.bc_close) + toFloat(d.oth_close);
+    const fOpenTotal = toFloat(d.cc_bv_open) + toFloat(d.cc_p_open) + toFloat(d.cc_up_open) + toFloat(d.cch_open) + toFloat(d.bi_open) + toFloat(d.lpg_open) + toFloat(d.nutri_open) + toFloat(d.mme_open) + toFloat(d.kd_open) + toFloat(d.ks_open) + toFloat(d.ng_open) + toFloat(d.bc_open) + toFloat(d.oth_open);
+    const fRecvTotal = toFloat(d.cc_bv_recv) + toFloat(d.cc_p_recv) + toFloat(d.cc_up_recv) + toFloat(d.cch_recv) + toFloat(d.bi_recv) + toFloat(d.lpg_recv) + toFloat(d.nutri_recv) + toFloat(d.mme_recv) + toFloat(d.kd_recv) + toFloat(d.ks_recv) + toFloat(d.ng_recv) + toFloat(d.bc_recv) + toFloat(d.oth_recv);
+    const fExpTotal = toFloat(d.cc_bv_exp) + toFloat(d.cc_p_exp) + toFloat(d.cc_up_exp) + toFloat(d.cch_exp) + toFloat(d.bi_exp) + toFloat(d.lpg_exp) + toFloat(d.nutri_exp) + toFloat(d.mme_exp) + toFloat(d.kd_exp) + toFloat(d.ks_exp) + toFloat(d.ng_exp) + toFloat(d.bc_exp) + toFloat(d.oth_exp);
+    const fCloseTotal = toFloat(d.cc_bv_close) + toFloat(d.cc_p_close) + toFloat(d.cc_up_close) + toFloat(d.cch_close) + toFloat(d.bi_close) + toFloat(d.lpg_close) + toFloat(d.nutri_close) + toFloat(d.mme_close) + toFloat(d.kd_close) + toFloat(d.ks_close) + toFloat(d.ng_close) + toFloat(d.bc_close) + toFloat(d.oth_close);
 
     let html = `
       <div class="report-card">
@@ -2473,6 +2596,7 @@ async function handleClosingBalance(req, res) {
             <tr><td style="text-align:left;">MATERIAL COST BAL VATIKA</td><td>${fmt(d.cc_bv_open)}</td><td>${fmt(d.cc_bv_recv)}</td><td>${fmt(d.cc_bv_exp)}</td><td>${fmt(d.cc_bv_close)}</td></tr>
             <tr><td style="text-align:left;">MATERIAL COST PRIMARY</td><td>${fmt(d.cc_p_open)}</td><td>${fmt(d.cc_p_recv)}</td><td>${fmt(d.cc_p_exp)}</td><td>${fmt(d.cc_p_close)}</td></tr>
             <tr><td style="text-align:left;">MATERIAL COST UPPER PRIMARY</td><td>${fmt(d.cc_up_open)}</td><td>${fmt(d.cc_up_recv)}</td><td>${fmt(d.cc_up_exp)}</td><td>${fmt(d.cc_up_close)}</td></tr>
+            <tr><td style="text-align:left;">COOK CUM HELPER</td><td>${fmt(d.cch_open)}</td><td>${fmt(d.cch_recv)}</td><td>${fmt(d.cch_exp)}</td><td>${fmt(d.cch_close)}</td></tr>
             <tr><td style="text-align:left;">BANK INTEREST</td><td>${fmt(d.bi_open)}</td><td>${fmt(d.bi_recv)}</td><td>${fmt(d.bi_exp)}</td><td>${fmt(d.bi_close)}</td></tr>
             <tr><td style="text-align:left;">LPG SUBSIDY</td><td>${fmt(d.lpg_open)}</td><td>${fmt(d.lpg_recv)}</td><td>${fmt(d.lpg_exp)}</td><td>${fmt(d.lpg_close)}</td></tr>
             <tr><td style="text-align:left;">SUPPLEMENTARY / EXTRA NUTRITION</td><td>${fmt(d.nutri_open)}</td><td>${fmt(d.nutri_recv)}</td><td>${fmt(d.nutri_exp)}</td><td>${fmt(d.nutri_close)}</td></tr>
@@ -2789,13 +2913,157 @@ const uploadMonthlyFullMulter = upload.fields([
   { name: 'upper_csv', maxCount: 1 }
 ]);
 
+const COLUMN_ALIASES = {
+  // UDISE & School Info
+  'udise_code': 'u_dise', 'udise': 'u_dise', 'u_dise': 'u_dise', 'school_udise': 'u_dise',
+  'school_name': 'school_name', 'school': 'school_name', 'name_of_school': 'school_name',
+  'category': 'category', 'school_category': 'category',
+  'circle_name': 'circle_name', 'circle': 'circle_name',
+  'gp_name': 'gp_name', 'gp': 'gp_name', 'gram_panchayat': 'gp_name',
+  'month_name': 'month_name', 'month': 'month_name',
+  'year': 'year',
+
+  // Meal Availed - Bal Vatika
+  'bal_vatika_school_days': 'bv_days', 'bal_vatika_days': 'bv_days', 'bv_days': 'bv_days',
+  'bal_vatika_mdm_served_days': 'bv_actual', 'bal_vatika_actual_days': 'bv_actual', 'bv_actual': 'bv_actual', 'bv_act': 'bv_actual',
+  'bal_vatika_meals_served': 'bv_meals', 'bal_vatika_meals': 'bv_meals', 'bv_meals': 'bv_meals',
+
+  // Meal Availed - Primary
+  'primary_school_days': 'p_days', 'primary_days': 'p_days', 'p_days': 'p_days',
+  'primary_mdm_served_days': 'p_actual', 'primary_actual_days': 'p_actual', 'p_actual': 'p_actual', 'p_act': 'p_actual',
+  'primary_meals_served': 'p_meals', 'primary_meals': 'p_meals', 'p_meals': 'p_meals',
+
+  // Meal Availed - Upper Primary
+  'upper_primary_school_days': 'up_days', 'upper_primary_days': 'up_days', 'upper_days': 'up_days', 'up_days': 'up_days',
+  'upper_primary_mdm_served_days': 'up_actual', 'upper_primary_actual_days': 'up_actual', 'upper_actual': 'up_actual', 'up_actual': 'up_actual', 'up_act': 'up_actual',
+  'upper_primary_meals_served': 'up_meals', 'upper_primary_meals': 'up_meals', 'upper_meals': 'up_meals', 'up_meals': 'up_meals',
+
+  // Cooking Cost - Bal Vatika
+  'material_cost_bal_vatika_opening_balance': 'cc_bv_open', 'material_cost_bal_vatika_open': 'cc_bv_open', 'cc_bv_open': 'cc_bv_open',
+  'material_cost_bal_vatika_received': 'cc_bv_recv', 'material_cost_bal_vatika_recv': 'cc_bv_recv', 'cc_bv_recv': 'cc_bv_recv',
+  'material_cost_bal_vatika_expenditure': 'cc_bv_exp', 'material_cost_bal_vatika_exp': 'cc_bv_exp', 'cc_bv_exp': 'cc_bv_exp',
+  'material_cost_bal_vatika_closing_balance': 'cc_bv_close', 'material_cost_bal_vatika_close': 'cc_bv_close', 'cc_bv_close': 'cc_bv_close',
+
+  // Cooking Cost - Primary
+  'material_cost_primary_opening_balance': 'cc_p_open', 'material_cost_primary_open': 'cc_p_open', 'cc_p_open': 'cc_p_open',
+  'material_cost_primary_received': 'cc_p_recv', 'material_cost_primary_recv': 'cc_p_recv', 'cc_p_recv': 'cc_p_recv',
+  'material_cost_primary_expenditure': 'cc_p_exp', 'material_cost_primary_exp': 'cc_p_exp', 'cc_p_exp': 'cc_p_exp',
+  'material_cost_primary_closing_balance': 'cc_p_close', 'material_cost_primary_close': 'cc_p_close', 'cc_p_close': 'cc_p_close',
+
+  // Cooking Cost - Upper Primary
+  'material_cost_upper_primary_opening_balance': 'cc_up_open', 'material_cost_upper_primary_open': 'cc_up_open', 'cc_up_open': 'cc_up_open',
+  'material_cost_upper_primary_received': 'cc_up_recv', 'material_cost_upper_primary_recv': 'cc_up_recv', 'cc_up_recv': 'cc_up_recv',
+  'material_cost_upper_primary_expenditure': 'cc_up_exp', 'material_cost_upper_primary_exp': 'cc_up_exp', 'cc_up_exp': 'cc_up_exp',
+  'material_cost_upper_primary_closing_balance': 'cc_up_close', 'material_cost_upper_primary_close': 'cc_up_close', 'cc_up_close': 'cc_up_close',
+
+  // Cook Cum Helper
+  'cook_cum_helper_opening_balance': 'cch_open', 'cook_cum_helper_open': 'cch_open', 'cch_open': 'cch_open',
+  'cook_cum_helper_received': 'cch_recv', 'cook_cum_helper_recv': 'cch_recv', 'cch_recv': 'cch_recv',
+  'cook_cum_helper_expenditure': 'cch_exp', 'cook_cum_helper_exp': 'cch_exp', 'cch_exp': 'cch_exp',
+  'cook_cum_helper_closing_balance': 'cch_close', 'cook_cum_helper_close': 'cch_close', 'cch_close': 'cch_close',
+
+  // School Expenses (MME)
+  'school_expenses_mme_opening_balance': 'mme_open', 'school_expenses_mme_open': 'mme_open', 'mme_open': 'mme_open',
+  'school_expenses_mme_received': 'mme_recv', 'school_expenses_mme_recv': 'mme_recv', 'mme_recv': 'mme_recv',
+  'school_expenses_mme_expenditure': 'mme_exp', 'school_expenses_mme_exp': 'mme_exp', 'mme_exp': 'mme_exp',
+  'school_expenses_mme_closing_balance': 'mme_close', 'school_expenses_mme_close': 'mme_close', 'mme_close': 'mme_close',
+
+  // Bank Interest
+  'bank_interest_opening_balance': 'bi_open', 'bank_interest_open': 'bi_open', 'bi_open': 'bi_open',
+  'bank_interest_received': 'bi_recv', 'bank_interest_recv': 'bi_recv', 'bi_recv': 'bi_recv',
+  'bank_interest_expenditure': 'bi_exp', 'bank_interest_exp': 'bi_exp', 'bi_exp': 'bi_exp',
+  'bank_interest_closing_balance': 'bi_close', 'bank_interest_close': 'bi_close', 'bi_close': 'bi_close',
+
+  // LPG Subsidy
+  'lpg_subsidy_opening_balance': 'lpg_open', 'lpg_subsidy_open': 'lpg_open', 'lpg_open': 'lpg_open',
+  'lpg_subsidy_received': 'lpg_recv', 'lpg_subsidy_recv': 'lpg_recv', 'lpg_recv': 'lpg_recv',
+  'lpg_subsidy_expenditure': 'lpg_exp', 'lpg_subsidy_exp': 'lpg_exp', 'lpg_exp': 'lpg_exp',
+  'lpg_subsidy_closing_balance': 'lpg_close', 'lpg_subsidy_close': 'lpg_close', 'lpg_close': 'lpg_close',
+
+  // Supplementary Nutrition
+  'supplementary_nutrition_opening_balance': 'nutri_open', 'supplementary_nutrition_open': 'nutri_open', 'nutri_open': 'nutri_open',
+  'supplementary_nutrition_received': 'nutri_recv', 'supplementary_nutrition_recv': 'nutri_recv', 'nutri_recv': 'nutri_recv',
+  'supplementary_nutrition_expenditure': 'nutri_exp', 'supplementary_nutrition_exp': 'nutri_exp', 'nutri_exp': 'nutri_exp',
+  'supplementary_nutrition_closing_balance': 'nutri_close', 'supplementary_nutrition_close': 'nutri_close', 'nutri_close': 'nutri_close',
+
+  // Kitchen Devices
+  'kitchen_devices_opening_balance': 'kd_open', 'kitchen_devices_open': 'kd_open', 'kd_open': 'kd_open',
+  'kitchen_devices_received': 'kd_recv', 'kitchen_devices_recv': 'kd_recv', 'kd_recv': 'kd_recv',
+  'kitchen_devices_expenditure': 'kd_exp', 'kitchen_devices_exp': 'kd_exp', 'kd_exp': 'kd_exp',
+  'kitchen_devices_closing_balance': 'kd_close', 'kitchen_devices_close': 'kd_close', 'kd_close': 'kd_close',
+
+  // Kitchen Shed Repair
+  'kitchen_shed_repair_opening_balance': 'ks_open', 'kitchen_shed_repair_open': 'ks_open', 'ks_open': 'ks_open',
+  'kitchen_shed_repair_received': 'ks_recv', 'kitchen_shed_repair_recv': 'ks_recv', 'ks_recv': 'ks_recv',
+  'kitchen_shed_repair_expenditure': 'ks_exp', 'kitchen_shed_repair_exp': 'ks_exp', 'ks_exp': 'ks_exp',
+  'kitchen_shed_repair_closing_balance': 'ks_close', 'kitchen_shed_repair_close': 'ks_close', 'ks_close': 'ks_close',
+
+  // Nutrition Garden
+  'nutrition_garden_opening_balance': 'ng_open', 'nutrition_garden_open': 'ng_open', 'ng_open': 'ng_open',
+  'nutrition_garden_received': 'ng_recv', 'nutrition_garden_recv': 'ng_recv', 'ng_recv': 'ng_recv',
+  'nutrition_garden_expenditure': 'ng_exp', 'nutrition_garden_exp': 'ng_exp', 'ng_exp': 'ng_exp',
+  'nutrition_garden_closing_balance': 'ng_close', 'nutrition_garden_close': 'ng_close', 'ng_close': 'ng_close',
+
+  // Bank Charges
+  'bank_charges_opening_balance': 'bc_open', 'bank_charges_open': 'bc_open', 'bc_open': 'bc_open',
+  'bank_charges_received': 'bc_recv', 'bank_charges_recv': 'bc_recv', 'bc_recv': 'bc_recv',
+  'bank_charges_expenditure': 'bc_exp', 'bank_charges_exp': 'bc_exp', 'bc_exp': 'bc_exp',
+  'bank_charges_closing_balance': 'bc_close', 'bank_charges_close': 'bc_close', 'bc_close': 'bc_close',
+
+  // Others
+  'others_opening_balance': 'oth_open', 'others_open': 'oth_open', 'oth_open': 'oth_open',
+  'others_received': 'oth_recv', 'others_recv': 'oth_recv', 'oth_recv': 'oth_recv',
+  'others_expenditure': 'oth_exp', 'others_exp': 'oth_exp', 'oth_exp': 'oth_exp',
+  'others_closing_balance': 'oth_close', 'others_close': 'oth_close', 'oth_close': 'oth_close',
+
+  // Bank Passbook
+  'bank_passbook_balance': 'bank_passbook_balance', 'bank_balance': 'bank_passbook_balance',
+  'bank_balance_date': 'bank_balance_date',
+  'bank_match_status': 'bank_match', 'bank_match': 'bank_match',
+
+  // Rice - Bal Vatika
+  'rice_bal_vatika_opening_balance': 'rice_bv_open', 'rice_bal_vatika_open': 'rice_bv_open', 'rice_bv_open': 'rice_bv_open', 'r_bv_open': 'rice_bv_open',
+  'rice_bal_vatika_received': 'rice_bv_recv', 'rice_bal_vatika_recv': 'rice_bv_recv', 'rice_bv_recv': 'rice_bv_recv', 'r_bv_recv': 'rice_bv_recv',
+  'rice_bal_vatika_consumption': 'rice_bv_cons', 'rice_bal_vatika_cons': 'rice_bv_cons', 'rice_bv_cons': 'rice_bv_cons', 'r_bv_cons': 'rice_bv_cons',
+  'rice_bal_vatika_closing_balance': 'rice_bv_close', 'rice_bal_vatika_close': 'rice_bv_close', 'rice_bv_close': 'rice_bv_close', 'r_bv_close': 'rice_bv_close',
+
+  // Rice - Primary
+  'rice_primary_opening_balance': 'rice_p_open', 'rice_primary_open': 'rice_p_open', 'rice_p_open': 'rice_p_open', 'r_p_open': 'rice_p_open',
+  'rice_primary_received': 'rice_p_recv', 'rice_primary_recv': 'rice_p_recv', 'rice_p_recv': 'rice_p_recv', 'r_p_recv': 'rice_p_recv',
+  'rice_primary_consumption': 'rice_p_cons', 'rice_primary_cons': 'rice_p_cons', 'rice_p_cons': 'rice_p_cons', 'r_p_cons': 'rice_p_cons',
+  'rice_primary_closing_balance': 'rice_p_close', 'rice_primary_close': 'rice_p_close', 'rice_p_close': 'rice_p_close', 'r_p_close': 'rice_p_close',
+
+  // Rice - Upper Primary
+  'rice_upper_primary_opening_balance': 'rice_up_open', 'rice_upper_primary_open': 'rice_up_open', 'rice_up_open': 'rice_up_open', 'r_up_open': 'rice_up_open',
+  'rice_upper_primary_received': 'rice_up_recv', 'rice_upper_primary_recv': 'rice_up_recv', 'rice_up_recv': 'rice_up_recv', 'r_up_recv': 'rice_up_recv',
+  'rice_upper_primary_consumption': 'rice_up_cons', 'rice_upper_primary_cons': 'rice_up_cons', 'rice_up_cons': 'rice_up_cons', 'r_up_cons': 'rice_up_cons',
+  'rice_upper_primary_closing_balance': 'rice_up_close', 'rice_upper_primary_close': 'rice_up_close', 'rice_up_close': 'rice_up_close', 'r_up_close': 'rice_up_close',
+
+  // Health
+  'ifa_tablets_received_boys': 'ifa_boys', 'ifa_boys': 'ifa_boys',
+  'ifa_tablets_received_girls': 'ifa_girls', 'ifa_girls': 'ifa_girls',
+  'rbsk_mobile_health_team_screened': 'rbsk_screened', 'rbsk_screened': 'rbsk_screened',
+  'rbsk_mobile_health_team_referred': 'rbsk_referred', 'rbsk_referred': 'rbsk_referred',
+
+  // Inspection
+  'school_inspection_done': 'inspection_done', 'inspection_done': 'inspection_done',
+  'inspection_by_members_of_task_force': 'insp_task_force', 'insp_task_force': 'insp_task_force',
+  'inspection_by_district_officials': 'insp_district_officials', 'insp_district_officials': 'insp_district_officials',
+  'inspection_by_block_officials': 'insp_block_officials', 'insp_block_officials': 'insp_block_officials',
+  'inspection_by_smc_members': 'insp_smc_members', 'insp_smc_members': 'insp_smc_members',
+  'untoward_incidents_occurred': 'untoward_incidents', 'untoward_incidents': 'untoward_incidents'
+};
+
 async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, schoolMap) {
   if (!rows || rows.length < 2) return 0;
   const header = rows[0];
   const colIndex = {};
   header.forEach((col, idx) => {
-    const cleanKey = String(col).toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_').trim();
-    colIndex[cleanKey] = idx;
+    const rawClean = String(col).toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').trim();
+    colIndex[rawClean] = idx;
+    if (COLUMN_ALIASES[rawClean]) {
+      colIndex[COLUMN_ALIASES[rawClean]] = idx;
+    }
   });
 
   const isMdcfTemplate = (
@@ -2851,6 +3119,7 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
     let ksOpen = 0, ksRecv = 0, ksExp = 0, ksClose = 0;
     let ngOpen = 0, ngRecv = 0, ngExp = 0, ngClose = 0;
     let bcOpen = 0, bcRecv = 0, bcExp = 0, bcClose = 0;
+    let othOpen = 0, othRecv = 0, othExp = 0, othClose = 0;
     let bankMatch = 'YES', bankPassbookBal = 0, bankBalDate = new Date().toISOString().slice(0, 10);
     let rBvOpen = 0, rBvRecv = 0, rBvCons = 0, rBvClose = 0;
     let rPOpen = 0, rPRecv = 0, rPCons = 0, rPClose = 0;
@@ -2892,9 +3161,18 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
       ksOpen = toFloat(getVal('ks_open')); ksRecv = toFloat(getVal('ks_recv')); ksExp = toFloat(getVal('ks_exp')); ksClose = toFloat(getVal('ks_close'));
       ngOpen = toFloat(getVal('ng_open')); ngRecv = toFloat(getVal('ng_recv')); ngExp = toFloat(getVal('ng_exp')); ngClose = toFloat(getVal('ng_close'));
       bcOpen = toFloat(getVal('bc_open')); bcRecv = toFloat(getVal('bc_recv')); bcExp = toFloat(getVal('bc_exp')); bcClose = toFloat(getVal('bc_close'));
+      othOpen = toFloat(getVal('oth_open')); othRecv = toFloat(getVal('oth_recv')); othExp = toFloat(getVal('oth_exp')); othClose = toFloat(getVal('oth_close'));
       bankMatch = getVal('bank_match') || 'YES';
       bankPassbookBal = toFloat(getVal('bank_passbook_balance'));
-      bankBalDate = getVal('bank_balance_date') || new Date().toISOString().slice(0, 10);
+      let rawBankDate = getVal('bank_balance_date');
+      if (rawBankDate && /^\d{2}-\d{2}-\d{4}$/.test(String(rawBankDate).trim())) {
+        const [d, m, y] = String(rawBankDate).trim().split('-');
+        bankBalDate = `${y}-${m}-${d}`;
+      } else if (rawBankDate && /^\d{4}-\d{2}-\d{2}/.test(String(rawBankDate).trim())) {
+        bankBalDate = String(rawBankDate).trim().slice(0, 10);
+      } else {
+        bankBalDate = rawBankDate || new Date().toISOString().slice(0, 10);
+      }
       rBvOpen = toFloat(getVal('rice_bv_open')); rBvRecv = toFloat(getVal('rice_bv_recv')); rBvCons = toFloat(getVal('rice_bv_cons')); rBvClose = toFloat(getVal('rice_bv_close'));
       rPOpen = toFloat(getVal('rice_p_open')); rPRecv = toFloat(getVal('rice_p_recv')); rPCons = toFloat(getVal('rice_p_cons')); rPClose = toFloat(getVal('rice_p_close'));
       rUpOpen = toFloat(getVal('rice_up_open')); rUpRecv = toFloat(getVal('rice_up_recv')); rUpCons = toFloat(getVal('rice_up_cons')); rUpClose = toFloat(getVal('rice_up_close'));
@@ -2949,6 +3227,7 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
         ks_open, ks_recv, ks_exp, ks_close,
         ng_open, ng_recv, ng_exp, ng_close,
         bc_open, bc_recv, bc_exp, bc_close,
+        oth_open, oth_recv, oth_exp, oth_close,
         bank_match, bank_passbook_balance, bank_balance_date,
         rice_bv_open, rice_bv_recv, rice_bv_cons, rice_bv_close,
         rice_p_open, rice_p_recv, rice_p_cons, rice_p_close,
@@ -2963,12 +3242,14 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
         $28, $29, $30, $31, $32, $33, $34, $35,
         $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47,
         $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59,
-        $60, $61, $62,
-        $63, $64, $65, $66,
-        $67, $68, $69, $70, $71, $72, $73, $74, $75, $76, $77, $78,
+        $60, $61, $62, $63, $64, $65, $66,
+        $67, $68, $69, $70,
+        $71, $72, $73, $74,
+        $75, $76, $77, $78,
         $79, $80, $81, $82,
         $83, $84, $85, $86, $87,
-        $88
+        $88, $89, $90, $91,
+        $92
       )
       ON CONFLICT (u_dise, month_name, year) DO UPDATE SET
         ${type === 'primary' ? `
@@ -2987,6 +3268,7 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
         ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
         ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
         bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        oth_open = EXCLUDED.oth_open, oth_recv = EXCLUDED.oth_recv, oth_exp = EXCLUDED.oth_exp, oth_close = EXCLUDED.oth_close,
         bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
         rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
         rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
@@ -3008,6 +3290,7 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
         ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
         ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
         bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        oth_open = EXCLUDED.oth_open, oth_recv = EXCLUDED.oth_recv, oth_exp = EXCLUDED.oth_exp, oth_close = EXCLUDED.oth_close,
         bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
         rice_up_open = EXCLUDED.rice_up_open, rice_up_recv = EXCLUDED.rice_up_recv, rice_up_cons = EXCLUDED.rice_up_cons, rice_up_close = EXCLUDED.rice_up_close,
         ifa_boys = EXCLUDED.ifa_boys, ifa_girls = EXCLUDED.ifa_girls,
@@ -3032,6 +3315,7 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
         ks_open = EXCLUDED.ks_open, ks_recv = EXCLUDED.ks_recv, ks_exp = EXCLUDED.ks_exp, ks_close = EXCLUDED.ks_close,
         ng_open = EXCLUDED.ng_open, ng_recv = EXCLUDED.ng_recv, ng_exp = EXCLUDED.ng_exp, ng_close = EXCLUDED.ng_close,
         bc_open = EXCLUDED.bc_open, bc_recv = EXCLUDED.bc_recv, bc_exp = EXCLUDED.bc_exp, bc_close = EXCLUDED.bc_close,
+        oth_open = EXCLUDED.oth_open, oth_recv = EXCLUDED.oth_recv, oth_exp = EXCLUDED.oth_exp, oth_close = EXCLUDED.oth_close,
         bank_match = EXCLUDED.bank_match, bank_passbook_balance = EXCLUDED.bank_passbook_balance, bank_balance_date = EXCLUDED.bank_balance_date,
         rice_bv_open = EXCLUDED.rice_bv_open, rice_bv_recv = EXCLUDED.rice_bv_recv, rice_bv_cons = EXCLUDED.rice_bv_cons, rice_bv_close = EXCLUDED.rice_bv_close,
         rice_p_open = EXCLUDED.rice_p_open, rice_p_recv = EXCLUDED.rice_p_recv, rice_p_cons = EXCLUDED.rice_p_cons, rice_p_close = EXCLUDED.rice_p_close,
@@ -3061,6 +3345,7 @@ async function processMonthlyCsvRows(rows, type, defaultMonth, defaultYear, scho
       ksOpen, ksRecv, ksExp, ksClose,
       ngOpen, ngRecv, ngExp, ngClose,
       bcOpen, bcRecv, bcExp, bcClose,
+      othOpen, othRecv, othExp, othClose,
       bankMatch, bankPassbookBal, bankBalDate,
       rBvOpen, rBvRecv, rBvCons, rBvClose,
       rPOpen, rPRecv, rPCons, rPClose,
@@ -3112,24 +3397,21 @@ router.post(['/upload_monthly_report.php', '/api/monthly-report/upload-full-csv'
     let singleProcessed = 0;
 
     if (primaryFile && primaryFile.buffer) {
-      const text = primaryFile.buffer.toString('utf8');
-      const rows = parseCSV(text);
+      const rows = parseUploadedContent(primaryFile.buffer);
       if (rows.length >= 2) {
         primaryProcessed = await processMonthlyCsvRows(rows, 'primary', month, year, schoolMap);
       }
     }
 
     if (upperFile && upperFile.buffer) {
-      const text = upperFile.buffer.toString('utf8');
-      const rows = parseCSV(text);
+      const rows = parseUploadedContent(upperFile.buffer);
       if (rows.length >= 2) {
         upperProcessed = await processMonthlyCsvRows(rows, 'upper', month, year, schoolMap);
       }
     }
 
     if (singleFile && singleFile.buffer && !primaryFile && !upperFile) {
-      const text = singleFile.buffer.toString('utf8');
-      const rows = parseCSV(text);
+      const rows = parseUploadedContent(singleFile.buffer);
       if (rows.length >= 2) {
         const fileType = req.body?.upload_type || req.body?.type || 'all';
         singleProcessed = await processMonthlyCsvRows(rows, fileType, month, year, schoolMap);

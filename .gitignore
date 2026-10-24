@@ -20,6 +20,11 @@ node_modules/
 npm-debug.log*
 *.log
 scratch/
+*.pdf
+monthly_report_template_blank*.csv
+scripts/*.py
+scripts/test_*.js
+jspdf*.js
 
 # Google Service Account Credentials
 *service-account*.json

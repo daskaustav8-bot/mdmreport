@@ -1668,9 +1668,14 @@
                     <p style="font-size:12px; color:var(--text-muted); margin:0 0 12px 0;">
                         Pre-filled with saved monthly update report data for all 194 Primary schools (Primary PP-V fields only).
                     </p>
-                    <a id="btnDownloadPrimary" class="btn-action btn-pri-action" style="margin-bottom:0;" onclick="downloadTemplate('primary')">
-                        <i class="fas fa-file-csv"></i> Download Primary Template (194 Schools)
-                    </a>
+                    <div style="display:flex; gap:8px;">
+                        <a id="btnDownloadPrimary" class="btn-action btn-pri-action" style="flex:1; margin-bottom:0;" onclick="downloadTemplate('primary')">
+                            <i class="fas fa-file-csv"></i> Download Primary CSV (194 Schools)
+                        </a>
+                        <a id="btnDownloadPrimaryExcel" class="btn-action" style="flex:1; margin-bottom:0; background:#059669; color:#fff;" onclick="downloadTemplate('primary', 'excel')">
+                            <i class="fas fa-file-excel"></i> Download Excel (.xls)
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Upper Primary Schools Template Box -->
@@ -1688,20 +1693,35 @@
                     <p style="font-size:12px; color:var(--text-muted); margin:0 0 12px 0;">
                         Pre-filled with saved monthly update report data for all 52 Upper Primary schools (Upper Primary VI-VIII fields only).
                     </p>
-                    <a id="btnDownloadUpper" class="btn-action btn-upp-action" style="margin-bottom:0;" onclick="downloadTemplate('upper')">
-                        <i class="fas fa-file-csv"></i> Download Upper Primary Template (52 Schools)
-                    </a>
+                    <div style="display:flex; gap:8px;">
+                        <a id="btnDownloadUpper" class="btn-action btn-upp-action" style="flex:1; margin-bottom:0;" onclick="downloadTemplate('upper')">
+                            <i class="fas fa-file-csv"></i> Download Upper CSV (52 Schools)
+                        </a>
+                        <a id="btnDownloadUpperExcel" class="btn-action" style="flex:1; margin-bottom:0; background:#059669; color:#fff;" onclick="downloadTemplate('upper', 'excel')">
+                            <i class="fas fa-file-excel"></i> Download Excel (.xls)
+                        </a>
+                    </div>
                 </div>
             </div>
 
             <!-- Blank Sample Links Separated for Primary & Upper Primary -->
             <div class="blank-sample-actions" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:14px;">
-                <a id="btnDownloadBlankPrimary" class="btn-action btn-blank-pri" style="margin-bottom:0; font-size:12.5px; padding:10px 12px;" onclick="downloadBlank('primary')">
-                    <i class="fas fa-file-alt"></i> Blank Primary Sample CSV
-                </a>
-                <a id="btnDownloadBlankUpper" class="btn-action btn-blank-upp" style="margin-bottom:0; font-size:12.5px; padding:10px 12px;" onclick="downloadBlank('upper')">
-                    <i class="fas fa-file-alt"></i> Blank Upper Sample CSV
-                </a>
+                <div style="display:flex; gap:6px;">
+                    <a id="btnDownloadBlankPrimary" class="btn-action btn-blank-pri" style="flex:1; margin-bottom:0; font-size:12px; padding:9px 8px;" onclick="downloadBlank('primary')">
+                        <i class="fas fa-file-csv"></i> Blank Primary CSV
+                    </a>
+                    <a id="btnDownloadBlankPrimaryXls" class="btn-action" style="flex:1; margin-bottom:0; font-size:12px; padding:9px 8px; background:#e2e8f0; color:#0f172a;" onclick="downloadBlank('primary', 'excel')">
+                        <i class="fas fa-file-excel" style="color:#059669;"></i> Blank Primary Excel
+                    </a>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <a id="btnDownloadBlankUpper" class="btn-action btn-blank-upp" style="flex:1; margin-bottom:0; font-size:12px; padding:9px 8px;" onclick="downloadBlank('upper')">
+                        <i class="fas fa-file-csv"></i> Blank Upper CSV
+                    </a>
+                    <a id="btnDownloadBlankUpperXls" class="btn-action" style="flex:1; margin-bottom:0; font-size:12px; padding:9px 8px; background:#e2e8f0; color:#0f172a;" onclick="downloadBlank('upper', 'excel')">
+                        <i class="fas fa-file-excel" style="color:#059669;"></i> Blank Upper Excel
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -1765,9 +1785,9 @@
 
                         <div class="dropzone-field" id="dropzonePrimary" onclick="document.getElementById('primaryCsvInput').click()">
                             <i class="fas fa-file-csv" style="color: #0d9488;"></i>
-                            <p id="primaryFileLabel">Click or Drag Primary CSV File</p>
-                            <span>Supports .csv (MDCF or Portal format)</span>
-                            <input type="file" id="primaryCsvInput" name="file_primary" accept=".csv" style="display:none;" onchange="handleFileSelected('primary', this)">
+                            <p id="primaryFileLabel">Click or Drag Primary CSV / Excel File</p>
+                            <span>Supports .csv, .xls, .xlsx (MDCF or Portal format)</span>
+                            <input type="file" id="primaryCsvInput" name="file_primary" accept=".csv,.xls,.xlsx" style="display:none;" onchange="handleFileSelected('primary', this)">
                         </div>
 
                         <div id="primaryFileInfo" class="file-info-pill file-info-pri" style="display:none;">
@@ -1800,9 +1820,9 @@
 
                         <div class="dropzone-field dropzone-upper" id="dropzoneUpper" onclick="document.getElementById('upperCsvInput').click()">
                             <i class="fas fa-file-csv" style="color: #4f46e5;"></i>
-                            <p id="upperFileLabel">Click or Drag Upper Primary CSV File</p>
-                            <span>Supports .csv (MDCF or Portal format)</span>
-                            <input type="file" id="upperCsvInput" name="file_upper" accept=".csv" style="display:none;" onchange="handleFileSelected('upper', this)">
+                            <p id="upperFileLabel">Click or Drag Upper Primary CSV / Excel File</p>
+                            <span>Supports .csv, .xls, .xlsx (MDCF or Portal format)</span>
+                            <input type="file" id="upperCsvInput" name="file_upper" accept=".csv,.xls,.xlsx" style="display:none;" onchange="handleFileSelected('upper', this)">
                         </div>
 
                         <div id="upperFileInfo" class="file-info-pill file-info-upp" style="display:none;">
@@ -2828,22 +2848,24 @@
 </div>
 
 <script>
-    function downloadTemplate(category) {
+    function downloadTemplate(category, format) {
         const m = document.getElementById('tmplMonth').value;
         const y = document.getElementById('tmplYear').value;
         const catParam = (category && category !== 'all') ? `&category=${encodeURIComponent(category)}` : '';
-        window.location.href = `/api/monthly-report/template?type=all&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}${catParam}`;
+        const fmtParam = (format === 'excel' || format === 'xls') ? '&format=excel' : '';
+        window.location.href = `/api/monthly-report/template?type=all&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}${catParam}${fmtParam}`;
     }
 
-    function downloadPrefilled() {
-        downloadTemplate('all');
+    function downloadPrefilled(format) {
+        downloadTemplate('all', format);
     }
 
-    function downloadBlank(category) {
+    function downloadBlank(category, format) {
         const m = document.getElementById('tmplMonth').value;
         const y = document.getElementById('tmplYear').value;
         const catParam = (category && category !== 'all') ? `&category=${encodeURIComponent(category)}` : '';
-        window.location.href = `/api/monthly-report/template?type=blank&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}${catParam}`;
+        const fmtParam = (format === 'excel' || format === 'xls') ? '&format=excel' : '';
+        window.location.href = `/api/monthly-report/template?type=blank&month=${encodeURIComponent(m)}&year=${encodeURIComponent(y)}${catParam}${fmtParam}`;
     }
 
     function switchUploadTab(tab) {

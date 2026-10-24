@@ -88,6 +88,55 @@ function makeGetRequest(urlPath, cookie) {
   });
 }
 
+function parseCSV(text) {
+  if (!text) return [];
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
+  const rows = [];
+  let currentRow = [];
+  let currentCell = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        currentCell += '"';
+        i++;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === ',' && !insideQuotes) {
+      currentRow.push(currentCell.trim());
+      currentCell = '';
+    } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+      currentRow.push(currentCell.trim());
+      if (currentRow.length > 1 || (currentRow.length === 1 && currentRow[0] !== '')) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentCell = '';
+    } else {
+      currentCell += char;
+    }
+  }
+
+  if (currentCell.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentCell.trim());
+    if (currentRow.length > 1 || (currentRow.length === 1 && currentRow[0] !== '')) {
+      rows.push(currentRow);
+    }
+  }
+
+  return rows;
+}
+
 function buildMultipartBody(boundary, fields, files) {
   const chunks = [];
 
@@ -279,18 +328,19 @@ async function runTests() {
   try {
     const res = await makeGetRequest('/api/monthly-report/template?category=primary&month=January&year=2026', mainCookie);
     const disposition = res.headers['content-disposition'] || '';
-    const lines = res.body.trim().split('\n').filter(l => l.length > 0);
-    const headerCols = lines[0].replace(/^\uFEFF/, '').split(',');
-    const rowCount = lines.length - 1; // subtract header
+    const rows = parseCSV(res.body);
+    const headerCols = rows[0] || [];
+    const rowCount = rows.length - 1; // subtract header
     const ok = res.status === 200 &&
                disposition.includes('monthly_report_template_primary_january_2026.csv') &&
                rowCount === 194 &&
                headerCols.length === 74 &&
-               headerCols.includes('bv_days') &&
-               headerCols.includes('cc_p_open') &&
-               !headerCols.includes('up_days') &&
-               !headerCols.includes('cc_up_open');
-    logResult('GET /api/monthly-report/template?category=primary returns exactly 194 Primary school rows with 74 Primary-only columns', ok, `Rows: ${rowCount}, Cols: ${headerCols.length}`);
+               headerCols.includes('Bal Vatika School Days') &&
+               headerCols.includes('Material Cost Primary Opening Balance') &&
+               headerCols.includes('Bank Interest Opening Balance') &&
+               !headerCols.includes('Upper Primary School Days') &&
+               !headerCols.includes('Material Cost Upper Primary Opening Balance');
+    logResult('GET /api/monthly-report/template?category=primary returns exactly 194 Primary school rows with 74 Primary-only columns with full names', ok, `Rows: ${rowCount}, Cols: ${headerCols.length}`);
   } catch (err) {
     logResult('GET /api/monthly-report/template?category=primary', false, err.message);
   }
@@ -299,19 +349,20 @@ async function runTests() {
   try {
     const res = await makeGetRequest('/api/monthly-report/template?category=upper&month=January&year=2026', mainCookie);
     const disposition = res.headers['content-disposition'] || '';
-    const lines = res.body.trim().split('\n').filter(l => l.length > 0);
-    const headerCols = lines[0].replace(/^\uFEFF/, '').split(',');
-    const rowCount = lines.length - 1; // subtract header
+    const rows = parseCSV(res.body);
+    const headerCols = rows[0] || [];
+    const rowCount = rows.length - 1; // subtract header
     const ok = res.status === 200 &&
                disposition.includes('monthly_report_template_upper_january_2026.csv') &&
                rowCount === 52 &&
                headerCols.length === 63 &&
-               headerCols.includes('up_days') &&
-               headerCols.includes('cc_up_open') &&
-               !headerCols.includes('bv_days') &&
-               !headerCols.includes('cc_bv_open') &&
-               !headerCols.includes('p_days');
-    logResult('GET /api/monthly-report/template?category=upper returns exactly 52 Upper Primary school rows with 63 Upper-only columns', ok, `Rows: ${rowCount}, Cols: ${headerCols.length}`);
+               headerCols.includes('Upper Primary School Days') &&
+               headerCols.includes('Material Cost Upper Primary Opening Balance') &&
+               headerCols.includes('Bank Interest Opening Balance') &&
+               !headerCols.includes('Bal Vatika School Days') &&
+               !headerCols.includes('Material Cost Bal Vatika Opening Balance') &&
+               !headerCols.includes('Primary School Days');
+    logResult('GET /api/monthly-report/template?category=upper returns exactly 52 Upper Primary school rows with 63 Upper-only columns with full names', ok, `Rows: ${rowCount}, Cols: ${headerCols.length}`);
   } catch (err) {
     logResult('GET /api/monthly-report/template?category=upper', false, err.message);
   }
@@ -320,11 +371,13 @@ async function runTests() {
   try {
     const res = await makeGetRequest('/api/monthly-report/template?type=all&month=January&year=2026', mainCookie);
     const disposition = res.headers['content-disposition'] || '';
-    const lines = res.body.trim().split('\n').filter(l => l.length > 0);
-    const rowCount = lines.length - 1; // subtract header
+    const rows = parseCSV(res.body);
+    const headerCols = rows[0] || [];
+    const rowCount = rows.length - 1; // subtract header
     const ok = res.status === 200 &&
                disposition.includes('monthly_report_template_january_2026.csv') &&
-               rowCount === 246;
+               rowCount === 246 &&
+               headerCols.length === 85;
     logResult('GET /api/monthly-report/template?type=all returns all 246 school rows', ok, `Rows: ${rowCount}, Filename header: ${disposition}`);
   } catch (err) {
     logResult('GET /api/monthly-report/template?type=all', false, err.message);
@@ -334,15 +387,16 @@ async function runTests() {
   try {
     const res = await makeGetRequest('/api/monthly-report/template?type=blank&category=primary', mainCookie);
     const disposition = res.headers['content-disposition'] || '';
-    const lines = res.body.trim().split('\n').filter(l => l.length > 0);
-    const headerCols = lines[0].replace(/^\uFEFF/, '').split(',');
+    const rows = parseCSV(res.body);
+    const headerCols = rows[0] || [];
     const ok = res.status === 200 &&
                disposition.includes('monthly_report_template_primary_blank.csv') &&
-               res.body.includes('CHOWBERA PRIMARY SCHOOL') &&
+               res.body.includes('ABADPARA PRIMARY SCHOOL') &&
                headerCols.length === 74 &&
-               !headerCols.includes('up_days') &&
-               !headerCols.includes('cc_up_open');
-    logResult('GET /api/monthly-report/template?type=blank&category=primary returns Primary sample CSV (74 Primary columns)', ok, `Cols: ${headerCols.length}`);
+               headerCols.includes('Bank Interest Opening Balance') &&
+               !headerCols.includes('Upper Primary School Days') &&
+               !headerCols.includes('Material Cost Upper Primary Opening Balance');
+    logResult('GET /api/monthly-report/template?type=blank&category=primary returns Primary sample CSV (74 Primary columns with full names)', ok, `Cols: ${headerCols.length}`);
   } catch (err) {
     logResult('GET /api/monthly-report/template?type=blank&category=primary', false, err.message);
   }
@@ -351,16 +405,17 @@ async function runTests() {
   try {
     const res = await makeGetRequest('/api/monthly-report/template?type=blank&category=upper', mainCookie);
     const disposition = res.headers['content-disposition'] || '';
-    const lines = res.body.trim().split('\n').filter(l => l.length > 0);
-    const headerCols = lines[0].replace(/^\uFEFF/, '').split(',');
+    const rows = parseCSV(res.body);
+    const headerCols = rows[0] || [];
     const ok = res.status === 200 &&
                disposition.includes('monthly_report_template_upper_blank.csv') &&
                res.body.includes('AINCHGARH JR. HIGH SCHOOL') &&
                headerCols.length === 63 &&
-               !headerCols.includes('bv_days') &&
-               !headerCols.includes('p_days') &&
-               !headerCols.includes('cc_bv_open');
-    logResult('GET /api/monthly-report/template?type=blank&category=upper returns Upper Primary sample CSV (63 Upper columns)', ok, `Cols: ${headerCols.length}`);
+               headerCols.includes('Bank Interest Opening Balance') &&
+               !headerCols.includes('Bal Vatika School Days') &&
+               !headerCols.includes('Primary School Days') &&
+               !headerCols.includes('Material Cost Bal Vatika Opening Balance');
+    logResult('GET /api/monthly-report/template?type=blank&category=upper returns Upper Primary sample CSV (63 Upper columns with full names)', ok, `Cols: ${headerCols.length}`);
   } catch (err) {
     logResult('GET /api/monthly-report/template?type=blank&category=upper', false, err.message);
   }
@@ -413,6 +468,185 @@ async function runTests() {
     logResult('Upload Isolation test', false, err.message);
   }
 
+  // Test 12: Uploading CSV with Full Descriptive Header Names (e.g., Bank Interest Opening Balance)
+  try {
+    const fullTestMonth = 'FullHeadersTest';
+    const fullTestYear = '2097';
+    await pool.query('DELETE FROM public.mdm_monthly_report WHERE month_name = $1 AND year = $2', [fullTestMonth, fullTestYear]);
+
+    const fullHeadersCsv =
+      'UDISE Code,School Name,Category,Circle Name,GP Name,Month Name,Year,Bal Vatika School Days,Primary School Days,Bal Vatika MDM Served Days,Primary MDM Served Days,Bal Vatika Meals Served,Primary Meals Served,Material Cost Bal Vatika Opening Balance,Material Cost Bal Vatika Received,Material Cost Bal Vatika Expenditure,Material Cost Bal Vatika Closing Balance,Material Cost Primary Opening Balance,Material Cost Primary Received,Material Cost Primary Expenditure,Material Cost Primary Closing Balance,Bank Interest Opening Balance,Bank Interest Received,Bank Interest Expenditure,Bank Interest Closing Balance,LPG Subsidy Opening Balance,LPG Subsidy Received,LPG Subsidy Expenditure,LPG Subsidy Closing Balance,Supplementary Nutrition Opening Balance,Supplementary Nutrition Received,Supplementary Nutrition Expenditure,Supplementary Nutrition Closing Balance,School Expenses MME Opening Balance,School Expenses MME Received,School Expenses MME Expenditure,School Expenses MME Closing Balance,Kitchen Devices Opening Balance,Kitchen Devices Received,Kitchen Devices Expenditure,Kitchen Devices Closing Balance,Kitchen Shed Repair Opening Balance,Kitchen Shed Repair Received,Kitchen Shed Repair Expenditure,Kitchen Shed Repair Closing Balance,Nutrition Garden Opening Balance,Nutrition Garden Received,Nutrition Garden Expenditure,Nutrition Garden Closing Balance,Bank Charges Opening Balance,Bank Charges Received,Bank Charges Expenditure,Bank Charges Closing Balance,Bank Passbook Balance,Bank Balance Date,Bank Match Status,Rice Bal Vatika Opening Balance,Rice Bal Vatika Received,Rice Bal Vatika Consumption,Rice Bal Vatika Closing Balance,Rice Primary Opening Balance,Rice Primary Received,Rice Primary Consumption,Rice Primary Closing Balance,IFA Tablets Received Boys,IFA Tablets Received Girls,RBSK Mobile Health Team Screened,RBSK Mobile Health Team Referred,School Inspection Done,Inspection by Members of Task Force,Inspection by District Officials,Inspection by Block Officials,Inspection by SMC Members,Untoward Incidents Occurred\n' +
+      `${priUdise},"ABADPARA PRIMARY SCHOOL","PRIMARY ONLY","BOINCHEE","BERALA KONCHMALI","${fullTestMonth}","${fullTestYear}",21,25,19,48,320,1050,110.00,510.00,410.00,210.00,260.00,1020.00,910.00,370.00,45.00,120.00,65.00,100.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,15.00,50.00,40.00,25.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,12500.50,2026-01-15,YES,11.00,51.00,41.00,21.00,26.00,105.00,95.00,36.00,22,28,45,3,Yes,1,0,1,2,0\n`;
+
+    const boundaryFull = '----WebKitFormBoundaryFull' + Date.now();
+    const bodyFull = buildMultipartBody(boundaryFull, { action: 'upload_csv', month: fullTestMonth, year: fullTestYear }, [
+      { fieldName: 'file_primary', fileName: 'full_headers_primary.csv', content: fullHeadersCsv }
+    ]);
+
+    const res = await makeMultipartRequest('/api/monthly-report/upload-full-csv', boundaryFull, bodyFull, mainCookie);
+    const data = JSON.parse(res.body);
+
+    const check = await pool.query(
+      'SELECT * FROM public.mdm_monthly_report WHERE u_dise = $1 AND month_name = $2 AND year = $3',
+      [priUdise, fullTestMonth, fullTestYear]
+    );
+
+    const ok = res.status === 200 &&
+               data.status === 'success' &&
+               check.rows.length === 1 &&
+               check.rows[0].p_days === 25 &&
+               Number(check.rows[0].bi_open) === 45.00 &&
+               Number(check.rows[0].bi_close) === 100.00 &&
+               Number(check.rows[0].bank_passbook_balance) === 12500.50;
+
+    await pool.query('DELETE FROM public.mdm_monthly_report WHERE month_name = $1 AND year = $2', [fullTestMonth, fullTestYear]);
+    logResult('Uploading CSV with Full Descriptive Header Names maps all fields to DB correctly', ok, `bi_open: ${check.rows[0]?.bi_open}, bi_close: ${check.rows[0]?.bi_close}, p_days: ${check.rows[0]?.p_days}`);
+  } catch (err) {
+    logResult('Uploading CSV with Full Descriptive Header Names', false, err.message);
+  }
+
+  // Test 13: Uploading CSV with Full Descriptive Top Header Names (Wrap Text compatible)
+  try {
+    const wrapTestMonth = 'WrapHeadersTest';
+    const wrapTestYear = '2096';
+    await pool.query('DELETE FROM public.mdm_monthly_report WHERE month_name = $1 AND year = $2', [wrapTestMonth, wrapTestYear]);
+
+    // Download primary template to test actual round-trip format
+    const tmplRes = await makeGetRequest('/api/monthly-report/template?category=primary&month=' + wrapTestMonth + '&year=' + wrapTestYear, mainCookie);
+    const tmplRows = parseCSV(tmplRes.body);
+    // Take header + first row
+    const headerLine = tmplRows[0].map(c => '"' + c.replace(/"/g, '""') + '"').join(',');
+    // Provide test data for row 1
+    const rowCells = [...tmplRows[1]];
+    // UDISE is at index 0, set days and bank interest
+    const udiseIdx = tmplRows[0].indexOf('UDISE Code');
+    const pDaysIdx = tmplRows[0].indexOf('Primary School Days');
+    const biOpenIdx = tmplRows[0].indexOf('Bank Interest Opening Balance');
+    const biCloseIdx = tmplRows[0].indexOf('Bank Interest Closing Balance');
+    if (pDaysIdx !== -1) rowCells[pDaysIdx] = '27';
+    if (biOpenIdx !== -1) rowCells[biOpenIdx] = '88.50';
+    if (biCloseIdx !== -1) rowCells[biCloseIdx] = '188.50';
+    const testUdise = rowCells[udiseIdx];
+
+    const testCsv = headerLine + '\r\n' + rowCells.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',') + '\r\n';
+
+    const boundaryWrap = '----WebKitFormBoundaryWrap' + Date.now();
+    const bodyWrap = buildMultipartBody(boundaryWrap, { action: 'upload_csv', month: wrapTestMonth, year: wrapTestYear }, [
+      { fieldName: 'file_primary', fileName: 'wrapped_headers_primary.csv', content: testCsv }
+    ]);
+
+    const res = await makeMultipartRequest('/api/monthly-report/upload-full-csv', boundaryWrap, bodyWrap, mainCookie);
+    const data = JSON.parse(res.body);
+
+    const check = await pool.query(
+      'SELECT * FROM public.mdm_monthly_report WHERE u_dise = $1 AND month_name = $2 AND year = $3',
+      [testUdise, wrapTestMonth, wrapTestYear]
+    );
+
+    const ok = res.status === 200 &&
+               data.status === 'success' &&
+               check.rows.length === 1 &&
+               check.rows[0].p_days === 27 &&
+               Number(check.rows[0].bi_open) === 88.50 &&
+               Number(check.rows[0].bi_close) === 188.50;
+
+    await pool.query('DELETE FROM public.mdm_monthly_report WHERE month_name = $1 AND year = $2', [wrapTestMonth, wrapTestYear]);
+    logResult('Uploading CSV with Full Descriptive Top Header Names maps all fields to DB correctly', ok, `bi_open: ${check.rows[0]?.bi_open}, bi_close: ${check.rows[0]?.bi_close}, p_days: ${check.rows[0]?.p_days}`);
+  } catch (err) {
+    logResult('Uploading CSV with Full Descriptive Top Header Names', false, err.message);
+  }
+
+  // Test 14: Download Excel Template (format=excel) with Wrap Text & Column Widths
+  try {
+    const res = await makeGetRequest('/api/monthly-report/template?category=primary&month=January&year=2026&format=excel', mainCookie);
+    const disposition = res.headers['content-disposition'] || '';
+    const contentType = res.headers['content-type'] || '';
+    const body = res.body;
+
+    const ok = res.status === 200 &&
+               disposition.includes('monthly_report_template_primary_january_2026.xls') &&
+               contentType.includes('application/vnd.ms-excel') &&
+               body.includes('white-space: normal') &&
+               body.includes('mso-wrap-style: square') &&
+               body.includes('height: 42px') &&
+               body.includes('min-width: 110px') &&
+               body.includes('<th>Bank Interest Opening Balance</th>');
+    logResult('GET /api/monthly-report/template?format=excel returns .xls with automatic Wrap Text, row height, and column widths', ok);
+  } catch (err) {
+    logResult('GET /api/monthly-report/template?format=excel', false, err.message);
+  }
+
+  // Test 15: Uploading Excel (.xls HTML table) File via upload-full-csv
+  try {
+    const xlsMonth = 'XlsUploadTest';
+    const xlsYear = '2095';
+    await pool.query('DELETE FROM public.mdm_monthly_report WHERE month_name = $1 AND year = $2', [xlsMonth, xlsYear]);
+
+    const sampleXls = `
+      <html><body><table>
+        <tr>
+          <th>UDISE Code</th><th>School Name</th><th>Category</th><th>Circle Name</th><th>GP Name</th><th>Month Name</th><th>Year</th>
+          <th>Primary School Days</th><th>Bank Interest Opening Balance</th><th>Bank Interest Closing Balance</th>
+        </tr>
+        <tr>
+          <td>${priUdise}</td><td>ABADPARA PRIMARY SCHOOL (${priUdise})</td><td>PRIMARY ONLY</td><td>BOINCHEE</td><td>GP</td><td>${xlsMonth}</td><td>${xlsYear}</td>
+          <td>29</td><td>99.50</td><td>199.50</td>
+        </tr>
+      </table></body></html>
+    `;
+
+    const boundaryXls = '----WebKitFormBoundaryXls' + Date.now();
+    const bodyXls = buildMultipartBody(boundaryXls, { action: 'upload_csv', month: xlsMonth, year: xlsYear }, [
+      { fieldName: 'file_primary', fileName: 'excel_template.xls', content: sampleXls }
+    ]);
+
+    const res = await makeMultipartRequest('/api/monthly-report/upload-full-csv', boundaryXls, bodyXls, mainCookie);
+    const data = JSON.parse(res.body);
+
+    const check = await pool.query(
+      'SELECT * FROM public.mdm_monthly_report WHERE u_dise = $1 AND month_name = $2 AND year = $3',
+      [priUdise, xlsMonth, xlsYear]
+    );
+
+    const ok = res.status === 200 &&
+               data.status === 'success' &&
+               check.rows.length === 1 &&
+               check.rows[0].p_days === 29 &&
+               Number(check.rows[0].bi_open) === 99.50 &&
+               Number(check.rows[0].bi_close) === 199.50;
+
+    await pool.query('DELETE FROM public.mdm_monthly_report WHERE month_name = $1 AND year = $2', [xlsMonth, xlsYear]);
+    logResult('Uploading Excel (.xls) file format via upload-full-csv successfully parses and saves to DB', ok);
+  } catch (err) {
+    logResult('Uploading Excel (.xls) file format', false, err.message);
+  }
+
+  // Test 16: Verification that downloaded Primary CSV matches monthly_report_template_blank (2).csv exactly
+  try {
+    const blankPath = path.join(__dirname, '..', 'monthly_report_template_blank (2).csv');
+    const blankContent = fs.readFileSync(blankPath, 'utf8');
+    const blankCols = blankContent.split(/\r?\n/)[0].replace(/^\uFEFF/, '').split(',').map(c => c.trim()).filter(c => c.length > 0);
+
+    const res = await makeGetRequest('/api/monthly-report/template?category=primary&month=January&year=2026', mainCookie);
+    const downloadedCols = parseCSV(res.body)[0] || [];
+
+    let allMatch = downloadedCols.length === blankCols.length;
+    for (let i = 0; i < blankCols.length; i++) {
+      if (downloadedCols[i] !== blankCols[i]) {
+        allMatch = false;
+        break;
+      }
+    }
+
+    logResult(
+      'Downloaded Primary CSV headers match monthly_report_template_blank (2).csv 100% across all 74 columns in exact order',
+      allMatch && downloadedCols.length === 74,
+      `Blank columns: ${blankCols.length}, Downloaded columns: ${downloadedCols.length}`
+    );
+  } catch (err) {
+    logResult('Verification against monthly_report_template_blank (2).csv', false, err.message);
+  }
+
   // Cleanup
   await pool.query('DELETE FROM public.mdm_monthly_report WHERE month_name = $1 AND year = $2', [testMonth, testYear]);
   if (serverInstance) serverInstance.close();
@@ -422,6 +656,7 @@ async function runTests() {
   console.log('================================================================');
 
   if (testsFailed > 0) process.exit(1);
+  process.exit(0);
 }
 
 runTests().catch(err => {
