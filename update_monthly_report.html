@@ -6464,6 +6464,530 @@
                     }
                 });
             });
+
+            // ==========================================
+            // PM POSHAN MONTHLY REPORT PDF GENERATOR
+            // Exact layout & reference style matching:
+            // PM_POSHAN_Monthly_Report_Reference_Style (1).pdf
+            // ==========================================
+            function extractMonthlyReportData() {
+                const month = ($('#selectMonth').val() || $('#selectMonth option:selected').text() || '').trim();
+                const year = ($('#selectYear').val() || '').trim();
+                const udise = ($('#badgeUdise').text() || $('#selectSchool').val() || '').trim();
+                const selectedOption = $('#selectSchool option:selected');
+                const fullSchoolText = (selectedOption.length && selectedOption.val()) ? selectedOption.text().trim() : '';
+
+                let schoolName = '';
+                let category = ($('#badgeCategory').text() || '').trim();
+                let circle = ($('#badgeCircle').text() || '').trim();
+                let gp = ($('#badgeGp').text() || '').trim();
+
+                if (category === '-') category = '';
+                if (circle === '-') circle = '';
+                if (gp === '-') gp = '';
+
+                if (typeof schools !== 'undefined' && Array.isArray(schools)) {
+                    const match = schools.find(s => String(s.id).trim() === udise);
+                    if (match) {
+                        schoolName = match.schoolNameOnly || (match.text ? match.text.replace(/\s*\([^)]*\)\s*$/, '').trim() : '');
+                        if (!category && match.category) category = match.category;
+                        if (!circle && match.circle) circle = match.circle;
+                        if (!gp && match.gp) gp = match.gp;
+                    }
+                }
+                if (!schoolName && fullSchoolText) {
+                    schoolName = fullSchoolText.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                }
+
+                const profileText = schoolName ? (schoolName.includes(udise) ? schoolName : `${schoolName} (${udise || ''})`) : '';
+
+                const isBvActive = $('#fund_row_bv').is(':visible') && !$('#badge_fund_bv').is(':visible');
+                const isUpActive = $('#fund_row_up').is(':visible') && !$('#badge_fund_up').is(':visible');
+
+                const bv_days = $('#bv_days').val() || '0';
+                const p_days = $('#p_days').val() || '0';
+                const up_days = $('#up_days').val() || '0';
+                const bv_actual = $('#bv_actual').val() || '0';
+                const p_actual = $('#p_actual').val() || '0';
+                const up_actual = $('#up_actual').val() || '0';
+                const bv_meals = $('#bv_meals').val() || '0';
+                const p_meals = $('#p_meals').val() || '0';
+                const up_meals = $('#up_meals').val() || '0';
+
+                const getNum = (id) => {
+                    const v = $(`#${id}`).val();
+                    return (v !== undefined && v !== null && v !== '') ? parseFloat(v) || 0 : 0;
+                };
+
+                const funds = {
+                    cc_bv_open: getNum('cc_bv_open'), cc_bv_recv: getNum('cc_bv_recv'), cc_bv_exp: getNum('cc_bv_exp'), cc_bv_close: getNum('cc_bv_close'),
+                    cc_p_open: getNum('cc_p_open'), cc_p_recv: getNum('cc_p_recv'), cc_p_exp: getNum('cc_p_exp'), cc_p_close: getNum('cc_p_close'),
+                    cch_open: getNum('cch_open'), cch_recv: getNum('cch_recv'), cch_exp: getNum('cch_exp'), cch_close: getNum('cch_close'),
+                    mme_open: getNum('mme_open'), mme_recv: getNum('mme_recv'), mme_exp: getNum('mme_exp'), mme_close: getNum('mme_close'),
+                    cc_up_open: getNum('cc_up_open'), cc_up_recv: getNum('cc_up_recv'), cc_up_exp: getNum('cc_up_exp'), cc_up_close: getNum('cc_up_close'),
+                    bi_open: getNum('bi_open'), bi_recv: getNum('bi_recv'), bi_exp: getNum('bi_exp'), bi_close: getNum('bi_close'),
+                    lpg_open: getNum('lpg_open'), lpg_recv: getNum('lpg_recv'), lpg_exp: getNum('lpg_exp'), lpg_close: getNum('lpg_close'),
+                    nutri_open: getNum('nutri_open'), nutri_recv: getNum('nutri_recv'), nutri_exp: getNum('nutri_exp'), nutri_close: getNum('nutri_close'),
+                    kd_open: getNum('kd_open'), kd_recv: getNum('kd_recv'), kd_exp: getNum('kd_exp'), kd_close: getNum('kd_close'),
+                    ks_open: getNum('ks_open'), ks_recv: getNum('ks_recv'), ks_exp: getNum('ks_exp'), ks_close: getNum('ks_close'),
+                    ng_open: getNum('ng_open'), ng_recv: getNum('ng_recv'), ng_exp: getNum('ng_exp'), ng_close: getNum('ng_close'),
+                    bc_open: getNum('bc_open'), bc_recv: getNum('bc_recv'), bc_exp: getNum('bc_exp'), bc_close: getNum('bc_close'),
+                    oth_open: getNum('oth_open'), oth_recv: getNum('oth_recv'), oth_exp: getNum('oth_exp'), oth_close: getNum('oth_close')
+                };
+
+                const total_open = parseFloat($('#total_fund_open').text()) || 0;
+                const total_recv = parseFloat($('#total_fund_recv').text()) || 0;
+                const total_exp = parseFloat($('#total_fund_exp').text()) || 0;
+                const total_close = parseFloat($('#total_fund_close').text()) || 0;
+
+                const bank_balance_date = $('#bank_balance_date').val() || '';
+                const bank_passbook_balance = $('#bank_passbook_balance').val() || '';
+                const bank_match = $('#bank_match').val() || '';
+
+                let passbookPhotoDataUrl = null;
+                if (typeof currentPassbookFile !== 'undefined' && currentPassbookFile && currentPassbookFile.dataUrl) {
+                    passbookPhotoDataUrl = currentPassbookFile.dataUrl;
+                } else {
+                    const thumbSrc = $('#photoThumbImg').attr('src');
+                    if (thumbSrc && thumbSrc.startsWith('data:image')) {
+                        passbookPhotoDataUrl = thumbSrc;
+                    }
+                }
+
+                const rice = {
+                    rice_bv_open: getNum('rice_bv_open'), rice_bv_recv: getNum('rice_bv_recv'), rice_bv_cons: getNum('rice_bv_cons'), rice_bv_close: getNum('rice_bv_close'),
+                    rice_p_open: getNum('rice_p_open'), rice_p_recv: getNum('rice_p_recv'), rice_p_cons: getNum('rice_p_cons'), rice_p_close: getNum('rice_p_close'),
+                    rice_up_open: getNum('rice_up_open'), rice_up_recv: getNum('rice_up_recv'), rice_up_cons: getNum('rice_up_cons'), rice_up_close: getNum('rice_up_close')
+                };
+
+                const ifa_boys = $('#ifa_boys').val() || '0';
+                const ifa_girls = $('#ifa_girls').val() || '0';
+                const rbsk_screened = $('#rbsk_screened').val() || '0';
+                const rbsk_referred = $('#rbsk_referred').val() || '0';
+
+                const inspVal = $('input[name="inspection_done"]:checked').val() || 'NO';
+                const insp_task_force = $('#insp_task_force').val() || '0';
+                const insp_district_officials = $('#insp_district_officials').val() || '0';
+                const insp_block_officials = $('#insp_block_officials').val() || '0';
+                const insp_smc_members = $('#insp_smc_members').val() || '0';
+                const untoward_incidents = $('#untoward_incidents').val() || '0';
+
+                return {
+                    month, year, udise, schoolName, profileText, category, circle, gp,
+                    hasBv: isBvActive || (parseFloat(bv_days) > 0 || parseFloat(bv_meals) > 0 || funds.cc_bv_open > 0 || funds.cc_bv_recv > 0),
+                    hasUp: isUpActive || (parseFloat(up_days) > 0 || parseFloat(up_meals) > 0 || funds.cc_up_open > 0 || funds.cc_up_recv > 0),
+                    bv_days, p_days, up_days,
+                    bv_actual, p_actual, up_actual,
+                    bv_meals, p_meals, up_meals,
+                    ...funds,
+                    total_open, total_recv, total_exp, total_close,
+                    bank_balance_date, bank_passbook_balance, bank_match,
+                    passbookPhotoDataUrl,
+                    ...rice,
+                    ifa_boys, ifa_girls, rbsk_screened, rbsk_referred,
+                    inspection_done: inspVal,
+                    insp_task_force, insp_district_officials, insp_block_officials, insp_smc_members,
+                    untoward_incidents
+                };
+            }
+
+            function generateMonthlyReportPdf(data) {
+                const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
+                if (!jsPDFConstructor) {
+                    throw new Error('jsPDF library could not be loaded.');
+                }
+
+                const doc = new jsPDFConstructor({
+                    orientation: 'portrait',
+                    unit: 'pt',
+                    format: 'letter' // 612 x 792 pt
+                });
+
+                const LINE_COLOR = [34, 34, 34];
+                const TEXT_COLOR = [15, 23, 42];
+                const BORDER_WIDTH = 0.5;
+
+                function setStroke() {
+                    doc.setDrawColor(LINE_COLOR[0], LINE_COLOR[1], LINE_COLOR[2]);
+                    doc.setLineWidth(BORDER_WIDTH);
+                }
+
+                function setFontBold(size = 7.1) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(size);
+                    doc.setTextColor(TEXT_COLOR[0], TEXT_COLOR[1], TEXT_COLOR[2]);
+                }
+
+                function setFontNormal(size = 7.1) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(size);
+                    doc.setTextColor(TEXT_COLOR[0], TEXT_COLOR[1], TEXT_COLOR[2]);
+                }
+
+                function drawHLine(x1, y, x2) {
+                    setStroke();
+                    doc.line(x1, y, x2, y);
+                }
+
+                function drawVLine(x, y1, y2) {
+                    setStroke();
+                    doc.line(x, y1, x, y2);
+                }
+
+                function textLeft(txt, x, y, bold = false, size = 7.1) {
+                    if (bold) setFontBold(size); else setFontNormal(size);
+                    doc.text(String(txt === undefined || txt === null ? '' : txt), x, y);
+                }
+
+                function textCenter(txt, x, y, bold = false, size = 7.1) {
+                    if (bold) setFontBold(size); else setFontNormal(size);
+                    doc.text(String(txt === undefined || txt === null ? '' : txt), x, y, { align: 'center' });
+                }
+
+                function textRight(txt, x, y, bold = false, size = 7.1) {
+                    if (bold) setFontBold(size); else setFontNormal(size);
+                    doc.text(String(txt === undefined || txt === null ? '' : txt), x, y, { align: 'right' });
+                }
+
+                function formatNum(val, decimals = 2) {
+                    if (val === undefined || val === null || val === '') return '';
+                    const n = parseFloat(val);
+                    return isNaN(n) ? String(val) : n.toFixed(decimals);
+                }
+
+                // ==========================================
+                // PAGE 1
+                // ==========================================
+
+                // Headers
+                textCenter('Pradhan Mantri Poshan Shakti Nirman (PM POSHAN)', 306, 39, true, 10.2);
+                textCenter('Update Monthly Report (MDCF)', 306, 52, true, 10.2);
+
+                // Section A: Select Month & School
+                textLeft('A. Select Month & School', 42.0, 73, true, 8.8);
+
+                const aRows = [78.5, 97.5, 119.5, 138.5, 157.5, 176.5];
+                aRows.forEach(y => drawHLine(42.0, y, 582.0));
+                drawVLine(42.0, 78.5, 176.5);
+                drawVLine(158.0, 78.5, 176.5);
+                drawVLine(582.0, 78.5, 176.5);
+
+                drawVLine(303.0, 78.5, 97.5);
+                drawVLine(403.0, 78.5, 97.5);
+
+                drawVLine(303.0, 138.5, 176.5);
+                drawVLine(403.0, 138.5, 176.5);
+
+                textLeft('Reporting Month', 45.0, 91.5, true, 7.1);
+                textLeft(data.month || '', 163.0, 91.5, false, 7.1);
+                textLeft('Reporting Year', 306.0, 91.5, true, 7.1);
+                textLeft(data.year || '', 408.0, 91.5, false, 7.1);
+
+                textLeft('School Name / U-DISE Code', 45.0, 112.0, true, 7.1);
+                textLeft(data.schoolName || '', 163.0, 112.0, false, 7.1);
+
+                textLeft('Selected Institute Profile', 45.0, 132.5, true, 7.1);
+                textLeft(data.profileText || (data.schoolName ? `${data.schoolName} (${data.udise || ''})` : ''), 163.0, 132.5, false, 7.1);
+
+                textLeft('U-DISE Code', 45.0, 151.5, true, 7.1);
+                textLeft(data.udise || '', 163.0, 151.5, false, 7.1);
+                textLeft('Category', 306.0, 151.5, true, 7.1);
+                textLeft(data.category || '', 408.0, 151.5, false, 7.1);
+
+                textLeft('Circle Name', 45.0, 170.5, true, 7.1);
+                textLeft(data.circle || '', 163.0, 170.5, false, 7.1);
+                textLeft('Gram Panchayat', 306.0, 170.5, true, 7.1);
+                textLeft(data.gp || '', 408.0, 170.5, false, 7.1);
+
+                // Section 1: Meal Availed Status
+                textLeft('1. Meal Availed Status', 42.0, 193.0, true, 8.8);
+
+                const s1Rows = [198.5, 218.5, 240.5, 262.5, 284.5];
+                s1Rows.forEach(y => drawHLine(42.0, y, 582.0));
+                [42.0, 257.0, 347.0, 437.0, 582.0].forEach(x => drawVLine(x, 198.5, 284.5));
+
+                textLeft('DESCRIPTION', 46.0, 212.0, true, 7.1);
+                textCenter('BAL VATIKA PP', (257.0 + 347.0) / 2, 212.0, true, 6.7);
+                textCenter('PRIMARY I-IV', (347.0 + 437.0) / 2, 212.0, true, 6.7);
+                textCenter('UPPER PRIMARY VI-VIII', (437.0 + 582.0) / 2, 212.0, true, 6.7);
+
+                textLeft('Number of School Days during Month', 46.0, 233.0, false, 7.1);
+                textCenter(data.bv_days !== undefined && data.bv_days !== '' ? data.bv_days : '', (257.0 + 347.0) / 2, 233.0, false, 7.1);
+                textCenter(data.p_days !== undefined && data.p_days !== '' ? data.p_days : '', (347.0 + 437.0) / 2, 233.0, false, 7.1);
+                textCenter(data.up_days !== undefined && data.up_days !== '' ? data.up_days : '', (437.0 + 582.0) / 2, 233.0, false, 7.1);
+
+                textLeft('Actual Number of Days MDM Served', 46.0, 255.0, false, 7.1);
+                textCenter(data.bv_actual !== undefined && data.bv_actual !== '' ? data.bv_actual : '', (257.0 + 347.0) / 2, 255.0, false, 7.1);
+                textCenter(data.p_actual !== undefined && data.p_actual !== '' ? data.p_actual : '', (347.0 + 437.0) / 2, 255.0, false, 7.1);
+                textCenter(data.up_actual !== undefined && data.up_actual !== '' ? data.up_actual : '', (437.0 + 582.0) / 2, 255.0, false, 7.1);
+
+                textLeft('Total Meals Served during Month', 46.0, 277.0, false, 7.1);
+                textCenter(data.bv_meals !== undefined && data.bv_meals !== '' ? data.bv_meals : '', (257.0 + 347.0) / 2, 277.0, false, 7.1);
+                textCenter(data.p_meals !== undefined && data.p_meals !== '' ? data.p_meals : '', (347.0 + 437.0) / 2, 277.0, false, 7.1);
+                textCenter(data.up_meals !== undefined && data.up_meals !== '' ? data.up_meals : '', (437.0 + 582.0) / 2, 277.0, false, 7.1);
+
+                textLeft('Enter zero (0) if Bal Vatika or Upper Primary is not applicable for your school.', 42.0, 293.0, false, 6.4);
+
+                // Section 2: Fund Details (in Rs.)
+                textLeft('2. Fund Details (in Rs.)', 42.0, 311.0, true, 8.8);
+
+                const s2Rows = [
+                    317.0, 342.0, 358.0, 374.0, 390.0, 406.0, 422.0, 438.0, 454.0, 470.0, 486.0, 502.0, 518.0, 534.0, 550.0, 568.0
+                ];
+                s2Rows.forEach(y => drawHLine(42.0, y, 582.0));
+                [42.0, 243.0, 325.0, 407.0, 498.0, 582.0].forEach(x => drawVLine(x, 317.0, 568.0));
+
+                textLeft('COMPONENT', 45.0, 332.0, true, 7.1);
+                textCenter('OPENING\nBALANCE (Rs.)', (243.0 + 325.0) / 2, 327.0, true, 6.7);
+                textCenter('RECEIVED (Rs.)', (325.0 + 407.0) / 2, 331.0, true, 6.7);
+                textCenter('EXPENDITURE (Rs.)', (407.0 + 498.0) / 2, 331.0, true, 6.7);
+                textCenter('CLOSING\nBALANCE (Rs.)', (498.0 + 582.0) / 2, 327.0, true, 6.7);
+
+                const fundList = [
+                    { num: '1.', name: 'MATERIAL COST BAL VATIKA PP', na: !data.hasBv, open: data.cc_bv_open, recv: data.cc_bv_recv, exp: data.cc_bv_exp, close: data.cc_bv_close },
+                    { num: '2.', name: 'MATERIAL COST PRIMARY I-IV', na: false, open: data.cc_p_open, recv: data.cc_p_recv, exp: data.cc_p_exp, close: data.cc_p_close },
+                    { num: '3.', name: 'COOK CUM HELPER', na: false, open: data.cch_open, recv: data.cch_recv, exp: data.cch_exp, close: data.cch_close },
+                    { num: '4.', name: 'SCHOOL EXPENSES (MME)', na: false, open: data.mme_open, recv: data.mme_recv, exp: data.mme_exp, close: data.mme_close },
+                    { num: '5.', name: 'MATERIAL COST UPPER PRIMARY VI-VIII', na: !data.hasUp, open: data.cc_up_open, recv: data.cc_up_recv, exp: data.cc_up_exp, close: data.cc_up_close },
+                    { num: '6.', name: 'BANK INTEREST', na: false, open: data.bi_open, recv: data.bi_recv, exp: data.bi_exp, close: data.bi_close },
+                    { num: '7.', name: 'LPG SUBSIDY', na: false, open: data.lpg_open, recv: data.lpg_recv, exp: data.lpg_exp, close: data.lpg_close },
+                    { num: '8.', name: 'SUPPLEMENTARY / EXTRA NUTRITION', na: false, open: data.nutri_open, recv: data.nutri_recv, exp: data.nutri_exp, close: data.nutri_close },
+                    { num: '9.', name: 'KITCHEN DEVICES', na: false, open: data.kd_open, recv: data.kd_recv, exp: data.kd_exp, close: data.kd_close },
+                    { num: '9.', name: 'KITCHEN SHED REPAIR', na: false, open: data.ks_open, recv: data.ks_recv, exp: data.ks_exp, close: data.ks_close },
+                    { num: '10.', name: 'NUTRITION GARDEN', na: false, open: data.ng_open, recv: data.ng_recv, exp: data.ng_exp, close: data.ng_close },
+                    { num: '11.', name: 'BANK CHARGES (SMS/CHEQUE BOOK)', na: false, open: data.bc_open, recv: data.bc_recv, exp: data.bc_exp, close: data.bc_close },
+                    { num: '12.', name: 'OTHERS', na: false, open: data.oth_open, recv: data.oth_recv, exp: data.oth_exp, close: data.oth_close }
+                ];
+
+                fundList.forEach((item, idx) => {
+                    const yTop = s2Rows[idx + 1];
+                    const yMid = yTop + 11.0;
+                    const numW = item.num.length > 2 ? 15.0 : 10.0;
+
+                    if (item.na) {
+                        textLeft(item.num, 45.0, yTop + 8.0, true, 6.3);
+                        textLeft(item.name, 45.0 + numW, yTop + 8.0, false, 6.3);
+                        textLeft('Not Applicable', 45.0, yTop + 14.5, false, 5.8);
+                    } else {
+                        textLeft(item.num, 45.0, yMid, true, 6.3);
+                        textLeft(item.name, 45.0 + numW, yMid, false, 6.3);
+                        if (item.open !== undefined && item.open !== '') textRight(formatNum(item.open), 321.0, yMid, false, 6.7);
+                        if (item.recv !== undefined && item.recv !== '') textRight(formatNum(item.recv), 403.0, yMid, false, 6.7);
+                        if (item.exp !== undefined && item.exp !== '') textRight(formatNum(item.exp), 494.0, yMid, false, 6.7);
+                        if (item.close !== undefined && item.close !== '') textRight(formatNum(item.close), 578.0, yMid, false, 6.7);
+                    }
+                });
+
+                // Grand Total Row
+                const yTotal = s2Rows[14] + 12.0;
+                textLeft('GRAND TOTAL (Rs.)', 45.0, yTotal, true, 7.1);
+                if (data.total_open !== undefined) textRight(formatNum(data.total_open), 321.0, yTotal, true, 6.7);
+                if (data.total_recv !== undefined) textRight(formatNum(data.total_recv), 403.0, yTotal, true, 6.7);
+                if (data.total_exp !== undefined) textRight(formatNum(data.total_exp), 494.0, yTotal, true, 6.7);
+                if (data.total_close !== undefined) textRight(formatNum(data.total_close), 578.0, yTotal, true, 6.7);
+
+                textLeft('Closing Balance is calculated in real time on the website: Opening Balance + Received - Expenditure.', 42.0, 576.0, false, 6.4);
+
+                // ==========================================
+                // PAGE 2
+                // ==========================================
+                doc.addPage('letter', 'portrait');
+
+                // Section 2A: Bank Passbook Verification
+                textLeft('2A. Bank Passbook Verification', 42.0, 37.0, true, 8.8);
+
+                const p2s1Rows = [43.5, 66.5, 91.5];
+                p2s1Rows.forEach(y => drawHLine(42.0, y, 582.0));
+                [42.0, 217.0, 339.0, 464.0, 582.0].forEach(x => drawVLine(x, 43.5, 91.5));
+
+                textLeft('Bank Balance Date', 46.0, 58.0, true, 7.1);
+                textCenter(data.bank_balance_date || '', (217.0 + 339.0) / 2, 58.0, false, 7.1);
+
+                textLeft('Bank Passbook Balance (Rs.)', 343.0, 58.0, true, 7.1);
+                textCenter(data.bank_passbook_balance !== undefined && data.bank_passbook_balance !== '' ? formatNum(data.bank_passbook_balance) : '', (464.0 + 582.0) / 2, 58.0, false, 7.1);
+
+                textLeft('Does sum of Closing Balance match Passbook?', 46.0, 82.0, true, 7.1);
+                const isYes = String(data.bank_match || '').toUpperCase() === 'YES';
+                const isNo = String(data.bank_match || '').toUpperCase() === 'NO';
+                textCenter(`YES [ ${isYes ? 'X' : ' '} ]`, (217.0 + 339.0) / 2, 82.0, true, 7.1);
+                textCenter(`NO [ ${isNo ? 'X' : ' '} ]`, (339.0 + 464.0) / 2, 82.0, true, 7.1);
+
+                // Passbook Photo Box
+                drawHLine(42.0, 97.5, 582.0);
+                drawHLine(42.0, 117.5, 582.0);
+                drawHLine(42.0, 142.5, 228.0);
+                drawHLine(42.0, 192.5, 582.0);
+
+                drawVLine(42.0, 97.5, 192.5);
+                drawVLine(228.0, 97.5, 192.5);
+                drawVLine(582.0, 97.5, 192.5);
+
+                textLeft('Bank Passbook Photo', 46.0, 110.0, true, 7.1);
+                textLeft('Website: use the camera/upload control. For this printed copy,', 46.0, 128.0, false, 6.4);
+                textLeft('attach or paste a clear photo of the relevant passbook page.', 46.0, 136.0, false, 6.4);
+
+                if (data.passbookPhotoDataUrl) {
+                    try {
+                        doc.addImage(data.passbookPhotoDataUrl, 'JPEG', 232, 100, 346, 90, undefined, 'FAST');
+                    } catch (e) {
+                        textCenter('Mandatory attachment area', (228.0 + 582.0) / 2, 110.0, true, 7.1);
+                    }
+                } else {
+                    textCenter('Mandatory attachment area', (228.0 + 582.0) / 2, 110.0, true, 7.1);
+                }
+
+                // Section 3: Food Grains Details - Rice (in KG)
+                textLeft('3. Food Grains Details - Rice (in KG)', 42.0, 208.0, true, 8.8);
+
+                const s3Rows = [214.5, 240.5, 264.5, 288.5, 312.5];
+                s3Rows.forEach(y => drawHLine(42.0, y, 582.0));
+                [42.0, 142.0, 200.0, 292.0, 371.0, 466.0, 582.0].forEach(x => drawVLine(x, 214.5, 312.5));
+
+                textLeft('CATEGORY', 45.0, 230.5, true, 7.1);
+                textCenter('FOOD ITEM', (142.0 + 200.0) / 2, 230.5, true, 6.7);
+                textCenter('OPENING BALANCE (KG)', (200.0 + 292.0) / 2, 230.5, true, 6.7);
+                textCenter('RECEIVED (KG)', (292.0 + 371.0) / 2, 230.5, true, 6.7);
+                textCenter('CONSUMPTION (KG)', (371.0 + 466.0) / 2, 230.5, true, 6.7);
+                textCenter('CLOSING BALANCE (KG)', (466.0 + 582.0) / 2, 230.5, true, 6.7);
+
+                const riceRows = [
+                    { cat: 'Bal Vatika PP', open: data.rice_bv_open, recv: data.rice_bv_recv, cons: data.rice_bv_cons, close: data.rice_bv_close, na: !data.hasBv },
+                    { cat: 'Primary I-IV', open: data.rice_p_open, recv: data.rice_p_recv, cons: data.rice_p_cons, close: data.rice_p_close, na: false },
+                    { cat: 'Upper Primary VI-VIII', open: data.rice_up_open, recv: data.rice_up_recv, cons: data.rice_up_cons, close: data.rice_up_close, na: !data.hasUp }
+                ];
+
+                riceRows.forEach((r, idx) => {
+                    const yPos = s3Rows[idx + 1] + 15.0;
+                    textLeft(r.cat, 45.0, yPos, false, 7.1);
+                    textCenter('Rice', (142.0 + 200.0) / 2, yPos, false, 7.1);
+                    textCenter(r.open !== undefined && r.open !== '' ? formatNum(r.open) : (r.na ? '-' : '0.00'), (200.0 + 292.0) / 2, yPos, false, 7.1);
+                    textCenter(r.recv !== undefined && r.recv !== '' ? formatNum(r.recv) : (r.na ? '-' : '0.00'), (292.0 + 371.0) / 2, yPos, false, 7.1);
+                    textCenter(r.cons !== undefined && r.cons !== '' ? formatNum(r.cons) : (r.na ? '-' : '0.00'), (371.0 + 466.0) / 2, yPos, false, 7.1);
+                    textCenter(r.close !== undefined && r.close !== '' ? formatNum(r.close) : (r.na ? '-' : '0.00'), (466.0 + 582.0) / 2, yPos, false, 7.1);
+                });
+
+                textLeft('Rice Closing Balance is calculated as: Opening Balance + Received - Consumption.', 42.0, 321.0, false, 6.4);
+
+                // Section 4: Children Health Status
+                textLeft('4. Children Health Status', 42.0, 338.0, true, 8.8);
+
+                const s4Rows = [345.0, 367.0, 389.0, 411.0, 433.0, 455.0];
+                s4Rows.forEach(y => drawHLine(42.0, y, 582.0));
+                [42.0, 477.0, 582.0].forEach(x => drawVLine(x, 345.0, 455.0));
+
+                textLeft('HEALTH PARAMETER / DESCRIPTION', 46.0, 359.0, true, 7.1);
+                textCenter('COUNT', (477.0 + 582.0) / 2, 359.0, true, 6.7);
+
+                const healthRows = [
+                    { desc: 'No. of children from class 1 to 8 who had received 4 IFA tablets (Boys)', val: data.ifa_boys },
+                    { desc: 'No. of children from class 1 to 8 who had received 4 IFA tablets (Girls)', val: data.ifa_girls },
+                    { desc: 'No. of children screened by mobile health (RBSK) team', val: data.rbsk_screened },
+                    { desc: 'No. of children referred by mobile health (RBSK) team', val: data.rbsk_referred }
+                ];
+
+                healthRows.forEach((h, idx) => {
+                    const yPos = s4Rows[idx + 1] + 14.5;
+                    textLeft(h.desc, 46.0, yPos, false, 7.1);
+                    textCenter(h.val !== undefined && h.val !== '' ? h.val : '0', (477.0 + 582.0) / 2, yPos, false, 7.1);
+                });
+
+                // Section 5: School Inspection
+                textLeft('5. School Inspection', 42.0, 470.0, true, 8.8);
+
+                const s5Rows = [477.0, 499.0, 521.0, 541.0, 561.0, 581.0, 601.0, 625.0];
+                s5Rows.forEach(y => drawHLine(42.0, y, 582.0));
+                [42.0, 417.0, 582.0].forEach(x => drawVLine(x, 477.0, 625.0));
+
+                textLeft('INSPECTION & MONITORING DETAILS', 46.0, 491.0, true, 7.1);
+                textCenter('STATUS / VISITS', (417.0 + 582.0) / 2, 491.0, true, 6.7);
+
+                const inspVal = String(data.inspection_done || '').toUpperCase();
+                const inspYesBox = (inspVal === 'YES' || inspVal === 'TRUE') ? 'YES [X]' : 'YES [ ]';
+                const inspNoBox = (inspVal === 'NO' || inspVal === 'FALSE') ? 'NO [X]' : 'NO [ ]';
+
+                textLeft('School Inspection done during the month', 46.0, 513.0, false, 7.1);
+                textCenter(`${inspYesBox}  ${inspNoBox}`, (417.0 + 582.0) / 2, 513.0, false, 6.7);
+
+                const inspRows = [
+                    { label: 'By Members of Task Force', val: data.insp_task_force },
+                    { label: 'By District Officials', val: data.insp_district_officials },
+                    { label: 'By Block/Taluka Level Officials', val: data.insp_block_officials },
+                    { label: 'By SMC Members', val: data.insp_smc_members }
+                ];
+
+                inspRows.forEach((r, idx) => {
+                    const yPos = s5Rows[idx + 2] + 13.5;
+                    textLeft(r.label, 46.0, yPos, false, 7.1);
+                    textCenter(r.val !== undefined && r.val !== '' ? r.val : '0', (417.0 + 582.0) / 2, yPos, false, 7.1);
+                });
+
+                textLeft('Number of Untoward Incidents Occurred', 46.0, 616.0, true, 7.1);
+                textCenter(data.untoward_incidents !== undefined && data.untoward_incidents !== '' ? data.untoward_incidents : '0', (417.0 + 582.0) / 2, 616.0, false, 7.1);
+
+                // Signature Area
+                textLeft('........................................................................', 44.0, 672.0, false, 6.7);
+                textLeft('Signature of Head Teacher', 44.0, 684.0, true, 7.1);
+
+                return doc;
+            }
+
+            // Handler for Download PDF Button
+            $('#btnDownloadPdf').on('click', function () {
+                const udise = ($('#selectSchool').val() || $('#badgeUdise').text() || '').trim();
+                const doDownload = () => {
+                    const $btn = $('#btnDownloadPdf');
+                    const origHtml = $btn.html();
+                    $btn.addClass('is-loading').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> <span>Generating Pdf...</span>');
+
+                    try {
+                        const data = extractMonthlyReportData();
+                        const doc = generateMonthlyReportPdf(data);
+                        const safeUdise = data.udise || 'Draft';
+                        const safeMonth = data.month || 'Report';
+                        const safeYear = data.year || new Date().getFullYear();
+                        const fileName = `PM_POSHAN_Monthly_Report_${safeUdise}_${safeMonth}_${safeYear}.pdf`;
+                        doc.save(fileName);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'PDF Downloaded!',
+                            text: `Report saved as ${fileName}`,
+                            timer: 2200,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    } catch (err) {
+                        console.error('PDF generation error:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Download Failed',
+                            text: 'Failed to generate PDF: ' + (err.message || 'Unknown error occurred.')
+                        });
+                    } finally {
+                        $btn.removeClass('is-loading').prop('disabled', false).html(origHtml);
+                    }
+                };
+
+                if (!udise || udise === '-') {
+                    Swal.fire({
+                        title: 'No School Selected',
+                        text: 'Would you like to download a blank / draft PDF report with the current form values?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Download PDF Anyway',
+                        cancelButtonText: 'Select School First',
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#64748b'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            doDownload();
+                        }
+                    });
+                } else {
+                    doDownload();
+                }
+            });
         });
     </script>
 </body>
